@@ -1,10 +1,10 @@
 import React from 'react'
-import Button from './components/Button'
+import LandingPage from './pages/LandingPage'
 
 export default function App() {
     return (
-        <div>
-            <Button />
-        </div>
+        <>
+            <LandingPage />
+        </>
     )
 }
