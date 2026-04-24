@@ -1,5 +1,53 @@
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&family=Elms+Sans:ital,wght@0,100..900;1,100..900&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-Ping-Hebrew: "Ping Hebrew", sans-serif;
+  --font-primary: "Open Sans", sans-serif;  
+  --font-secondary: "Roboto", sans-serif;
+  --font-tertiary: "Elms Sans", sans-serif;
+  --font-quertanary: "Anton", sans-serif;
+  --font-quintary: "Crimson Text", sans-serif;
+  
+  --color-primary-blue: #08b4fb;
+  --color-secondary-blue: #1ea4dc;
+  --color-tertiary-blue: #1e91c1;
+  --color-dark-blue: #206988;
+  --color-darker-blue: #004561;
+}
+
+img {
+  z-index: 0;
+}
+
+p, h1, h3, a { 
+  z-index: 1;
+}
+
+button {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-hover-blue-secondary:hover {
+  background-color: var(--color-tertiary-blue);
+  border-color: black;
+  padding: 0px 15px 0px 15px;
+  border-radius: 30px;
+  color: white;
+}
+
+.btn-hover-blue {
+  transition: all 0.3s ease;
+}
+
+.btn-hover-blue:hover {
+  background-color: var(--color-tertiary-blue);
+  border-color: black;
+  border-radius: 30px;
+  padding: 0px 15px 0px 15px;
+  color: white;
+}
+
+.btn-hover-rg-lg:hover {
+  scale: 1.05;
 }
