@@ -1,5 +1,5 @@
 import NavBar from "../components/NavBar";
-import FooterButtons from "../components/FooterButtons";
+import Footer from "../components/Footer";
 
 export default function LandingPage() {
     return (
@@ -81,7 +81,7 @@ export default function LandingPage() {
 
 
             </section>
-            <FooterButtons />
+            <Footer />
         </>
     )
 }

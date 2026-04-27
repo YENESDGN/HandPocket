@@ -12,11 +12,6 @@
   --color-secondary-blue: #1ea4dc;
   --color-tertiary-blue: #1e91c1;
   --color-dark-blue: #206988;
-  --color-darker-blue: #004561;
-}
-
-img {
-  z-index: 0;
 }
 
 p, h1, h3, a { 
@@ -25,6 +20,10 @@ p, h1, h3, a {
 
 button {
   cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-hover-blue-secondary {
   transition: all 0.3s ease;
 }
 
@@ -51,3 +50,4 @@ button {
 .btn-hover-rg-lg:hover {
   scale: 1.05;
 }
+

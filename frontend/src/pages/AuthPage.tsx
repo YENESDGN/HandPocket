@@ -1,8 +1,12 @@
 import { useState } from 'react';
-import NavBar from './NavBar';
+import NavBar from '../components/NavBar';
 
-export default function LgnRgstrBtns() {
-    const [activeForm, setActiveForm] = useState<'login' | 'register'>('login');
+interface AuthPageProps {
+    initialForm?: 'login' | 'register';
+}
+
+export default function AuthPage({ initialForm = 'login' }: AuthPageProps) {
+    const [activeForm, setActiveForm] = useState<'login' | 'register'>(initialForm);
 
     return (
         <>
@@ -10,17 +14,24 @@ export default function LgnRgstrBtns() {
         className='absolute left-0 w-full h-full object-cover z-[-1] opacity-75 bg-cover bg-center blur-sm'
         src="assets/RgLg_bg.png"
         alt="Register-Login Background" />
-        <div className="z-10">
+        <div className='border-b-1 border-thin relative h-[150px]'>
+            <div className='grid grid-cols-2 items-center justify-start gap-0'>
+                <div className='flex flex-row items-center justify-start gap-0'>
+                    <img 
+                        className='w-20 h-20 object-contain relative left-5 top-5'
+                        src="/assets/favicon.png" 
+                        alt="HandPocket Logo" />
+                </div>
+            </div>
             <NavBar />
         </div>
-        <hr className="border-s border-black-100 border-opacity-50 w-full my-30 mb-0 p-0 relative z-10" />
         <section className="grid grid-cols-2 max-w-6xl mx-auto my-10 mt-0 p-10 font-tertiary font-bold pt-20 relative z-10">
             <div 
                 onClick={() => setActiveForm('login')}
                 className={`cursor-pointer rounded-xl p-8 transition-all duration-300 ${
                     activeForm === 'login' 
                         ? 'bg-white border-2 border-primary-blue' 
-                        : 'bg-[#004561]'
+                        : 'bg-dark-blue'
                 }`}
             >
                 {activeForm === 'login' ? (
@@ -33,7 +44,7 @@ export default function LgnRgstrBtns() {
                                     type="text" 
                                     name="username" 
                                     placeholder="Kullanıcı Adı"
-                                    className="text-white border border-gray-300 bg-darker-blue rounded-full p-2"
+                                    className="text-white border border-gray-300 bg-dark-blue rounded-full p-2"
                                 />
                             </div>
                             <div className="flex flex-col gap-1">
@@ -42,7 +53,7 @@ export default function LgnRgstrBtns() {
                                     type="email" 
                                     name="email" 
                                     placeholder="E-posta"
-                                    className="text-white border border-gray-300 bg-darker-blue rounded-full p-2"
+                                    className="text-white border border-gray-300 bg-dark-blue rounded-full p-2"
                                 />
                             </div>
                             <div className="flex flex-col gap-1">
@@ -51,14 +62,14 @@ export default function LgnRgstrBtns() {
                                     type="password" 
                                     name="password" 
                                     placeholder="Parola"
-                                    className="text-white border border-gray-300 bg-darker-blue rounded-full p-2"
+                                    className="text-white border border-gray-300 bg-dark-blue rounded-full p-2"
                                 />
                             </div>
                         </div>
                         <div className="flex justify-end">
                             <button 
                                 type="submit" 
-                                className="inline-block px-6 py-2 bg-darker-blue rounded-full text-white btn-hover-rg-lg"
+                                className="inline-block px-6 py-2 bg-dark-blue rounded-full text-white btn-hover-rg-lg"
                             >
                                 Giriş Yap
                             </button>
@@ -75,10 +86,10 @@ export default function LgnRgstrBtns() {
             
             <div 
                 onClick={() => setActiveForm('register')}
-                className={`cursor-pointer rounded-xl p-8  ${
+                className={`cursor-pointer rounded-xl p-8 ${
                     activeForm === 'register' 
                         ? 'bg-white border-2 border-primary-blue' 
-                        : 'bg-[#004561]'
+                        : 'bg-dark-blue'
                 }`}
             >
                 {activeForm === 'register' ? (
@@ -90,7 +101,7 @@ export default function LgnRgstrBtns() {
                                 type="text" 
                                 name="username" 
                                 placeholder="Kullanıcı Adı"
-                                className="text-white border border-gray-300 bg-darker-blue rounded-full p-2"
+                                className="text-white border border-gray-300 bg-dark-blue rounded-full p-2"
                             />
                         </div>
                         <div className="flex flex-col gap-1">
@@ -99,7 +110,7 @@ export default function LgnRgstrBtns() {
                                 type="email" 
                                 name="email" 
                                 placeholder="E-posta"
-                                className="text-white border border-gray-300 bg-darker-blue rounded-full p-2"
+                                className="text-white border border-gray-300 bg-dark-blue rounded-full p-2"
                             />
                         </div>
                         <div className="flex flex-col gap-1">
@@ -108,7 +119,7 @@ export default function LgnRgstrBtns() {
                                 type="email" 
                                 name="emailConfirm" 
                                 placeholder="Tekrar E-Posta"
-                                className="text-white border border-gray-300 bg-darker-blue rounded-full p-2"
+                                className="text-white border border-gray-300 bg-dark-blue rounded-full p-2"
                             />
                         </div>
                         <div className="flex flex-col gap-1">
@@ -117,7 +128,7 @@ export default function LgnRgstrBtns() {
                                 type="password" 
                                 name="password" 
                                 placeholder="Parola"
-                                className="text-white border border-gray-300 bg-darker-blue rounded-full p-2"
+                                className="text-white border border-gray-300 bg-dark-blue rounded-full p-2"
                             />
                         </div>
                         <div className="flex flex-col gap-1">
@@ -126,13 +137,13 @@ export default function LgnRgstrBtns() {
                                 type="password" 
                                 name="passwordConfirm" 
                                 placeholder="Tekrar Parola"
-                                className="text-white border border-gray-300 bg-darker-blue rounded-full p-2"
+                                className="text-white border border-gray-300 bg-dark-blue rounded-full p-2"
                             />
                         </div>
                         <div className="flex justify-end">
                             <button 
                                 type="submit" 
-                                className="text-white inline-block px-6 py-2 bg-darker-blue rounded-full btn-hover-rg-lg"
+                                className="text-white inline-block px-6 py-2 bg-dark-blue rounded-full btn-hover-rg-lg"
                             >
                                 Kayıt Ol
                             </button>
