@@ -5,12 +5,24 @@ export default function RequestPage() {
     const [isPanelVisible, setIsPanelVisible] = useState(true);
 
     return (
-        <>  
-            <nav className='relative h-[100px] bg-white'>
-                <NavBar />
-            </nav>
-            <section className='grid grid-cols-[30%_70%] p-10 gap-10 items-start bg-dark-blue'>
-            <div className='bg-secondary-blue w-full h-full rounded-xl p-4 flex flex-col gap-2 font-tertiary text-shadow-sm drop-shadow-[0_0_15px_rgba(0,0,0,0.7)]'>
+        <>
+        <img 
+        className='absolute left-0 w-full h-full object-cover z-[-1] opacity-75 bg-cover bg-center blur-sm'
+        src="assets/RgLg_bg.png"
+        alt="Register-Login Background" />
+        <div className='border-b-1 border-thin relative h-[150px]'>
+            <div className='grid grid-cols-2 items-center justify-start gap-0'>
+                <div className='flex flex-row items-center justify-start gap-0'>
+                    <img 
+                        className='w-20 h-20 object-contain relative left-5 top-5'
+                        src="/assets/favicon.png" 
+                        alt="HandPocket Logo" />
+                </div>
+            </div>
+            <NavBar />
+        </div>
+            <section className='grid grid-cols-[23%_77%] p-10 gap-10 items-start bg-dark-blue font-sextary'>
+            <div className='bg-tertiary-blue w-full h-full rounded-xl p-4 flex flex-col gap-2 text-shadow-sm drop-shadow-[0_0_15px_rgba(0,0,0,0.7)]'>
                 <h1 className='text-white text-3xl font-extrabold pb-4 pt-2'>Yeni Kargo</h1>
                     <div className='flex flex-col gap-1'>
                         <span className='text-white text-lg'>Kargo Adı</span>
@@ -67,7 +79,7 @@ export default function RequestPage() {
                         </div>
                     </div>
 
-                    <button className='bg-white text-secondary-blue rounded px-4 py-3 font-medium hover:bg-opacity-90 transition-all'>
+                    <button className='bg-white uppercase text-xl text-secondary-blue rounded px-4 py-3 font-extrabold btn-hover-shadow'>
                         Paket Tutarını Hesapla
                     </button>
                 </div>
@@ -96,8 +108,8 @@ export default function RequestPage() {
                     {isPanelVisible && (
                         <div className='absolute bottom-8 right-8 bg-white rounded-lg shadow-2xl z-10 font-tertiary max-w-xs w-80 overflow-hidden'>
                             {/* Başlık */}
-                            <div className='bg-primary-blue text-white px-4 py-3'>
-                                <h3 className='font-bold text-sm tracking-wide'>HESAPLAMA SONUÇLARI</h3>
+                            <div className='bg-primary-blue text-white px-2 py-2'>
+                                <h3 className='font-extrabold text-lg tracking-wide'>HESAPLAMA SONUÇLARI</h3>
                             </div>
 
                             {/* İçerik */}
@@ -106,24 +118,24 @@ export default function RequestPage() {
                                 <div className='mb-4'>
                                     <div className='mb-3'>
                                         <span className='text-gray-600 text-xs block mb-1'>Mesafe</span>
-                                        <p className='text-primary-blue text-xl font-semibold'>1.2 KM</p>
-                                        <div className='w-full h-0.5 bg-primary-blue mt-1'></div>
+                                        <p className='text-[#808080] text-xl font-semibold'>1.2 KM</p>
+                                        <div className='w-full h-[3px] bg-primary-blue mt-1 rounded-xl'></div>
                                     </div>
                                     <div>
                                         <span className='text-gray-600 text-xs block mb-1'>Süre</span>
-                                        <p className='text-primary-blue text-xl font-semibold'>1.2 KM</p>
-                                        <div className='w-full h-0.5 bg-primary-blue mt-1'></div>
+                                        <p className='text-[#808080] text-xl font-semibold'>1.2 KM</p>
+                                        <div className='w-full h-[3px] bg-primary-blue mt-1 rounded-xl'></div>
                                     </div>
                                 </div>
 
                                 {/* Hesaplanan Ücret */}
                                 <div className='mb-4'>
-                                    <span className='text-dark-blue text-sm font-bold block mb-1'>Hesaplanan Ücret</span>
+                                    <span className='text-dark-blue text-lg font-bold block mb-1'>Hesaplanan Ücret</span>
                                     <p className='text-dark-blue text-3xl font-extrabold'>27 TL</p>
                                 </div>
 
                                 {/* Teslimat Oluştur Butonu */}
-                                <button className='w-full bg-primary-blue text-white rounded px-4 py-3 font-bold text-sm tracking-wide hover:bg-opacity-90 transition-all shadow-md uppercase'>
+                                <button className='btn-hover-shadow w-full bg-primary-blue text-white rounded px-4 py-3 font-extrabold text-lg tracking-wide uppercase'>
                                     Teslimat Oluştur
                                 </button>
                             </div>

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Anton&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&family=Elms+Sans:ital,wght@0,100..900;1,100..900&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&family=Elms+Sans:ital,wght@0,100..900;1,100..900&family=Google+Sans+Flex:opsz,wght@6..144,1..1000&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -7,11 +7,13 @@
   --font-tertiary: "Elms Sans", sans-serif;
   --font-quertanary: "Anton", sans-serif;
   --font-quintary: "Crimson Text", sans-serif;
+  --font-sextary: "Google Sans Flex", sans-serif;
   
   --color-primary-blue: #08b4fb;
   --color-secondary-blue: #1ea4dc;
   --color-tertiary-blue: #1e91c1;
   --color-dark-blue: #206988;
+  --color-darker-blue: #004561;
 }
 
 p, h1, h3, a { 
@@ -47,7 +49,7 @@ button {
   color: white;
 }
 
-.btn-hover-rg-lg:hover {
-  scale: 1.05;
+.btn-hover-shadow:hover {
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.7);
+  transition: all ease 0.3;
 }
-

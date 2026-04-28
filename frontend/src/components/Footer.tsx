@@ -21,19 +21,6 @@ export default function FooterButtons() {
                     <p className="text-sm text-gray-600">© 2026 HandPocket. Tüm hakları saklıdır.</p>
                 </div>
             </section>
-            <section>
-                <div className="flex flex-row gap-35 items-center justify-center pb-5 border-t border-gray-600 border-opacity-50 pt-15 pb-10">
-                    <a href="mailto:info@handpocket.com" className="btn-hover-blue">
-                        📧 info@handpocket.com
-                    </a>
-                    <a href="tel:+905551234567" className="btn-hover-blue">
-                        📞 +90 555 123 45 67
-                    </a>
-                    <a href="https://maps.google.com/?q=HandPocket" target="_blank" rel="noopener noreferrer" className="btn-hover-blue">
-                        📍 İstanbul, Türkiye
-                    </a>
-                </div>
-            </section>
         </footer>
         </>
     )

@@ -69,7 +69,7 @@ export default function AuthPage({ initialForm = 'login' }: AuthPageProps) {
                         <div className="flex justify-end">
                             <button 
                                 type="submit" 
-                                className="inline-block px-6 py-2 bg-dark-blue rounded-full text-white btn-hover-rg-lg"
+                                className="inline-block px-6 py-2 bg-dark-blue rounded-full text-white btn-hover-shadow"
                             >
                                 Giriş Yap
                             </button>
@@ -143,7 +143,7 @@ export default function AuthPage({ initialForm = 'login' }: AuthPageProps) {
                         <div className="flex justify-end">
                             <button 
                                 type="submit" 
-                                className="text-white inline-block px-6 py-2 bg-dark-blue rounded-full btn-hover-rg-lg"
+                                className="text-white inline-block px-6 py-2 bg-dark-blue rounded-full btn-hover-shadow"
                             >
                                 Kayıt Ol
                             </button>

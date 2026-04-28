@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import LandingPage from './pages/LandingPage'
 import AuthPage from './pages/AuthPage'
 import RequestPage from './pages/RequestPage'
+import Contact from './pages/Contact'
 
 export default function App() {
     return (
@@ -11,6 +12,7 @@ export default function App() {
                 <Route path="/giris" element={<AuthPage initialForm="login"  />} />
                 <Route path="/kayit" element={<AuthPage initialForm="register" />} />
                 <Route path="/talep" element={<RequestPage />} />
+                <Route path="/iletisim" element={<Contact />} />
             </Routes>
         </Router>
     )

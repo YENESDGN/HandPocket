@@ -7,7 +7,7 @@ export default function Buttons() {
         <div className="text-black p-2 flex flex-row gap-7 text-xl">
                 <Link to="/" className="cursor-pointer btn-hover-blue">Anasayfa</Link>
                 <button className="cursor-pointer btn-hover-blue">Hakkımızda</button>
-                <button className="cursor-pointer btn-hover-blue">İletişim</button>
+                <Link to="/iletisim" className="cursor-pointer btn-hover-blue">İletişim</Link>
                 <button className="cursor-pointer btn-hover-blue">Şikayet</button>
         </div>
             <div className='text-white bg-[#08b4fb] p-1 pr-3 pl-3 rounded-[30px] flex flex-row justify-between items-center gap-3'>
