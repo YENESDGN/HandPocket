@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 export default function FooterButtons() {
     return (
         <>
@@ -14,7 +16,7 @@ export default function FooterButtons() {
                 <div className="flex flex-row gap-20 items-center text-xl justify-center">
                     <h3 className="cursor-pointer btn-hover-blue">Hizmetler</h3>
                     <h3 className="cursor-pointer btn-hover-blue">Hakkımızda</h3>
-                    <h3 className="cursor-pointer btn-hover-blue">İletişim</h3>
+                    <Link to="/iletisim" className="cursor-pointer btn-hover-blue">İletişim</Link>
                 </div>
 
                 <div className="flex items-center justify-center">

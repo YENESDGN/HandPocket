@@ -1,0 +1,27 @@
+---
+description: FastAPI/Python backend standards for HandPocket
+globs: backend/**/*.py
+alwaysApply: false
+---
+
+# Backend Standards
+
+## Tech Stack
+
+- **FastAPI** + **Python** + **SQLModel** (ORM + schema in one)
+- **Supabase**: PostgreSQL, Auth, Storage (for `package_photo_url`)
+- Map Services: Google Maps API / Mapbox (for `distance_km`, routing, live tracking)
+- Deploy: Render / Fly.io
+
+## Conventions
+
+- Pure functions for business logic. No side effects in domain layer.
+- SQLModel models define both DB schema and Pydantic validation.
+- Route handlers are thin — delegate to service functions.
+- Never expose internal DB ids directly; use UUIDs where appropriate.
+
+## Key Domain Model (DeliveryRequests)
+
+User inputs: `package_description`, `pickup_address`, `delivery_address`, `package_photo_url`, `weight_kg`, `open_time_multiplier`
+
+Auto-calculated: `distance_km` (Maps API), `estimated_time_mins`, `calculated_price` (distance × weight × multiplier), `sender_id`, `status="pending"`

@@ -53,6 +53,21 @@
 - Logo + Hizmetler/Hakkımızda/İletişim linkleri + Copyright
 - btn-hover-blue efektleri
 
+### ProfilePage.tsx (173 satır)
+- Route: /profil
+- h-screen flex layout: sol sidebar + sağ main content
+- **Sidebar** (bg-darker-blue, w-52):
+  - Üst: Profil fotoğrafı (yuvarlak), Ad, Telefon, Email
+  - Orta nav: Teslimatlar, Ayarlar, Güvenlik, Tercihler (Lucide ikonlar)
+  - Aktif nav item: bg-dark-blue + beyaz yazı (useState ile)
+  - Alt: Yardım Merkezi, Çıkış Yap (kırmızı)
+- **Navbar** (bg-white, py-5): Logo sol, Anasayfa/Hakkımızda/İletişim sağ
+- **Tablolar** (DeliveryTable komponenti):
+  - table-fixed + colgroup ile sabit kolon genişlikleri (15/45/20/20%)
+  - Başlık satırı: bg-darker-blue, beyaz bold yazı
+  - Gövde: beyaz arka plan
+  - Durum kolonu: StatusBadge (rounded-full pill) — yeşil/kırmızı/sarı
+
 ## Yapı
 ```
 frontend/src/
@@ -65,7 +80,8 @@ frontend/src/
 │   ├── LandingPage.tsx
 │   ├── AuthPage.tsx (login/register)
 │   ├── Contact.tsx (iletişim formu + harita)
-│   └── RequestPage.tsx (kargo talebi)
+│   ├── RequestPage.tsx (kargo talebi)
+│   └── ProfilePage.tsx (kullanıcı profili + teslimat geçmişi)
 └── types/
     └── index.ts
 
@@ -180,6 +196,10 @@ frontend/src/
 - [28/04] Contact.tsx sayfası oluşturuldu (iletişim formu + ContactInfo)
 - [28/04] Contact.tsx'e Google Maps iframe eklendi (İstanbul lokasyonu, 500px, p-10 m-10)
 - [28/04] Contact formu bg-tertiary-blue (#1e91c1) kullanımı
+- [03/05] ProfilePage.tsx oluşturuldu (sidebar + navbar + 3 teslimat tablosu)
+- [03/05] Aktif sidebar item highlight eklendi (useState, bg-dark-blue)
+- [03/05] Tablo kolon hizalama düzeltildi (table-fixed + colgroup)
+- [03/05] StatusBadge komponenti eklendi (pill şekli, renk kodlu durum)
 
 ## Kargo Talebi Formu Planı (DeliveryRequests)
 ### Kullanıcı Girdileri:

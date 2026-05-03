@@ -4,7 +4,7 @@ export default function Buttons() {
     return (
         <>
         <section className="flex flex-row gap-7 items-center top-10 right-15 absolute font-tertiary">
-        <div className="text-black p-2 flex flex-row gap-7 text-xl">
+        <div className="text-black p-2 flex flex-row gap-7 text-lg">
                 <Link to="/" className="cursor-pointer btn-hover-blue">Anasayfa</Link>
                 <button className="cursor-pointer btn-hover-blue">Hakkımızda</button>
                 <Link to="/iletisim" className="cursor-pointer btn-hover-blue">İletişim</Link>

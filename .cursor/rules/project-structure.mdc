@@ -1,0 +1,30 @@
+---
+description: HandPocket file structure and naming conventions
+alwaysApply: true
+---
+
+# Project Structure Rules
+
+```
+frontend/src/
+├── pages/       # Route-level components (LandingPage.tsx, RequestPage.tsx, AuthPage.tsx, Contact.tsx)
+├── components/  # Reusable components (NavBar.tsx, Footer.tsx, ContactInfo.tsx)
+└── types/       # Shared TypeScript types (index.ts)
+```
+
+- Pages (route-level) → `frontend/src/pages/`
+- Reusable UI → `frontend/src/components/`
+- All types → `frontend/src/types/`
+- Backend → `backend/` (FastAPI, Python, SQLModel)
+
+## CSS Utility Classes (use these, don't reinvent)
+
+- `.btn-hover-blue` — transition + primary-blue hover
+- `.btn-hover-blue-secondary` — transition + tertiary-blue hover + pill shape
+- `.btn-hover-shadow` — shadow on hover
+- `.fade-in-up`, `.fade-in-up-delay-1/2/3` — staggered entrance animations
+
+## Tailwind v4 Theme Tokens
+
+- Colors: `bg-primary-blue` (#08b4fb), `bg-secondary-blue`, `bg-tertiary-blue` (#1e91c1), `bg-dark-blue` (#206988)
+- Fonts: `font-primary` (Open Sans), `font-secondary` (Roboto), `font-quaternary` (Anton)

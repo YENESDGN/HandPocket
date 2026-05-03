@@ -1,0 +1,11 @@
+---
+description: Architecture and design philosophy for HandPocket
+alwaysApply: true
+---
+
+# Architecture & Design Philosophy
+
+- **Paradigm**: Prefer Functional Programming. Use pure functions and immutability. Avoid class-based OOP.
+- **Architecture**: Modular Monolith. Organize by Feature (Feature-First), never by layer or technical type.
+- **Data flow**: Unidirectional — root actions flow down to isolated leaf nodes (Tree mental model).
+- **Coupling**: Components must be strictly isolated but highly cohesive. No cross-feature imports.

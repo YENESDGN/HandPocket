@@ -1,0 +1,6 @@
+---
+description: Auto-injects HandPocket project context from CLAUDE.md
+alwaysApply: true
+---
+
+@CLAUDE.md

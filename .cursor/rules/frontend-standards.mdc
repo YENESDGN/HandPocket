@@ -1,0 +1,36 @@
+---
+description: React/TypeScript frontend standards for HandPocket
+globs: frontend/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Frontend Standards
+
+## TypeScript
+
+- Strict typing always. **Never use `any`**.
+- All shared types live in `frontend/src/types/index.ts`.
+
+## React
+
+- Functional components only. No class components.
+- Single-purpose, isolated components. One component = one responsibility.
+- Declarative — derive UI from state, no imperative DOM manipulation.
+- State management via **Zustand** (web). Design state to be translatable to Riverpod (Flutter).
+
+## Tech Stack
+
+- React + TypeScript + Vite + Tailwind CSS v4
+- Routing: React Router (`Link`, `useNavigate`)
+- State: Zustand stores
+
+## Examples
+
+```tsx
+// ❌ BAD — any, imperative, mixed concerns
+const handle = (e: any) => { document.getElementById('x')!.style.display = 'none'; }
+
+// ✅ GOOD — typed, declarative, single-purpose
+const [isVisible, setIsVisible] = useState(true);
+const handleClose = () => setIsVisible(false);
+```
