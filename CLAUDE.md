@@ -53,35 +53,89 @@
 - Logo + Hizmetler/Hakkımızda/İletişim linkleri + Copyright
 - btn-hover-blue efektleri
 
-### ProfilePage.tsx (173 satır)
+### ProfilePage.tsx (188 satır)
 - Route: /profil
-- h-screen flex layout: sol sidebar + sağ main content
+- relative flex h-screen layout: sol sidebar + sağ main content
+- Arka plan: assets/RgLg_bg.png (absolute, opacity-50, blur-sm, z-[-1])
 - **Sidebar** (bg-darker-blue, w-52):
   - Üst: Profil fotoğrafı (yuvarlak), Ad, Telefon, Email
   - Orta nav: Teslimatlar, Ayarlar, Güvenlik, Tercihler (Lucide ikonlar)
   - Aktif nav item: bg-dark-blue + beyaz yazı (useState ile)
-  - Alt: Yardım Merkezi, Çıkış Yap (kırmızı)
+  - Alt: Yardım Merkezi (NeedHelpPanel), Çıkış Yap (kırmızı)
 - **Navbar** (bg-white, py-5): Logo sol, Anasayfa/Hakkımızda/İletişim sağ
-- **Tablolar** (DeliveryTable komponenti):
+- **NavItem tipi**: 'teslimatlar' | 'ayarlar' | 'guvenlik' | 'tercihler' | 'yardim'
+- **Tablolar** (DeliveryTable komponenti — teslimatlar sekmesi):
   - table-fixed + colgroup ile sabit kolon genişlikleri (15/45/20/20%)
   - Başlık satırı: bg-darker-blue, beyaz bold yazı
   - Gövde: beyaz arka plan
   - Durum kolonu: StatusBadge (rounded-full pill) — yeşil/kırmızı/sarı
+- **Panel bileşenleri**: her sekme için ayrı component import edilir:
+  - ayarlar → SettingsPanel (settings.tsx)
+  - guvenlik → SecurityPanel (Security.tsx)
+  - tercihler → PreferencesPanel (Preferences.tsx)
+  - yardim → NeedHelpPanel (NeedHelp.tsx)
+
+### settings.tsx (181 satır) — Ayarlar sekmesi
+- font-sextary, rounded-lg, shadow-md kartlar
+- **Kişisel Bilgiler** (bg-dark-blue header + bg-dark-blue/90 body):
+  - Sol: profil fotoğrafı (rounded-lg, w-36 h-36)
+  - Sağ: 2-kolon grid — İsim, Soyisim, E-Posta, Telefon Numarası
+  - "Profili Güncelle" butonu: bg-darker-blue, rounded-xl
+- **Dil ve Zaman** (bg-white):
+  - Tercih Edilen Dil: Globe ikonu + select dropdown (TR/EN/DE/FR/ES)
+  - Zaman Formatı: Clock ikonu + 24 Saat / 12 Saat toggle butonları (useState)
+- **İstatistikler & Üyelik** (bg-white):
+  - Teslimat sayısı (128) + Puan (4.9), dikey ayırıcı, üyelik progress bar (%75)
+  - Standart Üyelik + AKTİF badge (bg-primary-blue)
+- **Güvenlik** (bg-white):
+  - 2-kolon grid: Şifre Güvenliği + 2FA Doğrulama kartları (bg-primary-blue/10)
+  - Her kart: bg-dark-blue ikon tile + açıklama + aksiyon linki
+- **Hesabı Kapat** (bg-red-500/10, border-red-300/50):
+  - AlertTriangle ikonu, uyarı metni, "Hesabı Sil" butonu (bg-red-500/15)
+
+### Security.tsx (156 satır) — Güvenlik sekmesi
+- Flex layout: sol kolon (flex-[3]) + sağ kolon (flex-[2], self-start)
+- **Sol kolon** (sırasıyla):
+  - Parola Güncelle (bg-dark-blue): Mevcut/Yeni parola 2-kolon + Yeni Tekrar tam genişlik + bg-primary-blue "Parolayı Güncelle" butonu
+  - Mail Güncelle (bg-dark-blue): Mevcut/Yeni mail 2-kolon + Tekrar tam genişlik + bg-primary-blue "Maili Güncelle" butonu
+  - İki Adımlı Doğrulama (bg-white): AKTİF/PASİF badge, açıklama kutusu, bg-primary-blue toggle butonu (useState)
+- **Sağ kolon**:
+  - Aktif Oturumlar (bg-white): 3 oturum (Web/Mobil/Masaüstü), cihaz ikonu, konum+IP+tarih, AKTİF badge
+  - Alt: "Diğer Tüm Oturumları Sonlandır" linki
+
+### Preferences.tsx (185 satır) — Tercihler sekmesi
+- Flex layout: sol kolon (flex-[3]) + sağ kolon (flex-[2], self-stretch)
+- **Sol kolon**:
+  - Görsel Arayüz (bg-white): Açık Mod / Koyu Mod önizleme kartları (tıklanabilir, border-primary-blue seçili)
+  - Bölge & Dil (bg-white): Sistem Dili select + Saat Dilimi select
+- **Sağ kolon**:
+  - Bildirim Kanalları (bg-white, flex-1 tam yükseklik): E-Posta/SMS/Push toggle'ları (useState), SMS uyarı notu (sarı)
+- **Alt aksiyon barı**: "Değişiklikleri İptal Et" + bg-primary-blue "Ayarları Uygula" butonu
+
+### NeedHelp.tsx (125 satır) — Yardım Merkezi sekmesi
+- **Hero banner** (bg-dark-blue): "Bugün size nasıl yardımcı olabiliriz?" + arama input'u
+- **3-kolon kategori kartları** (bg-white): Kargolar, Faturalandırma, Teknik Destek
+  - Her kart: bg-primary-blue/10 ikon tile, başlık, açıklama, ChevronRight linkleri
+- **"Hâlâ yardıma mı ihtiyacınız var?"** (bg-darker-blue): Headphones+MessageSquare ikonlar, 24/7 destek açıklaması, yanıt süresi istatistikleri, bg-primary-blue CTA butonu
 
 ## Yapı
 ```
 frontend/src/
 ├── components/
-│   ├── NavBar.tsx (navigation + auth butonları)
+│   ├── NavBar.tsx          (navigation + auth butonları)
 │   ├── SecondNavBar.tsx
 │   ├── Footer.tsx
-│   └── ContactInfo.tsx (iletişim bilgileri)
+│   ├── ContactInfo.tsx     (iletişim bilgileri)
+│   ├── settings.tsx        (ProfilePage — Ayarlar sekmesi)
+│   ├── Security.tsx        (ProfilePage — Güvenlik sekmesi)
+│   ├── Preferences.tsx     (ProfilePage — Tercihler sekmesi)
+│   └── NeedHelp.tsx        (ProfilePage — Yardım Merkezi sekmesi)
 ├── pages/
 │   ├── LandingPage.tsx
-│   ├── AuthPage.tsx (login/register)
-│   ├── Contact.tsx (iletişim formu + harita)
-│   ├── RequestPage.tsx (kargo talebi)
-│   └── ProfilePage.tsx (kullanıcı profili + teslimat geçmişi)
+│   ├── AuthPage.tsx        (login/register)
+│   ├── Contact.tsx         (iletişim formu + harita)
+│   ├── RequestPage.tsx     (kargo talebi)
+│   └── ProfilePage.tsx     (kullanıcı profili — sidebar + tüm sekmeler)
 └── types/
     └── index.ts
 
@@ -97,10 +151,12 @@ frontend/src/
 --font-tertiary: "Elms Sans"
 --font-quertanary: "Anton"
 --font-quintary: "Crimson Text"
+--font-sextary: "Google Sans Flex"   /* varsayılan — tüm profil panellerinde kullanılır */
 --color-primary-blue: #08b4fb
 --color-secondary-blue: #1ea4dc
 --color-tertiary-blue: #1e91c1
 --color-dark-blue: #206988
+--color-darker-blue: #004561
 ```
 
 **Custom Classes:**
@@ -200,6 +256,22 @@ frontend/src/
 - [03/05] Aktif sidebar item highlight eklendi (useState, bg-dark-blue)
 - [03/05] Tablo kolon hizalama düzeltildi (table-fixed + colgroup)
 - [03/05] StatusBadge komponenti eklendi (pill şekli, renk kodlu durum)
+- [04/05] ProfilePage'e RgLg_bg.png arka planı eklendi (absolute, opacity-50, blur-sm)
+- [04/05] settings.tsx komponenti oluşturuldu (Kişisel Bilgiler, Dil ve Zaman, İstatistikler, Güvenlik, Hesabı Kapat)
+- [04/05] settings.tsx — "Kullanıcı ID" → "E-Posta" olarak değiştirildi
+- [04/05] settings.tsx — Tercih Edilen Dil select dropdown'a, Zaman Formatı toggle butonlara dönüştürüldü
+- [04/05] settings.tsx — font-sextary ve tema renkleri (primary-blue/10, darker-blue vb.) uygulandı
+- [04/05] settings.tsx — rounded-2xl → rounded-lg olarak güncellendi
+- [04/05] Security.tsx komponenti oluşturuldu (Parola/Mail Güncelle, 2FA, Aktif Oturumlar)
+- [04/05] Security.tsx — sol/sağ iki kolon layout (flex-[3] / flex-[2])
+- [04/05] Security.tsx — Güncelle butonları bg-primary-blue + tam genişlik + büyük yapıldı
+- [04/05] Security.tsx — Aktif Oturumlar sticky kaldırıldı, self-start yapıldı
+- [04/05] Preferences.tsx komponenti oluşturuldu (Görsel Arayüz, Bölge & Dil, Bildirim Kanalları)
+- [04/05] Preferences.tsx — "Yerleşim Yoğunluğu" ve "Uyarı Öncelik Eşiği" kaldırıldı, diğer elemanlar büyütüldü
+- [04/05] Preferences.tsx — Bildirim Kanalları kartı tam yüksekliğe (self-stretch + flex-1) getirildi
+- [04/05] NeedHelp.tsx komponenti oluşturuldu (hero banner, 3 kategori kartı, "Hâlâ yardım" barı)
+- [04/05] ProfilePage.tsx — NavItem tipine 'yardim' eklendi, Yardım Merkezi butonu navItemClass'a bağlandı
+- [04/05] ProfilePage.tsx — tüm panel bileşenleri (settings, Security, Preferences, NeedHelp) import edildi ve activeNav ile koşullu render edildi
 
 ## Kargo Talebi Formu Planı (DeliveryRequests)
 ### Kullanıcı Girdileri:

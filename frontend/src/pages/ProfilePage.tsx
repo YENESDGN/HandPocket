@@ -1,8 +1,12 @@
 import { useState } from 'react';
 import { Package, Settings, Shield, List, HelpCircle, LogOut } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import SettingsPanel from '../components/settings';
+import SecurityPanel from '../components/Security';
+import PreferencesPanel from '../components/Preferences';
+import NeedHelpPanel from '../components/NeedHelp';
 
-type NavItem = 'teslimatlar' | 'ayarlar' | 'guvenlik' | 'tercihler';
+type NavItem = 'teslimatlar' | 'ayarlar' | 'guvenlik' | 'tercihler' | 'yardim';
 
 type DeliveryStatus = 'Başarılı' | 'Başarısız' | 'Bekliyor';
 
@@ -91,7 +95,7 @@ export default function ProfilePage() {
     }`;
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-100 font-sextary">
+    <div className="relative flex h-screen overflow-hidden font-sextary">
       {/* Sidebar */}
       <aside className="w-52 bg-darker-blue flex flex-col flex-shrink-0">
         {/* Profile section */}
@@ -135,7 +139,7 @@ export default function ProfilePage() {
 
         {/* Bottom actions */}
         <div className="px-3 pb-6 flex flex-col gap-1 font-sextary">
-          <button className="flex items-center gap-3 px-3 py-2.5 rounded text-white/80 btn-hover-shadow-blue text-sm text-left w-full">
+          <button className={navItemClass('yardim')} onClick={() => setActiveNav('yardim')}>
             <HelpCircle size={18} />
             Yardım Merkezi
           </button>
@@ -150,6 +154,10 @@ export default function ProfilePage() {
       <div className="flex flex-col flex-1 overflow-hidden">
         {/* Top navbar */}
         <header className="bg-white border-b border-gray-200 flex items-center justify-between px-8 py-5 flex-shrink-0">
+        <img 
+        className='absolute left-0 w-full h-full object-cover overflow-hidden z-[-1] opacity-50 blur-sm'
+        src="assets/RgLg_bg.png"
+        alt="Register-Login Background" />
           <div className="flex items-center gap-2">
             <img src="/assets/favicon.png" alt="HandPocket" className="w-16 h-16 object-contain" />
           </div>
@@ -162,9 +170,17 @@ export default function ProfilePage() {
 
         {/* Page body */}
         <main className="flex-1 overflow-y-auto p-8">
-          <DeliveryTable title="BAŞARILI TALEPLER"  rows={successfulRequests} />
-          <DeliveryTable title="BAŞARISIZ TALEPLER" rows={failedRequests} />
-          <DeliveryTable title="BEKLEYEN TALEPLER"  rows={pendingRequests} />
+          {activeNav === 'teslimatlar' && (
+            <>
+              <DeliveryTable title="BAŞARILI TALEPLER"  rows={successfulRequests} />
+              <DeliveryTable title="BAŞARISIZ TALEPLER" rows={failedRequests} />
+              <DeliveryTable title="BEKLEYEN TALEPLER"  rows={pendingRequests} />
+            </>
+          )}
+          {activeNav === 'ayarlar' && <SettingsPanel />}
+          {activeNav === 'guvenlik' && <SecurityPanel />}
+          {activeNav === 'tercihler' && <PreferencesPanel />}
+          {activeNav === 'yardim' && <NeedHelpPanel />}
         </main>
       </div>
     </div>
