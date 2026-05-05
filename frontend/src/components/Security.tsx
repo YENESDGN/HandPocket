@@ -35,26 +35,26 @@ export default function SecurityPanel() {
 
         {/* Parola Güncelle */}
         <div className="rounded-2xl overflow-hidden shadow-md">
-          <div className="bg-dark-blue px-8 py-5 flex items-center gap-3">
+          <div className="bg-secondary-blue px-8 py-5 flex items-center gap-3">
             <Lock size={18} className="text-white/80" />
             <span className="text-white font-bold text-xl tracking-wide font-sextary">Parola Güncelle</span>
           </div>
-          <div className="bg-dark-blue/90 px-8 py-7 flex flex-col gap-5">
+          <div className="bg-white px-8 py-7 flex flex-col gap-5">
             <div className="grid grid-cols-2 gap-x-8">
               <div className="flex flex-col gap-1.5">
-                <label className="text-white/80 text-xs font-semibold uppercase tracking-wider font-sextary">Mevcut Parola</label>
-                <input type="password" className="bg-white rounded-lg px-4 py-2.5 text-sm text-darker-blue outline-none focus:ring-2 focus:ring-primary-blue shadow-sm font-sextary" />
+                <label className="text-darker-blue text-xs font-semibold uppercase tracking-wider font-sextary">Mevcut Parola</label>
+                <input type="password" className="bg-secondary-blue rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:ring-2 focus:ring-primary-blue shadow-sm font-sextary" />
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="text-white/80 text-xs font-semibold uppercase tracking-wider font-sextary">Yeni Parola</label>
-                <input type="password" className="bg-white rounded-lg px-4 py-2.5 text-sm text-darker-blue outline-none focus:ring-2 focus:ring-primary-blue shadow-sm font-sextary" />
+                <label className="text-darker-blue text-xs font-semibold uppercase tracking-wider font-sextary">Yeni Parola</label>
+                <input type="password" className="bg-secondary-blue rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:ring-2 focus:ring-primary-blue shadow-sm font-sextary" />
               </div>
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-white/80 text-xs font-semibold uppercase tracking-wider font-sextary">Yeni Parola Tekrar</label>
-              <input type="password" className="bg-white rounded-lg px-4 py-2.5 text-sm text-darker-blue outline-none focus:ring-2 focus:ring-primary-blue shadow-sm font-sextary" />
+              <label className="text-darker-blue text-xs font-semibold uppercase tracking-wider font-sextary">Yeni Parola Tekrar</label>
+              <input type="password" className="bg-secondary-blue rounded-lg px-4 py-2.5 text-sm text-white outline-none focus:ring-2 focus:ring-primary-blue shadow-sm font-sextary" />
             </div>
-            <button className="w-full bg-primary-blue text-white font-bold py-3 text-sm rounded-xl hover:opacity-90 transition-opacity tracking-widest uppercase font-sextary shadow-sm">
+            <button className="w-full bg-secondary-blue text-white font-bold py-3 text-sm rounded-xl hover:opacity-90 transition-opacity tracking-widest uppercase font-sextary shadow-sm">
               Parolayı Güncelle
             </button>
           </div>
@@ -62,26 +62,26 @@ export default function SecurityPanel() {
 
         {/* Mail Güncelle */}
         <div className="rounded-2xl overflow-hidden shadow-md">
-          <div className="bg-dark-blue px-8 py-5 flex items-center gap-3">
-            <Mail size={18} className="text-white/80" />
+          <div className="bg-secondary-blue px-8 py-5 flex items-center gap-3">
+            <Mail size={18} className="text-white" />
             <span className="text-white font-bold text-xl tracking-wide font-sextary">Mail Güncelle</span>
           </div>
-          <div className="bg-dark-blue/90 px-8 py-7 flex flex-col gap-5">
+          <div className="bg-white px-8 py-7 flex flex-col gap-5">
             <div className="grid grid-cols-2 gap-x-8">
               <div className="flex flex-col gap-1.5">
-                <label className="text-white/80 text-xs font-semibold uppercase tracking-wider font-sextary">Mevcut Mail</label>
-                <input type="email" className="bg-white rounded-lg px-4 py-2.5 text-sm text-darker-blue outline-none focus:ring-2 focus:ring-primary-blue shadow-sm font-sextary" />
+                <label className="text-darker-blue text-xs font-semibold uppercase tracking-wider font-sextary">Mevcut Mail</label>
+                <input type="email" className="bg-secondary-blue rounded-lg px-4 py-2.5 text-sm text-darker-blue outline-none focus:ring-2 focus:ring-primary-blue shadow-sm font-sextary" />
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="text-white/80 text-xs font-semibold uppercase tracking-wider font-sextary">Yeni Mail</label>
-                <input type="email" className="bg-white rounded-lg px-4 py-2.5 text-sm text-darker-blue outline-none focus:ring-2 focus:ring-primary-blue shadow-sm font-sextary" />
+                <label className="text-darker-blue text-xs font-semibold uppercase tracking-wider font-sextary">Yeni Mail</label>
+                <input type="email" className="bg-secondary-blue rounded-lg px-4 py-2.5 text-sm text-darker-blue outline-none focus:ring-2 focus:ring-primary-blue shadow-sm font-sextary" />
               </div>
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-white/80 text-xs font-semibold uppercase tracking-wider font-sextary">Yeni Mail Tekrar</label>
-              <input type="email" className="bg-white rounded-lg px-4 py-2.5 text-sm text-darker-blue outline-none focus:ring-2 focus:ring-primary-blue shadow-sm font-sextary" />
+              <label className="text-darker-blue text-xs font-semibold uppercase tracking-wider font-sextary">Yeni Mail Tekrar</label>
+              <input type="email" className="bg-secondary-blue rounded-lg px-4 py-2.5 text-sm text-darker-blue outline-none focus:ring-2 focus:ring-primary-blue shadow-sm font-sextary" />
             </div>
-            <button className="w-full bg-primary-blue text-white font-bold py-3 text-sm rounded-xl hover:opacity-90 transition-opacity tracking-widest uppercase font-sextary shadow-sm">
+            <button className="w-full bg-secondary-blue text-white font-bold py-3 text-sm rounded-xl hover:opacity-90 transition-opacity tracking-widest uppercase font-sextary shadow-sm">
               Maili Güncelle
             </button>
           </div>
@@ -89,12 +89,12 @@ export default function SecurityPanel() {
 
         {/* İki Adımlı Doğrulama — bottom of left column */}
         <div className="rounded-2xl overflow-hidden shadow-md">
-          <div className="bg-white px-8 py-5 border-b border-primary-blue/20 flex items-center justify-between">
+          <div className="bg-secondary-blue px-8 py-5 border-b border-primary-blue/20 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-dark-blue flex items-center justify-center">
+              <div className="w-9 h-9 rounded-xl bg-darker-blue flex items-center justify-center">
                 <Smartphone size={16} className="text-white" />
               </div>
-              <span className="text-darker-blue font-bold text-xl tracking-wide font-sextary">İki Adımlı Doğrulama</span>
+              <span className="text-white font-bold text-xl tracking-wide font-sextary">İki Adımlı Doğrulama</span>
             </div>
             <span className={`text-xs font-bold px-3 py-1 rounded-full font-sextary ${twoFA ? 'bg-primary-blue text-white' : 'bg-red-100 text-red-600'}`}>
               {twoFA ? 'AKTİF' : 'PASİF'}
@@ -109,7 +109,7 @@ export default function SecurityPanel() {
             </div>
             <button
               onClick={() => setTwoFA(!twoFA)}
-              className="w-full bg-primary-blue text-white font-bold py-3 text-sm rounded-xl hover:opacity-90 transition-opacity tracking-widest uppercase font-sextary shadow-sm"
+              className="w-full bg-secondary-blue text-white font-bold py-3 text-sm rounded-xl hover:opacity-90 transition-opacity tracking-widest uppercase font-sextary shadow-sm"
             >
               {twoFA ? 'Doğrulamayı Devre Dışı Bırak' : 'İki Adımlı Doğrulamayı Başlat'}
             </button>
@@ -120,14 +120,14 @@ export default function SecurityPanel() {
 
       {/* Right column — Aktif Oturumlar */}
       <div className="flex-[2] rounded-lg overflow-hidden shadow-md self-start">
-        <div className="bg-white px-6 py-5 border-b border-primary-blue/20">
-          <span className="text-darker-blue font-bold text-xl tracking-wide font-sextary">Aktif Oturumlar</span>
-          <p className="text-dark-blue text-xs mt-1 font-sextary">Hesabınızdaki oturum geçmişi.</p>
+        <div className="bg-secondary-blue px-6 py-5 border-b border-primary-blue/20">
+          <span className="text-white font-bold text-xl tracking-wide font-sextary">Aktif Oturumlar</span>
+          <p className="text-white/80 text-xs mt-1 font-sextary">Hesabınızdaki oturum geçmişi.</p>
         </div>
         <div className="bg-white px-6 flex flex-col divide-y divide-primary-blue/10">
           {sessions.map((s) => (
             <div key={s.id} className="flex items-center gap-4 py-4">
-              <div className="w-9 h-9 rounded-xl bg-dark-blue flex items-center justify-center flex-shrink-0">
+              <div className="w-9 h-9 rounded-xl bg-darker-blue flex items-center justify-center flex-shrink-0">
                 <DeviceIcon type={s.icon} />
               </div>
               <div className="flex-1 min-w-0">

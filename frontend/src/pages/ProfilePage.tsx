@@ -49,7 +49,7 @@ function StatusBadge({ status }: { status: DeliveryStatus }) {
 function DeliveryTable({ title, rows }: { title: string; rows: DeliveryRequest[] }) {
   return (
     <div className="mb-6 rounded overflow-hidden border border-gray-200 shadow-sm">
-      <div className="bg-darker-blue px-4 py-3">
+      <div className="bg-secondary-blue px-4 py-3">
         <span className="text-white font-bold font-sextary tracking-wide text-sm">{title}</span>
       </div>
       <table className="w-full bg-white text-sm font-sextary table-fixed">
@@ -95,7 +95,7 @@ export default function ProfilePage() {
     }`;
 
   return (
-    <div className="relative flex h-screen overflow-hidden font-sextary">
+    <div className="profile-bg relative flex h-screen overflow-hidden font-sextary">
       {/* Sidebar */}
       <aside className="w-52 bg-darker-blue flex flex-col flex-shrink-0">
         {/* Profile section */}
@@ -153,12 +153,8 @@ export default function ProfilePage() {
       {/* Main content */}
       <div className="flex flex-col flex-1 overflow-hidden">
         {/* Top navbar */}
-        <header className="bg-white border-b border-gray-200 flex items-center justify-between px-8 py-5 flex-shrink-0">
-        <img 
-        className='absolute left-0 w-full h-full object-cover overflow-hidden z-[-1] opacity-50 blur-sm'
-        src="assets/RgLg_bg.png"
-        alt="Register-Login Background" />
-          <div className="flex items-center gap-2">
+        <header className="backdrop-blur-sm border-b border-gray-200 flex items-center justify-between px-8 py-5 flex-shrink-0">
+          <div className="flex bg-items-center gap-2">
             <img src="/assets/favicon.png" alt="HandPocket" className="w-16 h-16 object-contain" />
           </div>
           <nav className="flex items-center gap-8 text-lg font-tertiary relative px-10">
@@ -169,7 +165,7 @@ export default function ProfilePage() {
         </header>
 
         {/* Page body */}
-        <main className="flex-1 overflow-y-auto p-8">
+        <main className="main-bg flex-1 overflow-y-auto p-8">
           {activeNav === 'teslimatlar' && (
             <>
               <DeliveryTable title="BAŞARILI TALEPLER"  rows={successfulRequests} />

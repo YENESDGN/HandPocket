@@ -45,11 +45,11 @@ export default function PreferencesPanel() {
 
           {/* Görsel Arayüz */}
           <div className="rounded-lg overflow-hidden shadow-md">
-            <div className="bg-white px-10 py-6 border-b border-primary-blue/20 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-dark-blue flex items-center justify-center">
+            <div className="bg-secondary-blue px-10 py-6 border-b border-primary-blue/20 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-darker-blue flex items-center justify-center">
                 <Palette size={18} className="text-white" />
               </div>
-              <span className="text-darker-blue font-bold text-2xl tracking-wide font-sextary">Görsel Arayüz</span>
+              <span className="text-white font-bold text-2xl tracking-wide font-sextary">Görsel Arayüz</span>
             </div>
             <div className="bg-white px-10 py-9">
               <div className="flex gap-6">
@@ -58,14 +58,14 @@ export default function PreferencesPanel() {
                   onClick={() => setTheme('light')}
                   className={`flex-1 rounded-lg overflow-hidden border-2 transition-all ${theme === 'light' ? 'border-primary-blue shadow-md' : 'border-primary-blue/20'}`}
                 >
-                  <div className="bg-primary-blue/10 px-6 pt-6 pb-3">
+                  <div className="bg-secondary-blue/10 px-6 pt-6 pb-3">
                     <div className="bg-white rounded-md px-4 py-4 shadow-sm space-y-2">
-                      <div className="h-2.5 bg-dark-blue/20 rounded w-full" />
-                      <div className="h-2.5 bg-dark-blue/10 rounded w-3/4" />
-                      <div className="h-2.5 bg-dark-blue/10 rounded w-1/2" />
+                      <div className="h-2.5 bg-darker-blue/20 rounded w-full" />
+                      <div className="h-2.5 bg-darker-blue/10 rounded w-3/4" />
+                      <div className="h-2.5 bg-darker-blue/10 rounded w-1/2" />
                       <div className="flex gap-2 mt-3">
                         <div className="w-4 h-4 rounded-full bg-primary-blue" />
-                        <div className="w-4 h-4 rounded-full bg-dark-blue" />
+                        <div className="w-4 h-4 rounded-full bg-darker-blue" />
                       </div>
                     </div>
                   </div>
@@ -100,17 +100,17 @@ export default function PreferencesPanel() {
 
           {/* Bölge & Dil */}
           <div className="rounded-lg overflow-hidden shadow-md">
-            <div className="bg-white px-10 py-6 border-b border-primary-blue/20 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-dark-blue flex items-center justify-center">
+            <div className="bg-secondary-blue px-10 py-6 border-b border-primary-blue/20 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-darker-blue flex items-center justify-center">
                 <Globe size={18} className="text-white" />
               </div>
-              <span className="text-darker-blue font-bold text-2xl tracking-wide font-sextary">Bölge & Dil</span>
+              <span className="text-white font-bold text-2xl tracking-wide font-sextary">Bölge & Dil</span>
             </div>
             <div className="bg-white px-10 py-9">
               <div className="grid grid-cols-2 gap-x-8 gap-y-6">
                 <div className="flex flex-col gap-2">
-                  <label className="text-dark-blue text-xs font-semibold uppercase tracking-wider font-sextary">Sistem Dili</label>
-                  <select className="bg-primary-blue/10 rounded-lg px-4 py-3 text-sm text-darker-blue outline-none focus:ring-2 focus:ring-primary-blue border border-primary-blue/20 shadow-sm font-sextary appearance-none cursor-pointer">
+                  <label className="text-darker-blue text-xs font-semibold uppercase tracking-wider font-sextary">Sistem Dili</label>
+                  <select className="bg-secondary-blue rounded-lg font-bold px-4 py-3 text-sm text-white outline-none focus:ring-2 focus:ring-primary-blue border border-primary-blue/20 shadow-sm font-sextary appearance-none cursor-pointer">
                     <option value="tr">Türkçe</option>
                     <option value="en">English (US)</option>
                     <option value="de">Deutsch</option>
@@ -119,8 +119,8 @@ export default function PreferencesPanel() {
                   </select>
                 </div>
                 <div className="flex flex-col gap-2">
-                  <label className="text-dark-blue text-xs font-semibold uppercase tracking-wider font-sextary">Saat Dilimi</label>
-                  <select className="bg-primary-blue/10 rounded-lg px-4 py-3 text-sm text-darker-blue outline-none focus:ring-2 focus:ring-primary-blue border border-primary-blue/20 shadow-sm font-sextary appearance-none cursor-pointer">
+                  <label className="text-darker-blue text-xs font-semibold uppercase tracking-wider font-sextary">Saat Dilimi</label>
+                  <select className="bg-secondary-blue rounded-lg px-4 py-3 text-sm font-bold text-white outline-none focus:ring-2 focus:ring-primary-blue border border-primary-blue/20 shadow-sm font-sextary appearance-none cursor-pointer">
                     <option value="europe/istanbul">(UTC+03:00) İstanbul</option>
                     <option value="europe/london">(UTC+00:00) Londra</option>
                     <option value="america/new_york">(UTC-05:00) New York</option>
@@ -138,11 +138,11 @@ export default function PreferencesPanel() {
 
           {/* Bildirim Kanalları */}
           <div className="rounded-lg overflow-hidden shadow-md flex flex-col flex-1">
-            <div className="bg-white px-8 py-6 border-b border-primary-blue/20 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-dark-blue flex items-center justify-center">
+            <div className="bg-secondary-blue px-8 py-6 border-b border-primary-blue/20 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-darker-blue flex items-center justify-center">
                 <Bell size={18} className="text-white" />
               </div>
-              <span className="text-darker-blue font-bold text-2xl tracking-wide font-sextary">Bildirim Kanalları</span>
+              <span className="text-white font-bold text-2xl tracking-wide font-sextary">Bildirim Kanalları</span>
             </div>
             <div className="bg-white px-8 py-4 flex flex-col divide-y divide-primary-blue/10 flex-1 justify-between">
               {channels.map((ch) => (
@@ -174,7 +174,7 @@ export default function PreferencesPanel() {
         <button className="text-dark-blue text-sm font-semibold font-sextary hover:text-darker-blue transition-colors px-4 py-2">
           Değişiklikleri İptal Et
         </button>
-        <button className="bg-primary-blue text-white font-bold py-3 px-8 text-sm rounded-lg hover:opacity-90 transition-opacity tracking-widest uppercase font-sextary shadow-sm">
+        <button className="bg-secondary-blue text-white font-bold py-3 px-8 text-sm rounded-lg hover:opacity-90 transition-opacity tracking-widest uppercase font-sextary shadow-sm">
           Ayarları Uygula
         </button>
       </div>
