@@ -8,7 +8,6 @@ export default function Buttons() {
                 <Link to="/" className="cursor-pointer btn-hover-blue">Anasayfa</Link>
                 <button className="cursor-pointer btn-hover-blue">Hakkımızda</button>
                 <Link to="/iletisim" className="cursor-pointer btn-hover-blue">İletişim</Link>
-                <button className="cursor-pointer btn-hover-blue">Şikayet</button>
         </div>
             <div className='text-white bg-[#08b4fb] p-1 pr-3 pl-3 rounded-[30px] flex flex-row justify-between items-center gap-3'>
                 <Link to="/giris" className="cursor-pointer btn-hover-blue-secondary">

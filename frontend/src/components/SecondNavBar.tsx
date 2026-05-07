@@ -20,7 +20,7 @@ export default function SecondNavBar() {
                     <div>
 
                     </div>
-            <div className="text-black p-2 relative items-center justify-center flex bottom-1 flex-row gap-15 text-lg font-tertiary">
+            <div className="text-black p-2 relative items-center justify-center flex bottom-1 left-7 flex-row gap-15 text-lg font-tertiary">
                     <Link to="/" className="cursor-pointer btn-hover-blue">Anasayfa</Link>
                     <button className="cursor-pointer btn-hover-blue">Hakkımızda</button>
                     <button className="cursor-pointer btn-hover-blue">İletişim</button>

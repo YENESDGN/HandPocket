@@ -1,4 +1,4 @@
-import NavBar from '../components/NavBar';
+import SecondNavBar from '../components/SecondNavBar';
 import { useState } from 'react';
 
 export default function RequestPage() {
@@ -6,21 +6,7 @@ export default function RequestPage() {
 
     return (
         <>
-        <img 
-        className='absolute left-0 w-full h-full object-cover z-[-1] opacity-75 bg-cover bg-center blur-sm'
-        src="assets/RgLg_bg.png"
-        alt="Register-Login Background" />
-        <div className='border-b-1 border-thin relative h-[150px]'>
-            <div className='grid grid-cols-2 items-center justify-start gap-0'>
-                <div className='flex flex-row items-center justify-start gap-0'>
-                    <img 
-                        className='w-20 h-20 object-contain relative left-5 top-5'
-                        src="/assets/favicon.png" 
-                        alt="HandPocket Logo" />
-                </div>
-            </div>
-            <NavBar />
-        </div>
+        <SecondNavBar />
             <section className='grid grid-cols-[23%_77%] p-10 gap-10 items-start bg-dark-blue font-sextary'>
             <div className='bg-tertiary-blue w-full h-full rounded-xl p-4 flex flex-col gap-2 text-shadow-sm drop-shadow-[0_0_15px_rgba(0,0,0,0.7)]'>
                 <h1 className='text-white text-3xl font-extrabold pb-4 pt-2'>Yeni Kargo</h1>
@@ -83,11 +69,14 @@ export default function RequestPage() {
                         Paket Tutarını Hesapla
                     </button>
                 </div>
-                <div className='relative w-full h-[600px] bg-gray-200 rounded-xl overflow-hidden'>
-                    {/* Harita placeholder */}
-                    <div className='absolute inset-0 bg-gradient-to-br from-blue-100 to-gray-300 flex items-center justify-center'>
-                        <span className='text-gray-500 text-lg font-medium'>Harita Alanı</span>
-                    </div>
+                <div className='relative w-full h-[900px] rounded-xl overflow-hidden'>
+                    <iframe
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d385396.60516460294!2d28.682528!3d41.005369!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14caa7040068086b%3A0xe1ccfe98bc01b0d0!2zxLBzdGFuYnVsLCBUw7xya2l5ZQ!5e0!3m2!1str!2str!4v1234567890"
+                        className="w-full h-full border-0"
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                        title="Kargo Haritası"
+                    />
 
                     {/* Gizlenebilir Toggle Butonu */}
                     <button 
@@ -106,36 +95,26 @@ export default function RequestPage() {
 
                     {/* Hesaplama Paneli */}
                     {isPanelVisible && (
-                        <div className='absolute bottom-8 right-8 bg-white rounded-lg shadow-2xl z-10 font-tertiary max-w-xs w-80 overflow-hidden'>
-                            {/* Başlık */}
-                            <div className='bg-primary-blue text-white px-2 py-2'>
-                                <h3 className='font-extrabold text-lg tracking-wide'>HESAPLAMA SONUÇLARI</h3>
+                        <div className='absolute bottom-4 right-4 bg-white rounded-lg shadow-2xl z-10 font-tertiary w-56 overflow-hidden'>
+                            <div className='bg-primary-blue text-white px-3 py-1.5'>
+                                <h3 className='font-extrabold text-xs tracking-wide uppercase'>Hesaplama Sonuçları</h3>
                             </div>
-
-                            {/* İçerik */}
-                            <div className='p-4'>
-                                {/* Mesafe ve Süre - Alt Alta */}
-                                <div className='mb-4'>
-                                    <div className='mb-3'>
-                                        <span className='text-gray-600 text-xs block mb-1'>Mesafe</span>
-                                        <p className='text-[#808080] text-xl font-semibold'>1.2 KM</p>
-                                        <div className='w-full h-[3px] bg-primary-blue mt-1 rounded-xl'></div>
-                                    </div>
-                                    <div>
-                                        <span className='text-gray-600 text-xs block mb-1'>Süre</span>
-                                        <p className='text-[#808080] text-xl font-semibold'>1.2 KM</p>
-                                        <div className='w-full h-[3px] bg-primary-blue mt-1 rounded-xl'></div>
-                                    </div>
+                            <div className='px-3 py-2 flex flex-col gap-1.5'>
+                                <div>
+                                    <span className='text-gray-500 text-[10px] block'>Mesafe</span>
+                                    <p className='text-[#808080] text-sm font-semibold leading-tight'>1.2 KM</p>
+                                    <div className='w-full h-[2px] bg-primary-blue mt-0.5 rounded-xl' />
                                 </div>
-
-                                {/* Hesaplanan Ücret */}
-                                <div className='mb-4'>
-                                    <span className='text-dark-blue text-lg font-bold block mb-1'>Hesaplanan Ücret</span>
-                                    <p className='text-dark-blue text-3xl font-extrabold'>27 TL</p>
+                                <div>
+                                    <span className='text-gray-500 text-[10px] block'>Süre</span>
+                                    <p className='text-[#808080] text-sm font-semibold leading-tight'>15 dk</p>
+                                    <div className='w-full h-[2px] bg-primary-blue mt-0.5 rounded-xl' />
                                 </div>
-
-                                {/* Teslimat Oluştur Butonu */}
-                                <button className='btn-hover-shadow w-full bg-primary-blue text-white rounded px-4 py-3 font-extrabold text-lg tracking-wide uppercase'>
+                                <div>
+                                    <span className='text-dark-blue text-xs font-bold block'>Hesaplanan Ücret</span>
+                                    <p className='text-dark-blue text-xl font-extrabold leading-tight'>27 TL</p>
+                                </div>
+                                <button className='btn-hover-shadow w-full bg-primary-blue text-white rounded px-3 py-1.5 font-extrabold text-xs tracking-wide uppercase'>
                                     Teslimat Oluştur
                                 </button>
                             </div>
