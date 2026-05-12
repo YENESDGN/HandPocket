@@ -1,34 +1,41 @@
-import { Link } from 'react-router-dom'
+import { Link } from 'react-router-dom';
+import { useAuthStore } from '../store/auth';
 
 export default function SecondNavBar() {
-    return (
-        <>
-        <img 
-        className='absolute left-0 w-full h-full object-cover z-[-1] opacity-75 bg-cover bg-center blur-sm'
-        src="assets/RgLg_bg.png"
-        alt="Register-Login Background" />
-        <div className='border-b-1 border-thin relative h-[150px]'>
-            <div className='grid grid-cols-2 items-center justify-start gap-0'>
-                <div className='flex flex-row items-center justify-start gap-0'>
-                    <img 
-                        className='w-20 h-20 object-contain relative left-5 top-5'
-                        src="/assets/favicon.png" 
-                        alt="HandPocket Logo" />
-                </div>
-            </div>
-            <section className="grid grid-cols-3 gap-7 items-center justify-between relative bottom-15 font-tertiary">
-                    <div>
+    const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
 
-                    </div>
-            <div className="text-black p-2 relative items-center justify-center flex bottom-1 left-7 flex-row gap-15 text-lg font-tertiary">
-                    <Link to="/" className="cursor-pointer btn-hover-blue">Anasayfa</Link>
-                    <button className="cursor-pointer btn-hover-blue">Hakkımızda</button>
-                    <button className="cursor-pointer btn-hover-blue">İletişim</button>
+    return (
+        <nav className='profile-bg px-8 py-4 flex items-center justify-between font-tertiary'>
+            <div className='flex items-center gap-2'>
+                <img
+                    src="/assets/favicon.png"
+                    alt="HandPocket Logo"
+                    className='w-12 h-12 object-contain'
+                />
             </div>
-                <div className='w-24 h-24 bg-primary-blue  relative bottom-2 rounded-[1000px] left-80'>
+
+            <div className='flex gap-10 relative left-10 text-lg text-black'>
+                <Link to="/" className='btn-hover-blue'>Anasayfa</Link>
+                <Link to="/hakkimizda" className='btn-hover-blue'>Hakkımızda</Link>
+                <Link to="/iletisim" className='btn-hover-blue'>İletişim</Link>
+            </div>
+
+            {isLoggedIn ? (
+                <Link to="/profil">
+                    <div className='w-14 h-14 rounded-full overflow-hidden bg-gray-300 border-2 border-primary-blue'>
+                        <img
+                            src="/assets/favicon.png"
+                            alt="Profil"
+                            className='w-full h-full object-cover'
+                        />
+                    </div>
+                </Link>
+            ) : (
+                <div className='flex items-center gap-5 bg-secondary-blue rounded-full px-3 py-1'>
+                    <Link to="/giris" className='text-white text-sm btn-hover-blue-secondary'>Giriş Yap</Link>
+                    <Link to="/kayit" className='text-white text-sm btn-hover-blue-secondary'>Kayıt Ol</Link>
                 </div>
-            </section>
-        </div>
-        </>
-    )
+            )}
+        </nav>
+    );
 }

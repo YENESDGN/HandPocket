@@ -1,12 +1,14 @@
 import { useState } from 'react';
-import { Package, Settings, Shield, List, HelpCircle, LogOut } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Package, Settings, Shield, List, HelpCircle, LogOut, Wallet } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../store/auth';
 import SettingsPanel from '../components/settings';
 import SecurityPanel from '../components/Security';
 import PreferencesPanel from '../components/Preferences';
 import NeedHelpPanel from '../components/NeedHelp';
+import type { WalletTransaction } from '../types';
 
-type NavItem = 'teslimatlar' | 'ayarlar' | 'guvenlik' | 'tercihler' | 'yardim';
+type NavItem = 'teslimatlar' | 'ayarlar' | 'guvenlik' | 'tercihler' | 'yardim' | 'cuzdan';
 
 type DeliveryStatus = 'Başarılı' | 'Başarısız' | 'Bekliyor';
 
@@ -18,18 +20,20 @@ interface DeliveryRequest {
 }
 
 const successfulRequests: DeliveryRequest[] = [
-  { id: '#KRG-1', location: 'Akse Mah 415/2 Sok. No9. D.2', date: '24.09.2025', status: 'Başarılı' },
-  { id: '#KRG-2', location: 'Akse Mah 415/2 Sok. No9. D.2', date: '24.12.2025', status: 'Başarılı' },
+  { id: '#KRG-2', location: 'Üsküdar → Şişli',      date: '24.12.2025', status: 'Başarılı' },
+  { id: '#KRG-5', location: 'Sarıyer → Ataşehir',   date: '15.01.2026', status: 'Başarılı' },
 ];
 
 const failedRequests: DeliveryRequest[] = [
-  { id: '#KRG-1', location: 'Akse Mah 415/2 Sok. No9. D.2', date: '24.09.2025', status: 'Başarısız' },
-  { id: '#KRG-2', location: 'Akse Mah 415/2 Sok. No9. D.2', date: '24.12.2025', status: 'Başarısız' },
+  { id: '#KRG-6', location: 'Levent → Taksim',      date: '22.03.2026', status: 'Başarısız' },
 ];
 
 const pendingRequests: DeliveryRequest[] = [
-  { id: '#KRG-1', location: 'Akse Mah 415/2 Sok. No9. D.2', date: '24.09.2025', status: 'Bekliyor' },
-  { id: '#KRG-2', location: 'Akse Mah 415/2 Sok. No9. D.2', date: '24.12.2025', status: 'Bekliyor' },
+  { id: '#KRG-1', location: 'Kadıköy → Beşiktaş',  date: '24.09.2025', status: 'Bekliyor' },
+  { id: '#KRG-3', location: 'Bakırköy → Fatih',    date: '10.02.2026', status: 'Bekliyor' },
+  { id: '#KRG-4', location: 'Pendik → Maltepe',    date: '01.05.2026', status: 'Bekliyor' },
+  { id: '#KRG-7', location: 'Bağcılar → Zeytinburnu', date: '12.05.2026', status: 'Bekliyor' },
+  { id: '#KRG-8', location: 'Kartal → Kadıköy',    date: '30.04.2026', status: 'Bekliyor' },
 ];
 
 const statusStyles: Record<DeliveryStatus, string> = {
@@ -46,9 +50,9 @@ function StatusBadge({ status }: { status: DeliveryStatus }) {
   );
 }
 
-function DeliveryTable({ title, rows }: { title: string; rows: DeliveryRequest[] }) {
+function DeliveryTable({ title, rows, animClass }: { title: string; rows: DeliveryRequest[]; animClass?: string }) {
   return (
-    <div className="mb-6 rounded overflow-hidden border border-gray-200 shadow-sm">
+    <div className={`mb-6 rounded overflow-hidden border border-gray-200 shadow-sm${animClass ? ` ${animClass}` : ''}`}>
       <div className="bg-secondary-blue px-4 py-3">
         <span className="text-white font-bold font-sextary tracking-wide text-sm">{title}</span>
       </div>
@@ -69,8 +73,12 @@ function DeliveryTable({ title, rows }: { title: string; rows: DeliveryRequest[]
         </thead>
         <tbody>
           {rows.map((row, i) => (
-            <tr key={i} className="border-b border-gray-100 last:border-0">
-              <td className="px-4 py-3 text-gray-800">{row.id}</td>
+            <tr key={i} className="border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors cursor-pointer">
+              <td className="px-4 py-3">
+                <Link to={`/talep/${row.id.replace('#', '')}`} className="text-secondary-blue font-semibold hover:underline">
+                  {row.id}
+                </Link>
+              </td>
               <td className="px-4 py-3 text-gray-800">{row.location}</td>
               <td className="px-4 py-3 text-gray-800">{row.date}</td>
               <td className="px-4 py-3">
@@ -84,8 +92,82 @@ function DeliveryTable({ title, rows }: { title: string; rows: DeliveryRequest[]
   );
 }
 
+const walletBalance = 236;
+
+const mockTransactions: WalletTransaction[] = [
+  { id: 'tx-1', label: 'Teslimat Ödemesi #KRG-1', type: 'debit',  amount: 87,  date: '24.09.2025' },
+  { id: 'tx-2', label: 'Teslimat Ödemesi #KRG-2', type: 'debit',  amount: 53,  date: '24.12.2025' },
+  { id: 'tx-3', label: 'Bakiye Yükleme',          type: 'credit', amount: 500, date: '10.01.2026' },
+  { id: 'tx-4', label: 'Teslimat Ödemesi #KRG-3', type: 'debit',  amount: 124, date: '15.02.2026' },
+];
+
+const walletStats = [
+  { label: 'Toplam Harcama', value: '264 TL' },
+  { label: 'Toplam Teslimat', value: '3' },
+  { label: 'Ortalama Sipariş', value: '88 TL' },
+];
+
+function WalletPanel() {
+  return (
+    <div className='flex flex-col gap-6'>
+      <div className='bg-secondary-blue rounded-2xl p-8 flex items-center justify-between drop-shadow-[0_0_15px_rgba(0,0,0,0.3)] fade-in-up'>
+        <div>
+          <span className='text-white/70 text-sm block mb-1'>Mevcut Bakiye</span>
+          <span className='text-white font-bold text-5xl'>{walletBalance} TL</span>
+          <p className='text-white/50 text-xs mt-2'>Son güncelleme: 15.02.2026</p>
+        </div>
+        <div className='flex flex-col gap-2 items-end'>
+          <button className='bg-white text-secondary-blue font-bold px-6 py-2.5 rounded-full text-sm hover:bg-primary-blue hover:text-white transition-all active:scale-95'>
+            Bakiye Yükle
+          </button>
+          <button className='bg-white/15 border border-white/25 text-white font-semibold px-6 py-2.5 rounded-full text-sm hover:bg-white/25 transition-all active:scale-95'>
+            Para Çek
+          </button>
+        </div>
+      </div>
+
+      <div className='grid grid-cols-3 gap-4 fade-in-up-delay-1'>
+        {walletStats.map((s) => (
+          <div key={s.label} className='bg-white rounded-xl p-5 drop-shadow-[0_0_8px_rgba(0,0,0,0.1)]'>
+            <span className='text-gray-400 text-xs block mb-1'>{s.label}</span>
+            <span className='text-darker-blue font-bold text-2xl'>{s.value}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className='bg-white rounded-xl overflow-hidden drop-shadow-[0_0_8px_rgba(0,0,0,0.1)] fade-in-up-delay-2'>
+        <div className='bg-darker-blue px-5 py-3'>
+          <span className='text-white font-bold text-sm tracking-wide uppercase'>İşlem Geçmişi</span>
+        </div>
+        <table className='w-full text-sm font-sextary'>
+          <thead>
+            <tr className='border-b border-gray-100'>
+              <th className='text-left px-5 py-3 text-gray-500 font-semibold'>İşlem</th>
+              <th className='text-left px-5 py-3 text-gray-500 font-semibold'>Tarih</th>
+              <th className='text-right px-5 py-3 text-gray-500 font-semibold'>Tutar</th>
+            </tr>
+          </thead>
+          <tbody>
+            {mockTransactions.map((tx) => (
+              <tr key={tx.id} className='border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors'>
+                <td className='px-5 py-3 text-gray-800'>{tx.label}</td>
+                <td className='px-5 py-3 text-gray-400'>{tx.date}</td>
+                <td className={`px-5 py-3 text-right font-bold ${tx.type === 'credit' ? 'text-green-600' : 'text-red-500'}`}>
+                  {tx.type === 'credit' ? '+' : '−'}{tx.amount} TL
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 export default function ProfilePage() {
   const [activeNav, setActiveNav] = useState<NavItem>('teslimatlar');
+  const logout = useAuthStore((s) => s.logout);
+  const navigate = useNavigate();
 
   const navItemClass = (item: NavItem) =>
     `flex items-center gap-3 px-3 py-2.5 rounded text-sm text-left w-full transition-all ${
@@ -97,7 +179,7 @@ export default function ProfilePage() {
   return (
     <div className="profile-bg relative flex h-screen overflow-hidden font-sextary">
       {/* Sidebar */}
-      <aside className="w-52 bg-darker-blue flex flex-col flex-shrink-0">
+      <aside className="w-52 bg-darker-blue flex flex-col flex-shrink-0 profile-sidebar">
         {/* Profile section */}
         <div className="flex flex-col items-center pt-8 pb-6 px-4 border-b border-white/10">
           <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-white/30 mb-3">
@@ -119,19 +201,19 @@ export default function ProfilePage() {
 
         {/* Navigation menu */}
         <nav className="flex flex-col gap-1 px-3 py-4 flex-1 font-sextary">
-          <button className={navItemClass('teslimatlar')} onClick={() => setActiveNav('teslimatlar')}>
+          <button className={`${navItemClass('teslimatlar')} profile-nav-item`} onClick={() => setActiveNav('teslimatlar')} style={{ animationDelay: '0.05s' }}>
             <Package size={18} />
             Teslimatlar
           </button>
-          <button className={navItemClass('ayarlar')} onClick={() => setActiveNav('ayarlar')}>
+          <button className={`${navItemClass('ayarlar')} profile-nav-item`} onClick={() => setActiveNav('ayarlar')} style={{ animationDelay: '0.12s' }}>
             <Settings size={18} />
             Ayarlar
           </button>
-          <button className={navItemClass('guvenlik')} onClick={() => setActiveNav('guvenlik')}>
+          <button className={`${navItemClass('guvenlik')} profile-nav-item`} onClick={() => setActiveNav('guvenlik')} style={{ animationDelay: '0.19s' }}>
             <Shield size={18} />
             Güvenlik
           </button>
-          <button className={navItemClass('tercihler')} onClick={() => setActiveNav('tercihler')}>
+          <button className={`${navItemClass('tercihler')} profile-nav-item`} onClick={() => setActiveNav('tercihler')} style={{ animationDelay: '0.26s' }}>
             <List size={18} />
             Tercihler
           </button>
@@ -139,11 +221,19 @@ export default function ProfilePage() {
 
         {/* Bottom actions */}
         <div className="px-3 pb-6 flex flex-col gap-1 font-sextary">
-          <button className={navItemClass('yardim')} onClick={() => setActiveNav('yardim')}>
+          <button className={`${navItemClass('cuzdan')} profile-nav-item`} onClick={() => setActiveNav('cuzdan')} style={{ animationDelay: '0.33s' }}>
+            <Wallet size={18} />
+            Cüzdan
+          </button>
+          <button className={`${navItemClass('yardim')} profile-nav-item`} onClick={() => setActiveNav('yardim')} style={{ animationDelay: '0.40s' }}>
             <HelpCircle size={18} />
             Yardım Merkezi
           </button>
-          <button className="flex items-center gap-3 px-3 py-2.5 rounded text-red-400 btn-hover-shadow-blue text-sm text-left font-semibold w-full">
+          <button
+            className="flex items-center gap-3 px-3 py-2.5 rounded text-red-400 btn-hover-shadow-blue text-sm text-left font-semibold w-full profile-nav-item"
+            style={{ animationDelay: '0.47s' }}
+            onClick={() => { logout(); navigate('/'); }}
+          >
             <LogOut size={18} />
             Çıkış Yap
           </button>
@@ -153,29 +243,30 @@ export default function ProfilePage() {
       {/* Main content */}
       <div className="flex flex-col flex-1 overflow-hidden">
         {/* Top navbar */}
-        <header className="backdrop-blur-sm border-b border-gray-200 flex items-center justify-between px-8 py-5 flex-shrink-0">
+        <header className="backdrop-blur-sm border-b border-gray-200 flex items-center justify-between px-8 py-5 flex-shrink-0 profile-header">
           <div className="flex bg-items-center gap-2">
             <img src="/assets/favicon.png" alt="HandPocket" className="w-16 h-16 object-contain" />
           </div>
           <nav className="flex items-center gap-8 text-lg font-tertiary relative px-10">
             <Link to="/" className="text-gray-800 btn-hover-blue">Anasayfa</Link>
-            <button className="text-gray-800 btn-hover-blue">Hakkımızda</button>
+            <Link to="/hakkimizda" className="text-gray-800 btn-hover-blue">Hakkımızda</Link>
             <Link to="/iletisim" className="text-gray-800 btn-hover-blue">İletişim</Link>
           </nav>
         </header>
 
         {/* Page body */}
-        <main className="main-bg flex-1 overflow-y-auto p-8">
+        <main className="main-bg flex-1 overflow-y-auto p-8 profile-content">
           {activeNav === 'teslimatlar' && (
             <>
-              <DeliveryTable title="BAŞARILI TALEPLER"  rows={successfulRequests} />
-              <DeliveryTable title="BAŞARISIZ TALEPLER" rows={failedRequests} />
-              <DeliveryTable title="BEKLEYEN TALEPLER"  rows={pendingRequests} />
+              <DeliveryTable title="BAŞARILI TALEPLER"  rows={successfulRequests} animClass="delivery-table-1" />
+              <DeliveryTable title="BAŞARISIZ TALEPLER" rows={failedRequests}    animClass="delivery-table-2" />
+              <DeliveryTable title="BEKLEYEN TALEPLER"  rows={pendingRequests}   animClass="delivery-table-3" />
             </>
           )}
           {activeNav === 'ayarlar' && <SettingsPanel />}
           {activeNav === 'guvenlik' && <SecurityPanel />}
           {activeNav === 'tercihler' && <PreferencesPanel />}
+          {activeNav === 'cuzdan' && <WalletPanel />}
           {activeNav === 'yardim' && <NeedHelpPanel />}
         </main>
       </div>

@@ -5,7 +5,7 @@ export default function LandingPage() {
     return (
         <>
             <section className="grid grid-cols-2">
-                <div className="bg-[#08b4fb] w-full h-full grid grid-cols-1 text-white gap-20 p-10">
+                <div className="bg-[#08b4fb] w-full h-full grid grid-cols-1 text-white gap-20 p-10 landing-hero-left">
                     <div>
                         <img 
                         className="relative top-5"
@@ -34,7 +34,7 @@ export default function LandingPage() {
                          />
                     </div>
                 </div>
-                <div className="relative overflow-hidden">
+                <div className="relative overflow-hidden landing-hero-right">
                     <img
                     className="w-full h-full object-none"
                     src="../assets/bg_img.png"
@@ -50,21 +50,21 @@ export default function LandingPage() {
                         className="absolute top-5 left-1/2 -translate-x-1/2 w-2xl" 
                         src="../assets/Road.png" 
                         alt="Road Icon" />
-                        <div className="bg-secondary-blue text-white flex flex-col items-center pt-28 gap-5">
+                        <div className="bg-secondary-blue text-white flex flex-col items-center pt-28 gap-5 landing-feature-card-1">
                             <img 
                             src="../assets/Cargo_Icon.png" 
                             alt="Cargo Icon" />
                                 <h1 className="text-[3rem] leading-[3rem]">Gönderim <br /> Kolaylığı!</h1>
                             <p className="text-[1.5rem] leading-[1.5rem] p-2">Artık kargo göndermek için <br /> binbir türlü zahmete girmenize <br /> gerek yok.</p>
                         </div>
-                        <div className="bg-tertiary-blue flex flex-col items-center pt-29 gap-5">
+                        <div className="bg-tertiary-blue flex flex-col items-center pt-29 gap-5 landing-feature-card-2">
                             <img 
                             src="../assets/HandCargo_Icon.png" 
                             alt="HandCargo Icon" />
                             <h1 className="text-[3rem] leading-[3rem]">Zamanında <br /> Teslimat!</h1>
                             <p className="text-[1.5rem] leading-[1.5rem] p-2">Uygulamamız üzerinden teslimat talebi <br /> oluşturun ve gün içerisinde en kısa <br /> zamanda elinize veya dilediğiniz <br /> lokasyona ulaşsın!</p>
                         </div>
-                        <div className="bg-dark-blue flex flex-col items-center pt-29 gap-5">
+                        <div className="bg-dark-blue flex flex-col items-center pt-29 gap-5 landing-feature-card-3">
                             <img 
                             src="../assets/Customer_Icon.png"
                             alt="Customer Icon" />

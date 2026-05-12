@@ -85,3 +85,164 @@ button {
   background-attachment: fixed;
   background-repeat: no-repeat;
 }
+
+/* ─── Keyframes ─────────────────────────────────────────── */
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-36px); }
+  to   { opacity: 1; transform: translateX(0);     }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(36px); }
+  to   { opacity: 1; transform: translateX(0);    }
+}
+
+@keyframes slideInUp {
+  from { opacity: 0; transform: translateY(36px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.93); }
+  to   { opacity: 1; transform: scale(1);    }
+}
+
+@keyframes scaleOut {
+  from { opacity: 1; transform: scale(1);    }
+  to   { opacity: 0; transform: scale(0.93); }
+}
+
+/* ─── Global entrance helpers (shared across pages) ─────── */
+
+.fade-in-up         { animation: fadeInUp 0.55s ease-out           forwards; }
+.fade-in-up-delay-1 { animation: fadeInUp 0.55s ease-out 0.15s     forwards; opacity: 0; }
+.fade-in-up-delay-2 { animation: fadeInUp 0.55s ease-out 0.30s     forwards; opacity: 0; }
+.fade-in-up-delay-3 { animation: fadeInUp 0.55s ease-out 0.45s     forwards; opacity: 0; }
+
+/* ─── LandingPage ────────────────────────────────────────── */
+
+.landing-hero-left        { animation: slideInLeft  0.60s ease-out           forwards; }
+.landing-hero-right       { animation: slideInRight 0.60s ease-out 0.10s     forwards; opacity: 0; }
+.landing-feature-card-1   { animation: fadeInUp     0.50s ease-out 0.20s     forwards; opacity: 0; }
+.landing-feature-card-2   { animation: fadeInUp     0.50s ease-out 0.35s     forwards; opacity: 0; }
+.landing-feature-card-3   { animation: fadeInUp     0.50s ease-out 0.50s     forwards; opacity: 0; }
+
+/* ─── AuthPage ───────────────────────────────────────────── */
+
+.auth-form-left           { animation: slideInLeft  0.45s ease-out           forwards; }
+.auth-form-right          { animation: slideInRight 0.45s ease-out 0.10s     forwards; opacity: 0; }
+
+/* ─── RequestPage ────────────────────────────────────────── */
+
+.request-form-panel       { animation: slideInLeft  0.40s ease-out           forwards; }
+.request-map              { animation: fadeInUp     0.50s ease-out 0.10s     forwards; opacity: 0; }
+
+/* ─── Contact ────────────────────────────────────────────── */
+
+.contact-map              { animation: fadeInUp     0.50s ease-out           forwards; }
+.contact-form             { animation: slideInLeft  0.45s ease-out 0.15s     forwards; opacity: 0; }
+.contact-info             { animation: slideInRight 0.45s ease-out 0.25s     forwards; opacity: 0; }
+
+/* ─── ProfilePage ────────────────────────────────────────── */
+
+.profile-sidebar          { animation: slideInLeft  0.40s ease-out           forwards; }
+.profile-header           { animation: fadeInUp     0.35s ease-out           forwards; }
+.profile-content          { animation: fadeInUp     0.45s ease-out 0.15s     forwards; opacity: 0; }
+
+/* ─── RecieverPage ───────────────────────────────────────── */
+
+.receiver-panel           { animation: slideInLeft  0.40s ease-out           forwards; }
+.receiver-map             { animation: fadeInUp     0.50s ease-out 0.10s     forwards; opacity: 0; }
+.receiver-list            { animation: slideInRight 0.40s ease-out 0.15s     forwards; opacity: 0; }
+.receiver-content-update  { animation: fadeInUp     0.18s ease-out           forwards; }
+
+/* ─── TrackingPage ───────────────────────────────────────── */
+
+.tracking-status-card  { animation: slideInLeft 0.40s ease-out           forwards; }
+.tracking-cargo-card   { animation: slideInLeft 0.40s ease-out 0.15s     forwards; opacity: 0; }
+.tracking-courier-card { animation: slideInLeft 0.40s ease-out 0.28s     forwards; opacity: 0; }
+.tracking-map          { animation: fadeInUp    0.50s ease-out 0.10s     forwards; opacity: 0; }
+
+/* ─── NavigationPage ─────────────────────────────────────── */
+
+.nav-turn-card       { animation: slideInLeft  0.40s ease-out           forwards; }
+.nav-arrival-card    { animation: slideInLeft  0.40s ease-out 0.15s     forwards; opacity: 0; }
+.nav-timeline-panel  { animation: slideInRight 0.40s ease-out           forwards; }
+.nav-cargo-specs     { animation: slideInUp    0.40s ease-out           forwards; }
+.nav-action-buttons  { animation: slideInUp    0.40s ease-out 0.15s     forwards; opacity: 0; }
+
+/* ─── AboutUs ────────────────────────────────────────────── */
+
+.about-header       { animation: fadeInUp    0.35s ease-out           forwards; }
+.about-left-panel   { animation: slideInLeft 0.50s ease-out           forwards; }
+.about-right-panel  { animation: slideInRight 0.50s ease-out 0.10s   forwards; opacity: 0; }
+.about-stat-card    { animation: fadeInUp    0.40s ease-out           forwards; opacity: 0; }
+.about-stat-card:nth-child(1) { animation-delay: 0.25s; }
+.about-stat-card:nth-child(2) { animation-delay: 0.35s; }
+.about-stat-card:nth-child(3) { animation-delay: 0.45s; }
+.about-stat-card:nth-child(4) { animation-delay: 0.55s; }
+
+/* ─── ProfilePage sidebar nav items ─────────────────────── */
+
+.profile-nav-item              { animation: fadeInUp 0.28s ease-out forwards; opacity: 0; }
+.profile-nav-item:nth-child(1) { animation-delay: 0.05s; }
+.profile-nav-item:nth-child(2) { animation-delay: 0.12s; }
+.profile-nav-item:nth-child(3) { animation-delay: 0.19s; }
+.profile-nav-item:nth-child(4) { animation-delay: 0.26s; }
+.profile-nav-item:nth-child(5) { animation-delay: 0.33s; }
+
+/* ─── Teslimatlar (DeliveryTable) ────────────────────────── */
+
+.delivery-table-1 { animation: fadeInUp 0.40s ease-out 0.05s forwards; opacity: 0; }
+.delivery-table-2 { animation: fadeInUp 0.40s ease-out 0.18s forwards; opacity: 0; }
+.delivery-table-3 { animation: fadeInUp 0.40s ease-out 0.31s forwards; opacity: 0; }
+
+/* ─── SettingsPanel ──────────────────────────────────────── */
+
+.settings-card-left   { animation: slideInLeft  0.40s ease-out           forwards; }
+.settings-card-right  { animation: slideInRight 0.40s ease-out 0.10s     forwards; opacity: 0; }
+.settings-card-bottom { animation: fadeInUp     0.40s ease-out 0.20s     forwards; opacity: 0; }
+.settings-danger      { animation: fadeInUp     0.40s ease-out 0.30s     forwards; opacity: 0; }
+
+/* ─── SecurityPanel ──────────────────────────────────────── */
+
+.security-left  { animation: slideInLeft  0.40s ease-out           forwards; }
+.security-right { animation: slideInRight 0.40s ease-out 0.10s     forwards; opacity: 0; }
+
+/* ─── PreferencesPanel ───────────────────────────────────── */
+
+.prefs-left    { animation: slideInLeft  0.40s ease-out           forwards; }
+.prefs-right   { animation: slideInRight 0.40s ease-out 0.10s     forwards; opacity: 0; }
+.prefs-actions { animation: fadeInUp     0.35s ease-out 0.20s     forwards; opacity: 0; }
+
+/* ─── NeedHelpPanel ──────────────────────────────────────── */
+
+.help-hero               { animation: fadeInUp 0.40s ease-out           forwards; }
+.help-card               { animation: fadeInUp 0.40s ease-out           forwards; opacity: 0; }
+.help-card:nth-child(1)  { animation-delay: 0.15s; }
+.help-card:nth-child(2)  { animation-delay: 0.25s; }
+.help-card:nth-child(3)  { animation-delay: 0.35s; }
+.help-contact            { animation: fadeInUp 0.40s ease-out 0.45s     forwards; opacity: 0; }
+
+/* ─── ProofOfDeliveryModal ───────────────────────────────── */
+
+.modal-backdrop         { animation: fadeIn   0.22s ease-out forwards; }
+.modal-backdrop.closing { animation: fadeOut  0.18s ease-out forwards; }
+.modal-card             { animation: scaleIn  0.25s ease-out forwards; }
+.modal-card.closing     { animation: scaleOut 0.18s ease-out forwards; }

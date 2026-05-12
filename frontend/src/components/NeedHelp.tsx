@@ -36,7 +36,7 @@ export default function NeedHelpPanel() {
     <div className="flex flex-col gap-6 font-sextary">
 
       {/* Hero banner */}
-      <div className="rounded-lg overflow-hidden shadow-md bg-dark-blue px-10 py-12 flex flex-col items-center gap-5 text-center">
+      <div className="rounded-lg overflow-hidden shadow-md bg-dark-blue px-10 py-12 flex flex-col items-center gap-5 text-center help-hero">
         <h1 className="text-white font-bold text-3xl tracking-wide font-sextary">
           Bugün size nasıl yardımcı olabiliriz?
         </h1>
@@ -58,7 +58,7 @@ export default function NeedHelpPanel() {
       {/* Category cards */}
       <div className="grid grid-cols-3 gap-6">
         {categories.map((cat) => (
-          <div key={cat.title} className="rounded-lg overflow-hidden shadow-md bg-white flex flex-col">
+          <div key={cat.title} className="rounded-lg overflow-hidden shadow-md bg-white flex flex-col help-card">
             <div className="px-7 pt-7 pb-4">
               <div className="w-12 h-12 rounded-lg bg-primary-blue/10 border border-primary-blue/20 flex items-center justify-center mb-4">
                 {cat.icon}
@@ -82,7 +82,7 @@ export default function NeedHelpPanel() {
       </div>
 
       {/* Still need help */}
-      <div className="rounded-lg overflow-hidden shadow-md bg-darker-blue px-10 py-8 flex items-center justify-between gap-8">
+      <div className="rounded-lg overflow-hidden shadow-md bg-darker-blue px-10 py-8 flex items-center justify-between gap-8 help-contact">
         <div className="flex items-center gap-5">
           <div className="flex gap-3">
             <div className="w-12 h-12 rounded-lg bg-dark-blue flex items-center justify-center">

@@ -13,7 +13,7 @@ export default function DeliveryAmountCard({
 }: DeliveryAmountCardProps) {
     return (
         <div className='rounded-xl overflow-hidden mt-2 drop-shadow-[0_0_10px_rgba(0,0,0,0.4)]'>
-            <div className='bg-darker-blue px-4 py-2'>
+            <div className='bg-dark-blue px-4 py-2'>
                 <h2 className='text-white font-extrabold text-sm tracking-widest uppercase'>
                     Teslimat Miktarı
                 </h2>

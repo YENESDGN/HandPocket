@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 
 export default function ReceiverNavBar() {
     return (
-        <nav className='bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between font-tertiary'>
+        <nav className='profile-bg px-8 py-4 flex items-center justify-between font-tertiary'>
             <div className='flex items-center gap-2'>
                 <img
                     src="/assets/favicon.png"
@@ -12,8 +12,8 @@ export default function ReceiverNavBar() {
             </div>
 
             <div className='flex gap-10 text-lg text-black'>
-                <button className='btn-hover-blue'>Hakkımızda</button>
-                <button className='btn-hover-blue'>Şikayet</button>
+                <Link to="/" className='btn-hover-blue'>Anasayfa</Link>
+                <Link to="/hakkimizda" className='btn-hover-blue'>Hakkımızda</Link>
                 <Link to="/iletisim" className='btn-hover-blue'>İletişim</Link>
             </div>
 

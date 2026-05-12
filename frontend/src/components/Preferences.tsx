@@ -41,7 +41,7 @@ export default function PreferencesPanel() {
       <div className="flex gap-6 items-start">
 
         {/* Left column */}
-        <div className="flex flex-col gap-6 flex-[3]">
+        <div className="flex flex-col gap-6 flex-[3] prefs-left">
 
           {/* Görsel Arayüz */}
           <div className="rounded-lg overflow-hidden shadow-md">
@@ -134,7 +134,7 @@ export default function PreferencesPanel() {
         </div>
 
         {/* Right column */}
-        <div className="flex-[2] self-stretch flex flex-col">
+        <div className="flex-[2] self-stretch flex flex-col prefs-right">
 
           {/* Bildirim Kanalları */}
           <div className="rounded-lg overflow-hidden shadow-md flex flex-col flex-1">
@@ -170,7 +170,7 @@ export default function PreferencesPanel() {
       </div>
 
       {/* Bottom action bar */}
-      <div className="flex items-center justify-end gap-4 pt-2">
+      <div className="flex items-center justify-end gap-4 pt-2 prefs-actions">
         <button className="text-dark-blue text-sm font-semibold font-sextary hover:text-darker-blue transition-colors px-4 py-2">
           Değişiklikleri İptal Et
         </button>

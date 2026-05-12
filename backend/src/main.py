@@ -1,0 +1,38 @@
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from .database import create_db_and_tables
+from .routers import tasks, users, reviews, disputes, locations
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    create_db_and_tables()
+    yield
+
+
+app = FastAPI(
+    title="HandPocket API",
+    version="1.0.0",
+    description="Kargo talep, takip ve teslimat yönetim API'si",
+    lifespan=lifespan,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Restrict to your domain in production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(users.router)
+app.include_router(tasks.router)
+app.include_router(reviews.router)
+app.include_router(disputes.router)
+app.include_router(locations.router)
+
+
+@app.get("/health", tags=["health"])
+def health():
+    return {"status": "ok"}

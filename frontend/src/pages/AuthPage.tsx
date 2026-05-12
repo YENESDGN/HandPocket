@@ -1,5 +1,10 @@
 import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Mail, Lock, User, ArrowRight, ShieldCheck } from 'lucide-react';
 import NavBar from '../components/NavBar';
+import { useAuthStore } from '../store/auth';
+
+type UserRole = 'sender' | 'courier';
 
 interface AuthPageProps {
     initialForm?: 'login' | 'register';
@@ -7,157 +12,264 @@ interface AuthPageProps {
 
 export default function AuthPage({ initialForm = 'login' }: AuthPageProps) {
     const [activeForm, setActiveForm] = useState<'login' | 'register'>(initialForm);
+    const [registerRole, setRegisterRole] = useState<UserRole>('sender');
+    const login = useAuthStore((s) => s.login);
+    const navigate = useNavigate();
+
+    const handleLogin = (e: React.FormEvent) => {
+        e.preventDefault();
+        const savedRole = (localStorage.getItem('hp_role') as UserRole) ?? 'sender';
+        login(savedRole);
+        navigate('/profil');
+    };
+
+    const handleRegister = (e: React.FormEvent) => {
+        e.preventDefault();
+        localStorage.setItem('hp_role', registerRole);
+        login(registerRole);
+        navigate('/profil');
+    };
 
     return (
-        <>
-        <img 
-        className='absolute left-0 w-full h-full object-cover z-[-1] opacity-75 bg-cover bg-center blur-sm'
-        src="assets/RgLg_bg.png"
-        alt="Register-Login Background" />
-        <div className='border-b-1 border-thin relative h-[150px]'>
-            <div className='grid grid-cols-2 items-center justify-start gap-0'>
-                <div className='flex flex-row items-center justify-start gap-0'>
-                    <img 
-                        className='w-20 h-20 object-contain relative left-5 top-5'
-                        src="/assets/favicon.png" 
-                        alt="HandPocket Logo" />
+        <div className="relative min-h-screen overflow-hidden">
+            {/* Background */}
+            <img
+                className="absolute inset-0 w-full h-full object-cover z-0 opacity-75 blur-sm"
+                src="/assets/RgLg_bg.png"
+                alt=""
+            />
+            <div className="absolute inset-0 bg-darker-blue/40 z-0" />
+
+            {/* NavBar */}
+            <div className="relative flex flex-col justify-between border-b bg-white/85 border-white/70 bottom-4 h-[130px]">
+                <div className="flex items-center h-full px-6">
+                    <img
+                        className="w-16 h-16 relative top-3 object-contain"
+                        src="/assets/favicon.png"
+                        alt="HandPocket Logo"
+                    />
+                </div>
+                <NavBar />
+            </div>
+
+            {/* Centered Card */}
+            <div className="relative z-10 flex items-center justify-center min-h-[calc(100vh-80px)] px-4 py-10">
+                <div className="w-full max-w-[460px] fade-in-up">
+
+                    {/* Brand */}
+                    <div className="flex flex-col items-center mb-8">
+                        <div className="w-20 h-20 bg-white border-2 border-secondary-blue/30 rounded-3xl flex items-center justify-center mb-3">
+                            <img src="/assets/favicon.png" alt="HandPocket Logo" className="w-16 h-16 object-contain" />
+                        </div>
+                        <h1 className="text-3xl font-bold text-white tracking-tight font-tertiary">HandPocket</h1>
+                        <p className="text-sm text-white/60 uppercase tracking-widest mt-1 font-secondary">
+                            Hızlı & Güvenli Kargo Platformu
+                        </p>
+                    </div>
+
+                    {/* Card */}
+                    <div className="bg-primary-blue border border-white/20 rounded-2xl shadow-2xl shadow-black/20 p-8">
+
+                        {activeForm === 'login' ? (
+                            <div key="login" className="fade-in-up">
+                                <header className="mb-7">
+                                    <h2 className="text-2xl font-bold text-white font-tertiary">Giriş Yap</h2>
+                                    <p className="text-sm text-white/80 mt-1">Hesabınıza erişmek için bilgilerinizi girin</p>
+                                </header>
+
+                                <form onSubmit={handleLogin} className="space-y-5">
+                                    <div className="space-y-1">
+                                        <label className="block text-xs font-semibold text-white uppercase tracking-wider">E-posta</label>
+                                        <div className="relative">
+                                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-blue" size={17} />
+                                            <input
+                                                type="email"
+                                                name="email"
+                                                placeholder="ornek@mail.com"
+                                                required
+                                                className="w-full pl-10 pr-4 py-3 bg-white border border-white/20 rounded-xl text-sm text-darker-blue placeholder:text-dark-blue/50 focus:outline-none focus:ring-2 focus:ring-primary-blue/50 focus:border-primary-blue transition-all"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <div className="flex justify-between items-center">
+                                            <label className="block text-xs font-semibold text-white uppercase tracking-wider">Parola</label>
+                                            <Link to="/sifremi-unuttum" className="text-xs text-white hover:text-white/70 font-semibold transition-colors">
+                                                Şifremi Unuttum
+                                            </Link>
+                                        </div>
+                                        <div className="relative">
+                                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-blue" size={17} />
+                                            <input
+                                                type="password"
+                                                name="password"
+                                                placeholder="••••••••"
+                                                required
+                                                className="w-full pl-10 pr-4 py-3 bg-white border border-white/20 rounded-xl text-sm text-darker-blue placeholder:text-dark-blue/50 focus:outline-none focus:ring-2 focus:ring-primary-blue/50 focus:border-primary-blue transition-all"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        type="submit"
+                                        className="w-full bg-white hover:bg-white/80 hover:text-primary-blue text-primary-blue font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-primary-blue/25 active:scale-[0.98] transition-all mt-2"
+                                    >
+                                        Giriş Yap
+                                        <ArrowRight size={18} />
+                                    </button>
+                                </form>
+
+                                <div className="mt-7 pt-6 border-t border-white/10 text-center">
+                                    <p className="text-sm text-white/80">
+                                        Hesabın yok mu?{' '}
+                                        <button
+                                            onClick={() => setActiveForm('register')}
+                                            className="text-white font-semibold hover:text-white/70 transition-colors"
+                                        >
+                                            Kayıt Ol
+                                        </button>
+                                    </p>
+                                </div>
+                            </div>
+                        ) : (
+                            <div key="register" className="fade-in-up">
+                                <header className="mb-7">
+                                    <h2 className="text-2xl font-bold text-white font-tertiary">Kayıt Ol</h2>
+                                    <p className="text-sm text-white/80 mt-1">Platforma katılmak için bilgilerinizi girin</p>
+                                </header>
+
+                                <form onSubmit={handleRegister} className="space-y-5">
+                                    <div className="space-y-1">
+                                        <label className="block text-xs font-semibold text-white uppercase tracking-wider">Ad Soyad</label>
+                                        <div className="relative">
+                                            <User className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-blue" size={17} />
+                                            <input
+                                                type="text"
+                                                name="fullName"
+                                                placeholder="Ad Soyad"
+                                                required
+                                                className="w-full pl-10 pr-4 py-3 bg-white border border-white/20 rounded-xl text-sm text-darker-blue placeholder:text-dark-blue/50 focus:outline-none focus:ring-2 focus:ring-primary-blue/50 focus:border-primary-blue transition-all"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <label className="block text-xs font-semibold text-white uppercase tracking-wider">E-posta</label>
+                                        <div className="relative">
+                                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-blue" size={17} />
+                                            <input
+                                                type="email"
+                                                name="email"
+                                                placeholder="ornek@mail.com"
+                                                required
+                                                className="w-full pl-10 pr-4 py-3 bg-white border border-white/20 rounded-xl text-sm text-darker-blue placeholder:text-dark-blue/50 focus:outline-none focus:ring-2 focus:ring-primary-blue/50 focus:border-primary-blue transition-all"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <label className="block text-xs font-semibold text-white/60 uppercase tracking-wider">E-posta Tekrar</label>
+                                        <div className="relative">
+                                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-blue" size={17} />
+                                            <input
+                                                type="email"
+                                                name="emailConfirm"
+                                                placeholder="ornek@mail.com"
+                                                required
+                                                className="w-full pl-10 pr-4 py-3 bg-white border border-white/20 rounded-xl text-sm text-darker-blue placeholder:text-dark-blue/50 focus:outline-none focus:ring-2 focus:ring-primary-blue/50 focus:border-primary-blue transition-all"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <label className="block text-xs font-semibold text-white uppercase tracking-wider">Parola</label>
+                                        <div className="relative">
+                                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-blue" size={17} />
+                                            <input
+                                                type="password"
+                                                name="password"
+                                                placeholder="••••••••"
+                                                required
+                                                className="w-full pl-10 pr-4 py-3 bg-white border border-white/20 rounded-xl text-sm text-darker-blue placeholder:text-dark-blue/50 focus:outline-none focus:ring-2 focus:ring-primary-blue/50 focus:border-primary-blue transition-all"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <label className="block text-xs font-semibold text-white uppercase tracking-wider">Parola Tekrar</label>
+                                        <div className="relative">
+                                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-blue" size={17} />
+                                            <input
+                                                type="password"
+                                                name="passwordConfirm"
+                                                placeholder="••••••••"
+                                                required
+                                                className="w-full pl-10 pr-4 py-3 bg-white border border-white/20 rounded-xl text-sm text-darker-blue placeholder:text-dark-blue/50 focus:outline-none focus:ring-2 focus:ring-primary-blue/50 focus:border-primary-blue transition-all"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Role Toggle */}
+                                    <div className="space-y-2">
+                                        <label className="block text-xs font-semibold text-primary-blue uppercase tracking-wider">Hesap Türü</label>
+                                        <div className="flex rounded-xl overflow-hidden border border-white/20 bg-white">
+                                            <button
+                                                type="button"
+                                                onClick={() => setRegisterRole('sender')}
+                                                className={`flex-1 py-3 text-sm font-bold transition-all duration-200 ${
+                                                    registerRole === 'sender'
+                                                        ? 'bg-primary-blue text-white shadow-sm'
+                                                        : 'text-primary-blue hover:text-primary-blue/70'
+                                                }`}
+                                            >
+                                                Gönderici
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setRegisterRole('courier')}
+                                                className={`flex-1 py-3 text-sm font-bold transition-all duration-200 ${
+                                                    registerRole === 'courier'
+                                                        ? 'bg-primary-blue text-white shadow-sm'
+                                                        : 'text-primary-blue hover:text-primary-blue/70'
+                                                }`}
+                                            >
+                                                Kurye
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        type="submit"
+                                        className="w-full bg-white hover:bg-white/80 hover:text-primary-blue text-primary-blue font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-primary-blue/25 active:scale-[0.98] transition-all mt-2"
+                                    >
+                                        Hesap Oluştur
+                                        <ArrowRight size={18} />
+                                    </button>
+                                </form>
+
+                                <div className="mt-7 pt-6 border-t border-white/10 text-center">
+                                    <p className="text-sm text-white/80">
+                                        Zaten hesabın var mı?{' '}
+                                        <button
+                                            onClick={() => setActiveForm('login')}
+                                            className="text-white font-semibold hover:text-white/70 transition-colors"
+                                        >
+                                            Giriş Yap
+                                        </button>
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Footer hint */}
+                    <div className="mt-6 flex items-center justify-center gap-1 text-white/40">
+                        <ShieldCheck size={14} />
+                        <p className="text-xs uppercase tracking-widest">256-bit şifreli güvenli bağlantı</p>
+                    </div>
                 </div>
             </div>
-            <NavBar />
         </div>
-        <section className="grid grid-cols-2 max-w-6xl mx-auto my-10 mt-0 p-10 font-tertiary font-bold pt-20 relative z-10">
-            <div 
-                onClick={() => setActiveForm('login')}
-                className={`cursor-pointer rounded-xl p-8 transition-all duration-300 ${
-                    activeForm === 'login' 
-                        ? 'bg-white border-2 border-primary-blue' 
-                        : 'bg-dark-blue'
-                }`}
-            >
-                {activeForm === 'login' ? (
-                    <form className="flex flex-col gap-8 min-h-[700px] justify-between">
-                        <div className="flex flex-col gap-8">
-                            <h2 className="text-2xl font-bold font-tertiary text-center mb-4">Giriş Yap</h2>
-                            <div className="flex flex-col gap-1">
-                                <span>Kullanıcı Adı</span>
-                                <input 
-                                    type="text" 
-                                    name="username" 
-                                    placeholder="Kullanıcı Adı"
-                                    className="text-white border border-gray-300 bg-dark-blue rounded-full p-2"
-                                />
-                            </div>
-                            <div className="flex flex-col gap-1">
-                                <span>E-posta</span>
-                                <input 
-                                    type="email" 
-                                    name="email" 
-                                    placeholder="E-posta"
-                                    className="text-white border border-gray-300 bg-dark-blue rounded-full p-2"
-                                />
-                            </div>
-                            <div className="flex flex-col gap-1">
-                                <span>Parola</span>
-                                <input 
-                                    type="password" 
-                                    name="password" 
-                                    placeholder="Parola"
-                                    className="text-white border border-gray-300 bg-dark-blue rounded-full p-2"
-                                />
-                            </div>
-                        </div>
-                        <div className="flex justify-end">
-                            <button 
-                                type="submit" 
-                                className="inline-block px-6 py-2 bg-dark-blue rounded-full text-white btn-hover-shadow"
-                            >
-                                Giriş Yap
-                            </button>
-                        </div>
-                    </form>
-                ) : (
-                    <div className="flex items-center justify-center h-full min-h-[400px]">
-                        <h2 className="text-white text-5xl font-bold font-tertiary text-center">
-                            Zaten Hesabın mı Var? Giriş Yap!
-                        </h2>
-                    </div>
-                )}
-            </div>
-            
-            <div 
-                onClick={() => setActiveForm('register')}
-                className={`cursor-pointer rounded-xl p-8 ${
-                    activeForm === 'register' 
-                        ? 'bg-white border-2 border-primary-blue' 
-                        : 'bg-dark-blue'
-                }`}
-            >
-                {activeForm === 'register' ? (
-                    <form className="flex flex-col gap-8 min-h-[600px] justify-between">
-                        <h2 className="text-2xl font-bold font-tertiary text-center mb-4">Kayıt Ol</h2>
-                        <div className="flex flex-col gap-1">
-                            <span>Kullanıcı Adı</span>
-                            <input 
-                                type="text" 
-                                name="username" 
-                                placeholder="Kullanıcı Adı"
-                                className="text-white border border-gray-300 bg-dark-blue rounded-full p-2"
-                            />
-                        </div>
-                        <div className="flex flex-col gap-1">
-                            <span>E-posta</span>
-                            <input 
-                                type="email" 
-                                name="email" 
-                                placeholder="E-posta"
-                                className="text-white border border-gray-300 bg-dark-blue rounded-full p-2"
-                            />
-                        </div>
-                        <div className="flex flex-col gap-1">
-                            <span>Tekrar E-posta</span>
-                            <input 
-                                type="email" 
-                                name="emailConfirm" 
-                                placeholder="Tekrar E-Posta"
-                                className="text-white border border-gray-300 bg-dark-blue rounded-full p-2"
-                            />
-                        </div>
-                        <div className="flex flex-col gap-1">
-                            <span>Parola</span>
-                            <input 
-                                type="password" 
-                                name="password" 
-                                placeholder="Parola"
-                                className="text-white border border-gray-300 bg-dark-blue rounded-full p-2"
-                            />
-                        </div>
-                        <div className="flex flex-col gap-1">
-                            <span>Tekrar Parola</span>
-                            <input 
-                                type="password" 
-                                name="passwordConfirm" 
-                                placeholder="Tekrar Parola"
-                                className="text-white border border-gray-300 bg-dark-blue rounded-full p-2"
-                            />
-                        </div>
-                        <div className="flex justify-end">
-                            <button 
-                                type="submit" 
-                                className="text-white inline-block px-6 py-2 bg-dark-blue rounded-full btn-hover-shadow"
-                            >
-                                Kayıt Ol
-                            </button>
-                        </div>
-                    </form>
-                ) : (
-                    <div className="flex items-center justify-center h-full min-h-[400px]">
-                        <h2 className="text-white text-5xl font-bold font-tertiary text-center">
-                            Hesabın mı Yok? Kayıt Ol!
-                        </h2>
-                    </div>
-                )}
-            </div>
-        </section>
-        </>
-    )
+    );
 }

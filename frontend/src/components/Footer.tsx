@@ -9,13 +9,12 @@ export default function FooterButtons() {
                     <img 
                     src="/assets/favicon.png"
                     alt="HandPocket Logo"
-                    className="w-30 h-30 object-contain" />
-                    <h1 className="text-2xl font-bold text-blue">HandPocket</h1>
+                    className="w-16 h-16 object-contain" />
+                    <h1 className="text-xl font-bold text-blue">HandPocket</h1>
                 </div>
 
-                <div className="flex flex-row gap-20 items-center text-xl justify-center">
-                    <h3 className="cursor-pointer btn-hover-blue">Hizmetler</h3>
-                    <h3 className="cursor-pointer btn-hover-blue">Hakkımızda</h3>
+                <div className="flex flex-row gap-20 items-center text-lg justify-center">
+                    <Link to="/hakkimizda" className="cursor-pointer btn-hover-blue">Hakkımızda</Link>
                     <Link to="/iletisim" className="cursor-pointer btn-hover-blue">İletişim</Link>
                 </div>
 

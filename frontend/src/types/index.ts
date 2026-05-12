@@ -59,3 +59,11 @@ export interface Transaction {
     comment?: string;
     created_at?: Date;
 }
+
+export interface WalletTransaction {
+    id: string;
+    label: string;
+    type: 'credit' | 'debit';
+    amount: number;
+    date: string;
+}

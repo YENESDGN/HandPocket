@@ -8,7 +8,7 @@ export default function RequestPage() {
         <>
         <SecondNavBar />
             <section className='grid grid-cols-[23%_77%] p-10 gap-10 items-start bg-dark-blue font-sextary'>
-            <div className='bg-tertiary-blue w-full h-full rounded-xl p-4 flex flex-col gap-2 text-shadow-sm drop-shadow-[0_0_15px_rgba(0,0,0,0.7)]'>
+            <div className='bg-tertiary-blue w-full h-full rounded-xl p-4 flex flex-col gap-2 text-shadow-sm drop-shadow-[0_0_15px_rgba(0,0,0,0.7)] request-form-panel'>
                 <h1 className='text-white text-3xl font-extrabold pb-4 pt-2'>Yeni Kargo</h1>
                     <div className='flex flex-col gap-1'>
                         <span className='text-white text-lg'>Kargo Adı</span>
@@ -69,7 +69,7 @@ export default function RequestPage() {
                         Paket Tutarını Hesapla
                     </button>
                 </div>
-                <div className='relative w-full h-[900px] rounded-xl overflow-hidden'>
+                <div className='relative w-full h-[900px] rounded-xl overflow-hidden request-map'>
                     <iframe
                         src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d385396.60516460294!2d28.682528!3d41.005369!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14caa7040068086b%3A0xe1ccfe98bc01b0d0!2zxLBzdGFuYnVsLCBUw7xya2l5ZQ!5e0!3m2!1str!2str!4v1234567890"
                         className="w-full h-full border-0"

@@ -31,7 +31,7 @@ export default function SecurityPanel() {
     <div className="flex gap-6 items-start font-sextary">
 
       {/* Left column */}
-      <div className="flex flex-col gap-6 flex-[3]">
+      <div className="flex flex-col gap-6 flex-[3] security-left">
 
         {/* Parola Güncelle */}
         <div className="rounded-2xl overflow-hidden shadow-md">
@@ -119,7 +119,7 @@ export default function SecurityPanel() {
       </div>
 
       {/* Right column — Aktif Oturumlar */}
-      <div className="flex-[2] rounded-lg overflow-hidden shadow-md self-start">
+      <div className="flex-[2] rounded-lg overflow-hidden shadow-md self-start security-right">
         <div className="bg-secondary-blue px-6 py-5 border-b border-primary-blue/20">
           <span className="text-white font-bold text-xl tracking-wide font-sextary">Aktif Oturumlar</span>
           <p className="text-white/80 text-xs mt-1 font-sextary">Hesabınızdaki oturum geçmişi.</p>

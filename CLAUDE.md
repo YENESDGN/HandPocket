@@ -44,9 +44,86 @@
 - bg-dark-blue arka plan
 - Text-white renk
 
-### RequestPage.tsx (148 satır)
-- Kargo talebi oluşturma sayfası
+### RequestPage.tsx (127 satır)
+- Kargo talebi oluşturma sayfası (gönderici rolü)
 - SecondNavBar kullanımı
+- 23/77 grid layout: sol form paneli + sağ Google Maps iframe
+- Sol: Kargo Adı, Başlangıç/Bitiş Konumu, Paket Fotoğrafı (opsiyonel), Ağırlık, Öncelik
+- Sağ harita: h-[850px] Google Maps iframe
+- Harita üstünde toggle butonu (isPanelVisible useState) + compact hesaplama paneli (w-56, absolute bottom-4 right-4)
+- Hesaplama paneli: Mesafe / Süre / Hesaplanan Ücret + "Teslimat Oluştur" butonu
+
+### RecieverPage.tsx (274 satır)
+- Kurye rolü için açık talepleri görme ve kabul etme sayfası
+- Route: /talep-al
+- 3-kolon grid: [22%_1fr_22%] — sol detay paneli + orta harita + sağ bekleyen talepler listesi
+- ReceiverNavBar + DeliveryAmountCard kullanımı
+- Sol panel: seçili talebin read-only alanları (Kargo Adı, Başlangıç, Bitiş, Ağırlık, Öncelik badge) + DeliveryAmountCard
+- Orta: h-[850px] Google Maps iframe
+- Sağ: kaydırılabilir bekleyen talepler listesi (bg-secondary-blue header, beyaz kartlar, aktif seçim ring)
+- availableRequests mock data (6 talep), useState ile seçili talep yönetimi
+- priorityLabel / priorityBadge yardımcı fonksiyonlar
+
+### TrackingPage.tsx (176 satır)
+- Gönderi canlı takip sayfası (gönderici rolü)
+- Route: /takip
+- ReceiverNavBar kullanımı
+- 23/77 grid: sol 3 kart + sağ tam yükseklik harita
+- Sol kartlar: Status Card (Gönderi ID + ETA + Mesafe), Cargo Details Card (Timeline: BAŞLANGIÇ→TESLİMAT + ağırlık/öncelik), Courier Card (ad, filo ID, araç/plaka, telefon butonu)
+- Sağ harita: h-[calc(100vh-160px)], pulsing kurye marker overlay (animate-ping + bg-secondary-blue)
+
+### DeliveryDetailPage.tsx (327 satır)
+- Tekil teslimat detay sayfası
+- Route: /talep/:id (useParams ile id okuma)
+- ReceiverNavBar kullanımı
+- 30/70 grid: sol 3 kart + sağ harita
+- Sol kartlar: ID+Status Card, Durum Zaman Çizelgesi (4-adım timeline: Talep → Kabul → Alındı → Teslim), Kargo Bilgileri (açıklama, ağırlık, öncelik, mesafe, güzergah)
+- StatusBadge inline component (renk kodlu, Lucide ikonlar)
+- statusOrder / statusSteps ile timeline render
+- Kabul durumunda "Canlı Takip" linki (/takip)
+- Bulunamayan ID için 404 fallback ekranı
+
+### NavigationPage.tsx (157 satır)
+- Kurye navigasyon sayfası (tam ekran harita)
+- Route: /navigasyon
+- Full-screen iframe harita (absolute inset-0)
+- Sol üst: Dönüş talimatı kartı (mesafe + talimat) + Tahmini varış / kalan km kartı
+- Sağ üst: Rota Zaman Çizelgesi paneli (Alım → Yolda → Varış → Teslim)
+- Alt: Kargo Özellikleri (ağırlık/mesafe/ID) + İptal / Tamamla butonları
+- ProofOfDeliveryModal entegrasyonu (useState showProofModal)
+
+### AboutUs.tsx (116 satır)
+- Hakkımızda sayfası
+- Route: /hakkimizda
+- SecondNavBar + Footer kullanımı
+- 2 kolonlu (md:flex-row): sol bg-secondary-blue + sağ bg-darker-blue
+- Sol: Misyon, Kuruluş (2024), Temel Değerler (Hız/Güvenlik/Güvenilirlik/Şeffaflık)
+- Sağ: İstatistik kartları (50K+ Teslimat, 81 Şehir, 4.9 Puan, 2K+ Kurye) + hero görsel + "Hemen Başla" CTA
+
+### ForgotPasswordPage.tsx (84 satır)
+- Şifre sıfırlama sayfası
+- Route: /sifremi-unuttum
+- Merkezi beyaz kart (max-w-md, rounded-2xl), bg-dark-blue arka plan
+- E-posta input → gönder → başarı durumu (sent useState)
+- Logo + başlık + açıklama metni, giriş sayfasına dön linki
+
+### NotFoundPage.tsx (36 satır)
+- 404 sayfası
+- Route: * (catch-all)
+- bg-dark-blue, TinyHp_Logo.png, "404" büyük metin
+- "Anasayfaya Dön" + "Geri Git" (useNavigate(-1)) butonları
+- fade-in-up animasyonu
+
+### AdminDashboard.tsx (268 satır)
+- Admin paneli
+- Route: /admin
+- ProfilePage ile aynı sidebar+main layout (profile-bg, relative flex h-screen)
+- Sidebar (bg-darker-blue, w-52): ShieldCheck ikon, Admin Paneli başlık, 3 nav: Genel Bakış/Kullanıcılar/Teslimatlar (Lucide ikonlar), Çıkış Yap
+- Header: logo sol + "Admin Paneli" merkez
+- AdminNav tipi: 'genel' | 'kullanicilar' | 'teslimatlar'
+- **Genel Bakış**: 4 stat kartı (Kullanıcı/Kurye/Teslimat/Gelir) + Son Teslimatlar tablosu + Son Kullanıcılar tablosu
+- **Kullanıcılar**: Tüm kullanıcılar tablosu (Ad, E-Posta, Rol badge, Bakiye, Puan, Durum, Yasakla/Kaldır butonu)
+- **Teslimatlar**: Tüm teslimatlar tablosu (ID, Açıklama, Güzergah, Mesafe, Ücret, Durum badge)
 
 ### Footer.tsx (27 satır) - eski FooterButtons
 - 3 kolonlu footer layout
@@ -122,20 +199,31 @@
 ```
 frontend/src/
 ├── components/
-│   ├── NavBar.tsx          (navigation + auth butonları)
-│   ├── SecondNavBar.tsx
-│   ├── Footer.tsx
-│   ├── ContactInfo.tsx     (iletişim bilgileri)
-│   ├── settings.tsx        (ProfilePage — Ayarlar sekmesi)
-│   ├── Security.tsx        (ProfilePage — Güvenlik sekmesi)
-│   ├── Preferences.tsx     (ProfilePage — Tercihler sekmesi)
-│   └── NeedHelp.tsx        (ProfilePage — Yardım Merkezi sekmesi)
+│   ├── NavBar.tsx               (LandingPage nav + Giriş/Kayıt butonları)
+│   ├── SecondNavBar.tsx         (blur-bg navbar — RequestPage, AboutUs)
+│   ├── ReceiverNavBar.tsx       (beyaz navbar — kurye/takip/detay sayfaları)
+│   ├── Footer.tsx               (3-kolon footer)
+│   ├── ContactInfo.tsx          (iletişim bilgileri — bg-dark-blue)
+│   ├── DeliveryAmountCard.tsx   (TESLİMAT MİKTARI kartı — RecieverPage)
+│   ├── ProofOfDeliveryModal.tsx (teslimat kanıtı modal — NavigationPage)
+│   ├── settings.tsx             (ProfilePage — Ayarlar sekmesi)
+│   ├── Security.tsx             (ProfilePage — Güvenlik sekmesi)
+│   ├── Preferences.tsx          (ProfilePage — Tercihler sekmesi)
+│   └── NeedHelp.tsx             (ProfilePage — Yardım Merkezi sekmesi)
 ├── pages/
-│   ├── LandingPage.tsx
-│   ├── AuthPage.tsx        (login/register)
-│   ├── Contact.tsx         (iletişim formu + harita)
-│   ├── RequestPage.tsx     (kargo talebi)
-│   └── ProfilePage.tsx     (kullanıcı profili — sidebar + tüm sekmeler)
+│   ├── LandingPage.tsx          (/)
+│   ├── AuthPage.tsx             (/giris, /kayit)
+│   ├── ForgotPasswordPage.tsx   (/sifremi-unuttum)
+│   ├── Contact.tsx              (/iletisim)
+│   ├── AboutUs.tsx              (/hakkimizda)
+│   ├── RequestPage.tsx          (/talep)
+│   ├── RecieverPage.tsx         (/talep-al)
+│   ├── DeliveryDetailPage.tsx   (/talep/:id)
+│   ├── TrackingPage.tsx         (/takip)
+│   ├── NavigationPage.tsx       (/navigasyon)
+│   ├── ProfilePage.tsx          (/profil)
+│   ├── AdminDashboard.tsx       (/admin)
+│   └── NotFoundPage.tsx         (* catch-all)
 └── types/
     └── index.ts
 
@@ -272,6 +360,38 @@ frontend/src/
 - [04/05] NeedHelp.tsx komponenti oluşturuldu (hero banner, 3 kategori kartı, "Hâlâ yardım" barı)
 - [04/05] ProfilePage.tsx — NavItem tipine 'yardim' eklendi, Yardım Merkezi butonu navItemClass'a bağlandı
 - [04/05] ProfilePage.tsx — tüm panel bileşenleri (settings, Security, Preferences, NeedHelp) import edildi ve activeNav ile koşullu render edildi
+- [07/05] RecieverPage.tsx oluşturuldu (kurye için açık talepleri listeleme ve kabul etme)
+- [07/05] ReceiverNavBar.tsx komponenti oluşturuldu (beyaz navbar, logo+metin, Hakkımızda/Şikayet/İletişim, profil avatarı)
+- [07/05] DeliveryAmountCard.tsx komponenti oluşturuldu (TESLİMAT MİKTARI kartı — Mesafe/Süre/Ücret + Kabul Et butonu)
+- [07/05] RequestPage.tsx + RecieverPage.tsx harita placeholder → Google Maps iframe ile değiştirildi
+- [07/05] Harita yükseklikleri h-[850px]'e çıkarıldı
+- [07/05] RequestPage.tsx hesaplama paneli kompakt hale getirildi (w-56, bottom-4 right-4, küçük tipografi)
+- [12/05] RecieverPage.tsx 3-kolon layout'a geçirildi (sol detay + orta harita + sağ bekleyen talepler listesi)
+- [12/05] TrackingPage.tsx oluşturuldu (canlı takip — Status/Cargo/Courier kartları + pulsing marker)
+- [12/05] DeliveryDetailPage.tsx oluşturuldu (/talep/:id — 4-adım timeline + kargo bilgileri + harita)
+- [12/05] NavigationPage.tsx oluşturuldu (tam ekran harita, turn-by-turn overlay, ProofOfDeliveryModal)
+- [12/05] ProofOfDeliveryModal.tsx komponenti oluşturuldu (fotoğraf upload + not alanı + onay)
+- [12/05] AboutUs.tsx oluşturuldu (misyon, istatistikler, CTA)
+- [12/05] ForgotPasswordPage.tsx oluşturuldu (e-posta → gönder → başarı durumu)
+- [12/05] NotFoundPage.tsx oluşturuldu (404 catch-all)
+- [12/05] AdminDashboard.tsx oluşturuldu (Genel Bakış / Kullanıcılar / Teslimatlar sekmeleri)
+- [12/05] App.tsx routes güncellendi (8 yeni route eklendi: /sifremi-unuttum, /talep/:id, /talep-al, /takip, /navigasyon, /hakkimizda, /admin, *)
+- [13/05] Backend tamamen iskeletlendi: FastAPI + SQLModel + Supabase mimarisi kuruldu
+- [13/05] backend/src/models/ oluşturuldu: user.py, task_model.py, review.py, dispute.py, location.py
+- [13/05] backend/src/routers/ oluşturuldu: users.py, tasks.py, reviews.py, disputes.py, locations.py
+- [13/05] backend/src/security.py: Supabase JWT doğrulama + get_current_user + require_role(*roles)
+- [13/05] backend/src/database.py: SQLModel engine + get_session dependency + create_db_and_tables
+- [13/05] backend/src/main.py: FastAPI app + CORS middleware + lifespan + tüm router'lar kayıt edildi
+- [13/05] backend/requirements.txt: fastapi, uvicorn, sqlmodel, psycopg2-binary, python-jose, python-dotenv
+- [13/05] backend/.env: DATABASE_URL + SUPABASE_JWT_SECRET şablon oluşturuldu (git'e eklenmedi)
+- [13/05] store/auth.ts güncellendi: role: 'sender' | 'courier' | null eklendi, login(role) imzası güncellendi
+- [13/05] NavBar.tsx güncellendi: giriş yapan kullanıcıya rol bazlı nav item gösteriliyor (Gönderici → Talep Oluştur, Kurye → Talep Al)
+- [13/05] AuthPage.tsx yeniden tasarlandı: tek ortalanmış kart + Lucide ikonlar + fade-in-up animasyonu
+- [13/05] AuthPage.tsx — kayıt formuna Gönderici/Kurye rol seçici eklendi, giriş formundan rol seçici kaldırıldı
+- [13/05] AuthPage.tsx — rol localStorage'a kaydedilir (hp_role), giriş sırasında otomatik okunur
+- [13/05] AuthPage.tsx — kart arka planı bg-secondary-blue, inputlar bg-white + text-darker-blue yapıldı
+- [13/05] Kök .gitignore oluşturuldu: Stitch/, backend/.env, backend/__pycache__/, frontend/node_modules/ vb.
+- [13/05] backend/node_modules/, package.json, package-lock.json silindi (yanlışlıkla oluşturulmuştu)
 
 ## Kargo Talebi Formu Planı (DeliveryRequests)
 ### Kullanıcı Girdileri:

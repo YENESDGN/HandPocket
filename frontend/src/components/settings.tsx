@@ -11,7 +11,7 @@ export default function SettingsPanel() {
         <div className="grid grid-cols-2 gap-6">
 
           {/* Kişisel Bilgiler */}
-          <div className="rounded-lg overflow-hidden shadow-md">
+          <div className="rounded-lg overflow-hidden shadow-md settings-card-left">
             <div className="bg-secondary-blue px-8 py-5  flex items-center justify-between">
               <span className="text-white font-bold text-xl tracking-wide font-sextary">Kişisel Bilgiler</span>
               <button className="bg-dark-blue text-white text-sm font-semibold px-5 py-2 rounded-xl hover:opacity-90 transition-opacity tracking-wide font-sextary">
@@ -50,7 +50,7 @@ export default function SettingsPanel() {
           </div>
 
           {/* Dil ve Zaman */}
-          <div className="rounded-lg overflow-hidden shadow-md">
+          <div className="rounded-lg overflow-hidden shadow-md settings-card-right">
             <div className="bg-secondary-blue px-8 py-6 border-b border-primary-blue/20">
               <span className="text-white font-bold text-xl tracking-wide font-sextary">Dil ve Zaman</span>
             </div>
@@ -96,7 +96,7 @@ export default function SettingsPanel() {
         </div>
 
         {/* Row 2 — İstatistikler & Üyelik + Güvenlik */}
-        <div className="grid grid-cols-2 gap-6 items-stretch">
+        <div className="grid grid-cols-2 gap-6 items-stretch settings-card-bottom">
 
           {/* İstatistikler & Üyelik */}
           <div className="rounded-lg overflow-hidden shadow-md h-full flex flex-col">
@@ -169,7 +169,7 @@ export default function SettingsPanel() {
         </div>
 
         {/* Hesabı Kapat */}
-        <div className="rounded-lg overflow-hidden shadow-md border border-red-300">
+        <div className="rounded-lg overflow-hidden shadow-md border border-red-300 settings-danger">
           <div className="bg-red-500/75 px-8 py-5 border-b border-red-300/40 flex items-center gap-3">
             <AlertTriangle size={18} className="text-white" />
             <span className="text-white font-bold text-xl tracking-wide font-sextary">Hesabı Kapat</span>
