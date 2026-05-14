@@ -12,12 +12,12 @@ export default function NavBar() {
                 <Link to="/hakkimizda" className="cursor-pointer btn-hover-blue">Hakkımızda</Link>
                 <Link to="/iletisim" className="cursor-pointer btn-hover-blue">İletişim</Link>
                 {isLoggedIn && role === 'sender' && (
-                    <Link to="/talep" className="cursor-pointer btn-hover-blue font-bold text-primary-blue">
+                    <Link to="/talep" className="cursor-pointer btn-hover-blue font-bold text-dark-blue">
                         Talep Oluştur
                     </Link>
                 )}
                 {isLoggedIn && role === 'courier' && (
-                    <Link to="/talep-al" className="cursor-pointer btn-hover-blue font-bold text-primary-blue">
+                    <Link to="/talep-al" className="cursor-pointer btn-hover-blue font-bold text-dark-blue">
                         Talep Al
                     </Link>
                 )}

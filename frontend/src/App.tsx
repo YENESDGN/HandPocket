@@ -1,4 +1,6 @@
+import { useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { useAuthStore } from './store/auth'
 import LandingPage        from './pages/LandingPage'
 import AuthPage           from './pages/AuthPage'
 import RequestPage        from './pages/RequestPage'
@@ -14,6 +16,9 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import NotFoundPage       from './pages/NotFoundPage'
 
 export default function App() {
+    const initialize = useAuthStore((s) => s.initialize);
+    useEffect(() => { initialize(); }, [initialize]);
+
     return (
         <Router>
             <Routes>

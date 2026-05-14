@@ -1,43 +1,52 @@
-import { useState } from 'react';
-import { Package, Settings, Shield, List, HelpCircle, LogOut, Wallet } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Package, Settings, Shield, List, HelpCircle, LogOut, Wallet, Loader2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/auth';
 import SettingsPanel from '../components/settings';
 import SecurityPanel from '../components/Security';
 import PreferencesPanel from '../components/Preferences';
 import NeedHelpPanel from '../components/NeedHelp';
-import type { WalletTransaction } from '../types';
+import api from '../lib/api';
+import type { WalletTransaction, DeliveryRequest as ApiDeliveryRequest } from '../types';
 
 type NavItem = 'teslimatlar' | 'ayarlar' | 'guvenlik' | 'tercihler' | 'yardim' | 'cuzdan';
 
 type DeliveryStatus = 'Başarılı' | 'Başarısız' | 'Bekliyor';
 
-interface DeliveryRequest {
+interface DeliveryRow {
   id: string;
   location: string;
   date: string;
   status: DeliveryStatus;
+  rawStatus: string;
 }
 
-const successfulRequests: DeliveryRequest[] = [
-  { id: '#KRG-2', location: 'Üsküdar → Şişli',      date: '24.12.2025', status: 'Başarılı' },
-  { id: '#KRG-5', location: 'Sarıyer → Ataşehir',   date: '15.01.2026', status: 'Başarılı' },
-];
+const SUCCESSFUL_STATUSES = new Set(['delivered', 'completed']);
+const FAILED_STATUSES     = new Set(['cancelled', 'disputed']);
 
-const failedRequests: DeliveryRequest[] = [
-  { id: '#KRG-6', location: 'Levent → Taksim',      date: '22.03.2026', status: 'Başarısız' },
-];
+function mapStatus(apiStatus: string): DeliveryStatus {
+  if (SUCCESSFUL_STATUSES.has(apiStatus)) return 'Başarılı';
+  if (FAILED_STATUSES.has(apiStatus))     return 'Başarısız';
+  return 'Bekliyor';
+}
 
-const pendingRequests: DeliveryRequest[] = [
-  { id: '#KRG-1', location: 'Kadıköy → Beşiktaş',  date: '24.09.2025', status: 'Bekliyor' },
-  { id: '#KRG-3', location: 'Bakırköy → Fatih',    date: '10.02.2026', status: 'Bekliyor' },
-  { id: '#KRG-4', location: 'Pendik → Maltepe',    date: '01.05.2026', status: 'Bekliyor' },
-  { id: '#KRG-7', location: 'Bağcılar → Zeytinburnu', date: '12.05.2026', status: 'Bekliyor' },
-  { id: '#KRG-8', location: 'Kartal → Kadıköy',    date: '30.04.2026', status: 'Bekliyor' },
-];
+function formatDate(raw: string | Date): string {
+  const d = new Date(raw);
+  return d.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+function toRow(req: ApiDeliveryRequest): DeliveryRow {
+  return {
+    id: req.id,
+    location: `${req.pickup_address.split(',')[0]} → ${req.delivery_address.split(',')[0]}`,
+    date: formatDate(req.created_at),
+    status: mapStatus(req.status),
+    rawStatus: req.status,
+  };
+}
 
 const statusStyles: Record<DeliveryStatus, string> = {
-  'Başarılı':  'bg-green-100 text-green-700 border border-green-300 ',
+  'Başarılı':  'bg-green-100 text-green-700 border border-green-300',
   'Başarısız': 'bg-red-100 text-red-700 border border-red-300',
   'Bekliyor':  'bg-yellow-100 text-yellow-700 border border-yellow-300',
 };
@@ -50,7 +59,7 @@ function StatusBadge({ status }: { status: DeliveryStatus }) {
   );
 }
 
-function DeliveryTable({ title, rows, animClass }: { title: string; rows: DeliveryRequest[]; animClass?: string }) {
+function DeliveryTable({ title, rows, animClass }: { title: string; rows: DeliveryRow[]; animClass?: string }) {
   return (
     <div className={`mb-6 rounded overflow-hidden border border-gray-200 shadow-sm${animClass ? ` ${animClass}` : ''}`}>
       <div className="bg-secondary-blue px-4 py-3">
@@ -72,11 +81,15 @@ function DeliveryTable({ title, rows, animClass }: { title: string; rows: Delive
           </tr>
         </thead>
         <tbody>
-          {rows.map((row, i) => (
-            <tr key={i} className="border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors cursor-pointer">
+          {rows.length === 0 ? (
+            <tr>
+              <td colSpan={4} className="px-4 py-4 text-center text-gray-400 text-xs">Kayıt bulunamadı</td>
+            </tr>
+          ) : rows.map((row) => (
+            <tr key={row.id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors cursor-pointer">
               <td className="px-4 py-3">
-                <Link to={`/talep/${row.id.replace('#', '')}`} className="text-secondary-blue font-semibold hover:underline">
-                  {row.id}
+                <Link to={`/talep/${row.id}`} className="text-secondary-blue font-semibold hover:underline font-mono text-xs">
+                  {row.id.slice(0, 8).toUpperCase()}
                 </Link>
               </td>
               <td className="px-4 py-3 text-gray-800">{row.location}</td>
@@ -166,8 +179,18 @@ function WalletPanel() {
 
 export default function ProfilePage() {
   const [activeNav, setActiveNav] = useState<NavItem>('teslimatlar');
-  const logout = useAuthStore((s) => s.logout);
+  const [rows, setRows]           = useState<DeliveryRow[]>([]);
+  const [tasksLoading, setTasksLoading] = useState(true);
+  const signOut = useAuthStore((s) => s.signOut);
+  const user    = useAuthStore((s) => s.user);
+  const role    = useAuthStore((s) => s.role);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    api.get<ApiDeliveryRequest[]>('/tasks/my')
+      .then(({ data }) => setRows(data.map(toRow)))
+      .finally(() => setTasksLoading(false));
+  }, []);
 
   const navItemClass = (item: NavItem) =>
     `flex items-center gap-3 px-3 py-2.5 rounded text-sm text-left w-full transition-all ${
@@ -194,9 +217,9 @@ export default function ProfilePage() {
               }}
             />
           </div>
-          <p className="text-white font-bold text-sm text-center leading-tight">Yağız Enes DOĞAN</p>
-          <p className="text-white/70 text-xs mt-1">+90 530 301 6118</p>
-          <p className="text-white/70 text-xs mt-0.5 text-center">yenesdogan@outlook.com.tr</p>
+          <p className="text-white font-bold text-sm text-center leading-tight">{user?.full_name ?? '—'}</p>
+          <p className="text-white/70 text-xs mt-1">{user?.phone_number ?? ''}</p>
+          <p className="text-white/70 text-xs mt-0.5 text-center">{user?.email ?? ''}</p>
         </div>
 
         {/* Navigation menu */}
@@ -232,7 +255,7 @@ export default function ProfilePage() {
           <button
             className="flex items-center gap-3 px-3 py-2.5 rounded text-red-400 btn-hover-shadow-blue text-sm text-left font-semibold w-full profile-nav-item"
             style={{ animationDelay: '0.47s' }}
-            onClick={() => { logout(); navigate('/'); }}
+            onClick={() => { signOut(); navigate('/'); }}
           >
             <LogOut size={18} />
             Çıkış Yap
@@ -257,11 +280,35 @@ export default function ProfilePage() {
         {/* Page body */}
         <main className="main-bg flex-1 overflow-y-auto p-8 profile-content">
           {activeNav === 'teslimatlar' && (
-            <>
-              <DeliveryTable title="BAŞARILI TALEPLER"  rows={successfulRequests} animClass="delivery-table-1" />
-              <DeliveryTable title="BAŞARISIZ TALEPLER" rows={failedRequests}    animClass="delivery-table-2" />
-              <DeliveryTable title="BEKLEYEN TALEPLER"  rows={pendingRequests}   animClass="delivery-table-3" />
-            </>
+            tasksLoading ? (
+              <div className='flex justify-center py-16'>
+                <Loader2 size={32} className='text-primary-blue animate-spin' />
+              </div>
+            ) : role === 'courier' ? (
+              <>
+                <DeliveryTable
+                  title="AKTİF TESLİMATLAR"
+                  rows={rows.filter(r => ['accepted', 'picked_up'].includes(r.rawStatus))}
+                  animClass="delivery-table-1"
+                />
+                <DeliveryTable
+                  title="TAMAMLANAN TESLİMATLAR"
+                  rows={rows.filter(r => ['delivered', 'completed'].includes(r.rawStatus))}
+                  animClass="delivery-table-2"
+                />
+                <DeliveryTable
+                  title="İPTAL / ANLAŞMAZLIK"
+                  rows={rows.filter(r => ['cancelled', 'disputed'].includes(r.rawStatus))}
+                  animClass="delivery-table-3"
+                />
+              </>
+            ) : (
+              <>
+                <DeliveryTable title="BAŞARILI TALEPLER"  rows={rows.filter(r => r.status === 'Başarılı')}  animClass="delivery-table-1" />
+                <DeliveryTable title="BAŞARISIZ TALEPLER" rows={rows.filter(r => r.status === 'Başarısız')} animClass="delivery-table-2" />
+                <DeliveryTable title="BEKLEYEN TALEPLER"  rows={rows.filter(r => r.status === 'Bekliyor')}  animClass="delivery-table-3" />
+              </>
+            )
           )}
           {activeNav === 'ayarlar' && <SettingsPanel />}
           {activeNav === 'guvenlik' && <SecurityPanel />}

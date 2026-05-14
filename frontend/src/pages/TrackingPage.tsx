@@ -1,4 +1,5 @@
 import ReceiverNavBar from '../components/ReceiverNavBar';
+import MapboxMap from '../components/MapboxMap';
 import type { DeliveryRequest } from '../types';
 
 const mockRequest: DeliveryRequest = {
@@ -151,7 +152,12 @@ export default function TrackingPage() {
 
                 {/* Map */}
                 <div className='relative w-full h-[calc(100vh-160px)] rounded-xl overflow-hidden drop-shadow-[0_0_15px_rgba(0,0,0,0.7)] tracking-map'>
-                    {/* Pulsing courier marker overlay */}
+                    <MapboxMap
+                        center={[29.01, 41.025]}
+                        zoom={13}
+                        markers={[{ lng: 29.01, lat: 41.025, color: '#1ea4dc', popup: 'Kurye Konumu' }]}
+                    />
+                    {/* Pulsing courier overlay */}
                     <div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 pointer-events-none'>
                         <div className='relative flex items-center justify-center'>
                             <div className='absolute w-14 h-14 bg-secondary-blue/30 rounded-full animate-ping' />
@@ -162,13 +168,6 @@ export default function TrackingPage() {
                             </div>
                         </div>
                     </div>
-                    <iframe
-                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d385396.60516460294!2d28.682528!3d41.005369!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14caa7040068086b%3A0xe1ccfe98bc01b0d0!2zxLBzdGFuYnVsLCBUw7xya2l5ZQ!5e0!3m2!1str!2str!4v1234567890"
-                        className="w-full h-full border-0"
-                        loading="lazy"
-                        referrerPolicy="no-referrer-when-downgrade"
-                        title="Canlı Takip Haritası"
-                    />
                 </div>
             </section>
         </>

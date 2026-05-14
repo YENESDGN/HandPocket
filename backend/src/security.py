@@ -1,13 +1,20 @@
 import os
+from functools import lru_cache
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from jose import JWTError, jwt
+import jwt
+from jwt import PyJWKClient, PyJWTError
 from sqlmodel import Session
 from .database import get_session
 
 bearer_scheme = HTTPBearer()
 
-SUPABASE_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET", "")
+SUPABASE_URL = os.getenv("SUPABASE_URL", "")
+
+
+@lru_cache(maxsize=1)
+def _jwks_client() -> PyJWKClient:
+    return PyJWKClient(f"{SUPABASE_URL}/auth/v1/.well-known/jwks.json")
 
 
 def get_current_user(
@@ -17,14 +24,16 @@ def get_current_user(
     from .models.user import User
 
     try:
+        client = _jwks_client()
+        signing_key = client.get_signing_key_from_jwt(credentials.credentials)
         payload = jwt.decode(
             credentials.credentials,
-            SUPABASE_JWT_SECRET,
-            algorithms=["HS256"],
+            signing_key.key,
+            algorithms=["ES256"],
             audience="authenticated",
         )
         user_id: str = payload.get("sub", "")
-    except JWTError:
+    except PyJWTError as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token",

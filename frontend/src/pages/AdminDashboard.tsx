@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Users, Package, LogOut, ShieldCheck } from 'lucide-react';
 import type { User, DeliveryRequest } from '../types';
 import { UserRole, RequestStatus } from '../types';
+import { useAuthStore } from '../store/auth';
 
 type AdminNav = 'genel' | 'kullanicilar' | 'teslimatlar';
 
@@ -46,6 +47,8 @@ const statusLabel: Record<string, string> = {
 
 export default function AdminDashboard() {
     const [activeNav, setActiveNav] = useState<AdminNav>('genel');
+    const signOut = useAuthStore((s) => s.signOut);
+    const navigate = useNavigate();
 
     const navClass = (item: AdminNav) =>
         `flex items-center gap-3 px-3 py-2.5 rounded text-sm text-left w-full transition-all ${
@@ -78,9 +81,9 @@ export default function AdminDashboard() {
                 </nav>
 
                 <div className='px-3 pb-6'>
-                    <Link to='/' className='flex items-center gap-3 px-3 py-2.5 rounded text-red-400 btn-hover-shadow-blue text-sm font-semibold w-full'>
+                    <button onClick={() => { signOut(); navigate('/'); }} className='flex items-center gap-3 px-3 py-2.5 rounded text-red-400 btn-hover-shadow-blue text-sm font-semibold w-full'>
                         <LogOut size={18} /> Çıkış Yap
-                    </Link>
+                    </button>
                 </div>
             </aside>
 

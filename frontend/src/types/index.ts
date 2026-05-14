@@ -31,6 +31,7 @@ export interface DeliveryRequest {
     package_photo_url: string;
     package_description: string;
     pickup_address: string;
+    delivery_address: string;
     distance_km: number;
     estimated_time_mins: number;
     weight_kg: number;

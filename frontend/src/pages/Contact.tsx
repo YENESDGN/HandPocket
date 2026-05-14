@@ -1,18 +1,19 @@
 import SecondNavBar from "../components/SecondNavBar";
 import ContactInfo from "../components/ContactInfo";
+import MapboxMap from "../components/MapboxMap";
 
 export default function Contact() {
     return (
         <>
             <SecondNavBar />
             <div className="p-10 bg-dark-blue contact-map">
-                <iframe 
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d385396.60516460294!2d28.682528!3d41.005369!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14caa7040068086b%3A0xe1ccfe98bc01b0d0!2zxLBzdGFuYnVsLCBUw7xya2l5ZQ!5e0!3m2!1str!2str!4v1234567890"
-                    className="w-full h-[1000px] rounded-lg border-2 border-primary-blue"
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                    title="HandPocket Konum - İstanbul, Türkiye"
-                />
+                <div className="w-full h-[1000px] rounded-lg border-2 border-primary-blue overflow-hidden">
+                    <MapboxMap
+                        center={[28.97, 41.005]}
+                        zoom={11}
+                        markers={[{ lng: 28.97, lat: 41.005, color: '#08b4fb', popup: 'HandPocket Ofisi' }]}
+                    />
+                </div>
                 </div>
             <section className="grid grid-cols-2 gap-70 p-10 bg-dark-blue">
                 <div className="rounded-lg p-10 bg-darker-blue text-white w-[150%] contact-form">

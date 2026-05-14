@@ -42,7 +42,9 @@ class DeliveryRequestCreate(SQLModel):
     weight_kg: float
     open_time_multiplier: float = 1.0
     package_photo_url: Optional[str] = None
-    # distance_km and calculated_price are set server-side after Maps API call
+    distance_km: Optional[float] = None
+    estimated_time_mins: Optional[int] = None
+    calculated_price: Optional[float] = None
 
 
 class DeliveryRequestPublic(SQLModel):

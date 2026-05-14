@@ -24,6 +24,7 @@ class User(SQLModel, table=True):
 
 
 class UserCreate(SQLModel):
+    id: str  # Supabase auth.users UUID passed from frontend after signUp
     full_name: str
     role: str
     email: str

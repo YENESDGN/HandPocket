@@ -6,11 +6,12 @@
 - **Dil**: Türkçe
 
 ## Aktif Değişiklikler
-### NavBar.tsx (24 satır)
-- Nav butonları: Anasayfa, Hakkımızda, İletişim, Şikayet
-- Auth butonları: Giriş Yap, Kayıt Ol
-- Flexbox layout, Tailwind CSS
-- React Router Link kullanımı
+### NavBar.tsx
+- Nav linkleri: Anasayfa, Hakkımızda, İletişim
+- Giriş yokken: Giriş Yap, Kayıt Ol (pill butonlar)
+- Giriş varken: profil avatarı → /profil
+- Rol bazlı ek link: `sender` → **Talep Oluştur** (/talep), `courier` → **Talep Al** (/talep-al); diğer rolde karşı tarafın linki gösterilmez
+- `useAuthStore`: `isLoggedIn`, `role`
 
 ### LandingPage.tsx (85 satır)
 - 2 kolonlu grid layout
@@ -20,14 +21,13 @@
 - Asset'ler: Logo, yol, ikonlar, store logoları
 - fade-in-up animasyonu kullanımı
 
-### AuthPage.tsx (163 satır) - eski LgnRgstrBtns
-- Toggle tabanlı auth sistemi
-- İki form yan yana grid layout
-- Aktif form: Beyaz arka plan + mavi border vurgusu
-- Pasif form: Koyu mavi arka plan
-- onClick ile form geçişi
-- useState hook: activeForm ('login' | 'register')
-- Route: /giris ve /kayit
+### AuthPage.tsx (/giris, /kayit)
+- Arka plan: `RgLg_bg.png` (blur + koyu overlay), üstte logo + NavBar
+- Stitch referansına yakın tek ortalanmış kart (`bg-secondary-blue`), Lucide ikonlar (Mail, Lock, User, ArrowRight, ShieldCheck, Loader2)
+- Giriş / Kayıt tek kart içinde `activeForm` ile; alt linkten form değişimi; `fade-in-up` ile geçiş animasyonu
+- Kontrollü input state; hata bandı (`useAuthStore.error` + `clearError`); gönderimde `loading` + spinner
+- **Kayıt**: Ad Soyad, E-posta, E-posta Tekrar, Parola, Parola Tekrar, Gönderici/Kurye seçici → `signUp` (Supabase + profil satırı)
+- **Giriş**: E-posta, Parola → `signIn` (Supabase + `GET /users/me` ile rol)
 
 ### Contact.tsx (91 satır)
 - İletişim formu sayfası
@@ -53,7 +53,7 @@
 - Harita üstünde toggle butonu (isPanelVisible useState) + compact hesaplama paneli (w-56, absolute bottom-4 right-4)
 - Hesaplama paneli: Mesafe / Süre / Hesaplanan Ücret + "Teslimat Oluştur" butonu
 
-### RecieverPage.tsx (274 satır)
+### RecieverPage.tsx
 - Kurye rolü için açık talepleri görme ve kabul etme sayfası
 - Route: /talep-al
 - 3-kolon grid: [22%_1fr_22%] — sol detay paneli + orta harita + sağ bekleyen talepler listesi
@@ -63,6 +63,7 @@
 - Sağ: kaydırılabilir bekleyen talepler listesi (bg-secondary-blue header, beyaz kartlar, aktif seçim ring)
 - availableRequests mock data (6 talep), useState ile seçili talep yönetimi
 - priorityLabel / priorityBadge yardımcı fonksiyonlar
+- **Kabul Et** (`DeliveryAmountCard.onAccept`): `useNavigate` ile **/navigasyon** (NavigationPage) — API henüz bağlı değil
 
 ### TrackingPage.tsx (176 satır)
 - Gönderi canlı takip sayfası (gönderici rolü)
@@ -119,6 +120,7 @@
 - Route: /admin
 - ProfilePage ile aynı sidebar+main layout (profile-bg, relative flex h-screen)
 - Sidebar (bg-darker-blue, w-52): ShieldCheck ikon, Admin Paneli başlık, 3 nav: Genel Bakış/Kullanıcılar/Teslimatlar (Lucide ikonlar), Çıkış Yap
+- **Çıkış Yap**: `useAuthStore.signOut` + `navigate('/')` (Supabase oturumu kapanır)
 - Header: logo sol + "Admin Paneli" merkez
 - AdminNav tipi: 'genel' | 'kullanicilar' | 'teslimatlar'
 - **Genel Bakış**: 4 stat kartı (Kullanıcı/Kurye/Teslimat/Gelir) + Son Teslimatlar tablosu + Son Kullanıcılar tablosu
@@ -138,7 +140,7 @@
   - Üst: Profil fotoğrafı (yuvarlak), Ad, Telefon, Email
   - Orta nav: Teslimatlar, Ayarlar, Güvenlik, Tercihler (Lucide ikonlar)
   - Aktif nav item: bg-dark-blue + beyaz yazı (useState ile)
-  - Alt: Yardım Merkezi (NeedHelpPanel), Çıkış Yap (kırmızı)
+  - Alt: Yardım Merkezi (NeedHelpPanel), Çıkış Yap (kırmızı) — `signOut()` + ana sayfaya yönlendirme
 - **Navbar** (bg-white, py-5): Logo sol, Anasayfa/Hakkımızda/İletişim sağ
 - **NavItem tipi**: 'teslimatlar' | 'ayarlar' | 'guvenlik' | 'tercihler' | 'yardim'
 - **Tablolar** (DeliveryTable komponenti — teslimatlar sekmesi):
@@ -198,8 +200,13 @@
 ## Yapı
 ```
 frontend/src/
+├── lib/
+│   ├── supabase.ts              (@supabase/supabase-js client — VITE_SUPABASE_*)
+│   └── api.ts                   (axios instance, JWT interceptor → FastAPI)
+├── store/
+│   └── auth.ts                  (Zustand: signUp, signIn, signOut, initialize, role, user)
 ├── components/
-│   ├── NavBar.tsx               (LandingPage nav + Giriş/Kayıt butonları)
+│   ├── NavBar.tsx               (LandingPage nav + rol bazlı Talep Oluştur / Talep Al)
 │   ├── SecondNavBar.tsx         (blur-bg navbar — RequestPage, AboutUs)
 │   ├── ReceiverNavBar.tsx       (beyaz navbar — kurye/takip/detay sayfaları)
 │   ├── Footer.tsx               (3-kolon footer)
@@ -212,7 +219,7 @@ frontend/src/
 │   └── NeedHelp.tsx             (ProfilePage — Yardım Merkezi sekmesi)
 ├── pages/
 │   ├── LandingPage.tsx          (/)
-│   ├── AuthPage.tsx             (/giris, /kayit)
+│   ├── AuthPage.tsx             (/giris, /kayit — Supabase auth)
 │   ├── ForgotPasswordPage.tsx   (/sifremi-unuttum)
 │   ├── Contact.tsx              (/iletisim)
 │   ├── AboutUs.tsx              (/hakkimizda)
@@ -226,6 +233,18 @@ frontend/src/
 │   └── NotFoundPage.tsx         (* catch-all)
 └── types/
     └── index.ts
+
+frontend/.env                    (VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, VITE_API_URL — gitignore)
+
+backend/
+├── requirements.txt
+├── .env                         (DATABASE_URL, SUPABASE_JWT_SECRET — gitignore)
+└── src/
+    ├── main.py
+    ├── database.py
+    ├── security.py
+    ├── models/                  (user, task_model, review, dispute, location)
+    └── routers/                 (users, tasks, reviews, disputes, locations)
 
 .vscode/
 └── settings.json (CSS linter ayarları)
@@ -311,6 +330,25 @@ frontend/src/
 - Button hover: `className="btn-hover-blue"`
 - Animasyonlar: `fade-in-up`, `fade-in-up-delay-1/2/3`
 
+## Kimlik doğrulama ve API (Faz 2 — başlangıç)
+
+### Ortam değişkenleri
+- **frontend** (`frontend/.env`, git'te yok): `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (yalnızca tarayıcıda kullanılır; `sb_publishable_...`), `VITE_API_URL` (varsayılan `http://localhost:8000`)
+- **backend** (`backend/.env`, git'te yok): `DATABASE_URL` (Supabase Postgres pooler), `SUPABASE_JWT_SECRET` (JWT doğrulama — `sb_secret_...` sadece sunucuda)
+
+### Akış
+1. **Kayıt**: `supabase.auth.signUp` → ardından `POST /users` ile `users` tablosuna profil (Supabase `auth.users` id ile); `POST` başarısız olsa bile auth kullanıcısı oluşmuş olur (best-effort, backend kapalıyken)
+2. **Giriş**: `signInWithPassword` → `GET /users/me` ile rol ve profil
+3. **Axios** (`api.ts`): her istekte `supabase.auth.getSession()` ile `Authorization: Bearer <access_token>`
+4. **Uygulama açılışı**: `App.tsx` içinde `useAuthStore.initialize()` — geçerli session varsa profil yüklenir; `/users/me` başarısızsa Supabase oturumu temizlenir
+5. **Çıkış**: `supabase.auth.signOut` + store sıfırlama (`ProfilePage`, `AdminDashboard`)
+
+### Güvenlik notu
+- `sb_secret_` (service / JWT secret) **asla** frontend'e konmamalı; sadece backend `.env`.
+
+### Test ipucu
+- Supabase **Authentication → Providers → Email**: geliştirmede "Confirm email" kapalı olabilir; açıksa kullanıcı önce e-postayı onaylamalıdır.
+
 ## Sohbet
 - [21/04] CLAUDE.md oluşturuldu
 - [21/04] CSS root değişkenleri eklendi (renkler + fontlar)
@@ -384,14 +422,30 @@ frontend/src/
 - [13/05] backend/src/main.py: FastAPI app + CORS middleware + lifespan + tüm router'lar kayıt edildi
 - [13/05] backend/requirements.txt: fastapi, uvicorn, sqlmodel, psycopg2-binary, python-jose, python-dotenv
 - [13/05] backend/.env: DATABASE_URL + SUPABASE_JWT_SECRET şablon oluşturuldu (git'e eklenmedi)
-- [13/05] store/auth.ts güncellendi: role: 'sender' | 'courier' | null eklendi, login(role) imzası güncellendi
-- [13/05] NavBar.tsx güncellendi: giriş yapan kullanıcıya rol bazlı nav item gösteriliyor (Gönderici → Talep Oluştur, Kurye → Talep Al)
-- [13/05] AuthPage.tsx yeniden tasarlandı: tek ortalanmış kart + Lucide ikonlar + fade-in-up animasyonu
-- [13/05] AuthPage.tsx — kayıt formuna Gönderici/Kurye rol seçici eklendi, giriş formundan rol seçici kaldırıldı
-- [13/05] AuthPage.tsx — rol localStorage'a kaydedilir (hp_role), giriş sırasında otomatik okunur
-- [13/05] AuthPage.tsx — kart arka planı bg-secondary-blue, inputlar bg-white + text-darker-blue yapıldı
-- [13/05] Kök .gitignore oluşturuldu: Stitch/, backend/.env, backend/__pycache__/, frontend/node_modules/ vb.
+- [13/05] store/auth.ts: Supabase + FastAPI entegrasyonu — `signUp`, `signIn`, `signOut`, `initialize`, `user`, `loading`, `error`, `clearError`
+- [13/05] NavBar.tsx güncellendi: giriş yapan kullanıcıya rol bazlı nav item (Gönderici → Talep Oluştur, Kurye → Talep Al)
+- [13/05] AuthPage.tsx — kayıt formunda Gönderici/Kurye rol seçici; girişte rol seçimi yok (rol `GET /users/me` ile gelir)
+- [13/05] AuthPage.tsx — kart arka planı bg-secondary-blue, inputlar bg-white + text-darker-blue, ikonlar text-dark-blue
+- [13/05] AuthPage.tsx — form geçişleri ve kart için `fade-in-up` animasyonu
+- [13/05] `@supabase/supabase-js` ve `axios` frontend bağımlılıklarına eklendi
+- [13/05] `frontend/src/lib/supabase.ts` ve `frontend/src/lib/api.ts` oluşturuldu
+- [13/05] `App.tsx` — `useEffect` ile `initialize()` (sayfa yenilemede oturum sürdürme)
+- [13/05] `UserCreate` şemasına `id` alanı eklendi (Supabase auth UUID ile profil satırı)
+- [13/05] Kayıtta `POST /users` best-effort: backend kapalıyken bile Supabase Auth kullanıcısı oluşur
+- [13/05] ProfilePage — `signOut` kullanımı (eski `logout` kaldırıldı)
+- [13/05] AdminDashboard — Çıkış Yap `signOut` + yönlendirme (önceki yalnızca Link düzeltildi)
+- [13/05] Kayıt hatası: zaten kayıtlı e-posta → kullanıcıya "Kullanıcı Zaten Kayıtlı." mesajı
+- [13/05] RecieverPage — Kabul Et sonrası `navigate('/navigasyon')`
+- [13/05] Kök `.gitignore` oluşturuldu: Stitch/, backend/.env, backend/__pycache__/, frontend/node_modules/, frontend/.env vb.
 - [13/05] backend/node_modules/, package.json, package-lock.json silindi (yanlışlıkla oluşturulmuştu)
+- [14/05] MapboxMap.tsx komponenti oluşturuldu (paylaşımlı — markers, route, center, zoom props)
+- [14/05] Tüm Google Maps iframe'leri Mapbox ile değiştirildi: RecieverPage, DeliveryDetailPage, TrackingPage, NavigationPage, Contact
+- [14/05] RecieverPage — seçili talep değiştiğinde Nominatim geocode + OSRM rota haritada gösterilir
+- [14/05] DeliveryDetailPage — Nominatim geocode + OSRM rota; MapboxMap entegrasyonu
+- [14/05] NavigationPage — React Router state'ten gerçek talep verisi; OSRM `&steps=true` ile adım adım yön talimatları (Türkçe maneuverText); gerçek ETA, kalan mesafe, adresler
+- [14/05] NavigationPage — "Tamamla" → ProofOfDeliveryModal → PATCH /tasks/{id}/status picked_up → delivered → /profil
+- [14/05] NavigationPage — "İptal" → onay modal → PATCH /tasks/{id}/status cancelled → /talep-al
+- [14/05] DeliveryAmountCard, DeliveryDetailPage, RecieverPage — sayı formatlama toFixed(2) uygulandı
 
 ## Kargo Talebi Formu Planı (DeliveryRequests)
 ### Kullanıcı Girdileri:
