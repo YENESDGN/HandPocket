@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, ShieldCheck, Loader2 } from 'lucide-react';
 import NavBar from '../components/NavBar';
 import { useAuthStore } from '../store/auth';
 
@@ -13,21 +13,33 @@ interface AuthPageProps {
 export default function AuthPage({ initialForm = 'login' }: AuthPageProps) {
     const [activeForm, setActiveForm] = useState<'login' | 'register'>(initialForm);
     const [registerRole, setRegisterRole] = useState<UserRole>('sender');
-    const login = useAuthStore((s) => s.login);
+    const [loginEmail, setLoginEmail] = useState('');
+    const [loginPassword, setLoginPassword] = useState('');
+    const [registerFullName, setRegisterFullName] = useState('');
+    const [registerEmail, setRegisterEmail] = useState('');
+    const [registerPassword, setRegisterPassword] = useState('');
+
+    const { signIn, signUp, loading, error, clearError } = useAuthStore();
     const navigate = useNavigate();
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        const savedRole = (localStorage.getItem('hp_role') as UserRole) ?? 'sender';
-        login(savedRole);
-        navigate('/profil');
+        try {
+            await signIn(loginEmail, loginPassword);
+            navigate('/profil');
+        } catch {
+            // error is set in store
+        }
     };
 
-    const handleRegister = (e: React.FormEvent) => {
+    const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
-        localStorage.setItem('hp_role', registerRole);
-        login(registerRole);
-        navigate('/profil');
+        try {
+            await signUp(registerEmail, registerPassword, registerFullName, registerRole);
+            navigate('/profil');
+        } catch {
+            // error is set in store
+        }
     };
 
     return (
@@ -70,6 +82,13 @@ export default function AuthPage({ initialForm = 'login' }: AuthPageProps) {
                     {/* Card */}
                     <div className="bg-primary-blue border border-white/20 rounded-2xl shadow-2xl shadow-black/20 p-8">
 
+                        {error && (
+                            <div className="mb-4 px-4 py-3 bg-red-500/20 border border-red-400/40 rounded-xl text-sm text-red-200 flex justify-between items-center">
+                                <span>{error}</span>
+                                <button onClick={clearError} className="text-red-300 hover:text-white ml-3 font-bold">✕</button>
+                            </div>
+                        )}
+
                         {activeForm === 'login' ? (
                             <div key="login" className="fade-in-up">
                                 <header className="mb-7">
@@ -87,6 +106,8 @@ export default function AuthPage({ initialForm = 'login' }: AuthPageProps) {
                                                 name="email"
                                                 placeholder="ornek@mail.com"
                                                 required
+                                                value={loginEmail}
+                                                onChange={(e) => setLoginEmail(e.target.value)}
                                                 className="w-full pl-10 pr-4 py-3 bg-white border border-white/20 rounded-xl text-sm text-darker-blue placeholder:text-dark-blue/50 focus:outline-none focus:ring-2 focus:ring-primary-blue/50 focus:border-primary-blue transition-all"
                                             />
                                         </div>
@@ -106,6 +127,8 @@ export default function AuthPage({ initialForm = 'login' }: AuthPageProps) {
                                                 name="password"
                                                 placeholder="••••••••"
                                                 required
+                                                value={loginPassword}
+                                                onChange={(e) => setLoginPassword(e.target.value)}
                                                 className="w-full pl-10 pr-4 py-3 bg-white border border-white/20 rounded-xl text-sm text-darker-blue placeholder:text-dark-blue/50 focus:outline-none focus:ring-2 focus:ring-primary-blue/50 focus:border-primary-blue transition-all"
                                             />
                                         </div>
@@ -113,10 +136,10 @@ export default function AuthPage({ initialForm = 'login' }: AuthPageProps) {
 
                                     <button
                                         type="submit"
-                                        className="w-full bg-white hover:bg-white/80 hover:text-primary-blue text-primary-blue font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-primary-blue/25 active:scale-[0.98] transition-all mt-2"
+                                        disabled={loading}
+                                        className="w-full bg-white hover:bg-white/80 hover:text-primary-blue text-primary-blue font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-primary-blue/25 active:scale-[0.98] transition-all mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
                                     >
-                                        Giriş Yap
-                                        <ArrowRight size={18} />
+                                        {loading ? <Loader2 size={18} className="animate-spin" /> : <><span>Giriş Yap</span><ArrowRight size={18} /></>}
                                     </button>
                                 </form>
 
@@ -149,6 +172,8 @@ export default function AuthPage({ initialForm = 'login' }: AuthPageProps) {
                                                 name="fullName"
                                                 placeholder="Ad Soyad"
                                                 required
+                                                value={registerFullName}
+                                                onChange={(e) => setRegisterFullName(e.target.value)}
                                                 className="w-full pl-10 pr-4 py-3 bg-white border border-white/20 rounded-xl text-sm text-darker-blue placeholder:text-dark-blue/50 focus:outline-none focus:ring-2 focus:ring-primary-blue/50 focus:border-primary-blue transition-all"
                                             />
                                         </div>
@@ -163,6 +188,8 @@ export default function AuthPage({ initialForm = 'login' }: AuthPageProps) {
                                                 name="email"
                                                 placeholder="ornek@mail.com"
                                                 required
+                                                value={registerEmail}
+                                                onChange={(e) => setRegisterEmail(e.target.value)}
                                                 className="w-full pl-10 pr-4 py-3 bg-white border border-white/20 rounded-xl text-sm text-darker-blue placeholder:text-dark-blue/50 focus:outline-none focus:ring-2 focus:ring-primary-blue/50 focus:border-primary-blue transition-all"
                                             />
                                         </div>
@@ -191,6 +218,8 @@ export default function AuthPage({ initialForm = 'login' }: AuthPageProps) {
                                                 name="password"
                                                 placeholder="••••••••"
                                                 required
+                                                value={registerPassword}
+                                                onChange={(e) => setRegisterPassword(e.target.value)}
                                                 className="w-full pl-10 pr-4 py-3 bg-white border border-white/20 rounded-xl text-sm text-darker-blue placeholder:text-dark-blue/50 focus:outline-none focus:ring-2 focus:ring-primary-blue/50 focus:border-primary-blue transition-all"
                                             />
                                         </div>
@@ -241,10 +270,10 @@ export default function AuthPage({ initialForm = 'login' }: AuthPageProps) {
 
                                     <button
                                         type="submit"
-                                        className="w-full bg-white hover:bg-white/80 hover:text-primary-blue text-primary-blue font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-primary-blue/25 active:scale-[0.98] transition-all mt-2"
+                                        disabled={loading}
+                                        className="w-full bg-white hover:bg-white/80 hover:text-primary-blue text-primary-blue font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-primary-blue/25 active:scale-[0.98] transition-all mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
                                     >
-                                        Hesap Oluştur
-                                        <ArrowRight size={18} />
+                                        {loading ? <Loader2 size={18} className="animate-spin" /> : <><span>Hesap Oluştur</span><ArrowRight size={18} /></>}
                                     </button>
                                 </form>
 
