@@ -1,8 +1,15 @@
+import logging
+import time
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Any
+
+from cachetools import TTLCache
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from sqlmodel import Session, SQLModel, select
+
 from ..database import get_session
-from ..security import get_current_user, require_role
 from ..models.task_model import (
     DeliveryRequest,
     DeliveryRequestCreate,
@@ -11,6 +18,14 @@ from ..models.task_model import (
     StatusUpdate,
 )
 from ..models.user import User, UserRole
+from ..security import get_current_user, require_role
+
+limiter = Limiter(key_func=get_remote_address)
+logger = logging.getLogger("handpocket.tasks")
+
+# In-memory TTL cache for open tasks — same result for all couriers, safe to cache briefly.
+# TTL=10s: a new pending task becomes visible to couriers within 10 seconds.
+_open_tasks_cache: TTLCache = TTLCache(maxsize=1, ttl=10)
 
 
 class ProofPayload(SQLModel):
@@ -27,7 +42,9 @@ _TRANSITIONS: dict[str, list[str]] = {
 
 
 @router.post("/", response_model=DeliveryRequestPublic, status_code=status.HTTP_201_CREATED)
+@limiter.limit("20/minute")
 def create_task(
+    request: Request,
     payload: DeliveryRequestCreate,
     session: Session = Depends(get_session),
     current_user: User = Depends(require_role(UserRole.SENDER, UserRole.ADMIN)),
@@ -55,6 +72,8 @@ def create_task(
     session.add(task)
     session.commit()
     session.refresh(task)
+    _open_tasks_cache.clear()
+    logger.info("task_created task_id=%s sender_id=%s price=%.2f", task.id, current_user.id, price)
     return task
 
 
@@ -63,9 +82,14 @@ def list_open_tasks(
     session: Session = Depends(get_session),
     current_user: User = Depends(require_role(UserRole.COURIER, UserRole.ADMIN)),
 ):
-    return session.exec(
+    cached = _open_tasks_cache.get("open")
+    if cached is not None:
+        return cached
+    results = session.exec(
         select(DeliveryRequest).where(DeliveryRequest.status == RequestStatus.PENDING)
     ).all()
+    _open_tasks_cache["open"] = results
+    return results
 
 
 @router.get("/my", response_model=list[DeliveryRequestPublic])
@@ -110,6 +134,7 @@ def accept_task(
     session.add(task)
     session.commit()
     session.refresh(task)
+    _open_tasks_cache.clear()
     return task
 
 

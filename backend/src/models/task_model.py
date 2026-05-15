@@ -1,6 +1,7 @@
 from typing import Optional
 from datetime import datetime
 import uuid
+from sqlalchemy import Index
 from sqlmodel import Field, SQLModel
 
 
@@ -16,6 +17,11 @@ class RequestStatus:
 
 class DeliveryRequest(SQLModel, table=True):
     __tablename__ = "delivery_requests"
+    __table_args__ = (
+        # Covers the two hottest queries: list_open_tasks (status=pending) and
+        # list_my_tasks ordered by recency — single-column status index is superseded by this.
+        Index("ix_dr_status_created", "status", "created_at"),
+    )
 
     id: str = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
     sender_id: str = Field(foreign_key="users.id", index=True)

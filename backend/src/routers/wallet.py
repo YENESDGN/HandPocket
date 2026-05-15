@@ -1,15 +1,26 @@
-from fastapi import APIRouter, Depends, HTTPException
+import logging
+
+from fastapi import APIRouter, Depends, HTTPException, Request
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from sqlmodel import Session, select
+
 from ..database import get_session
-from ..security import get_current_user
+from ..models.task_model import DeliveryRequest, RequestStatus
 from ..models.user import User
 from ..models.wallet import (
-    WalletTransaction, WalletDeposit, WalletWithdraw,
-    WalletTransactionPublic, WalletStats, WalletSummary,
+    WalletDeposit,
+    WalletStats,
+    WalletSummary,
+    WalletTransaction,
+    WalletTransactionPublic,
+    WalletWithdraw,
 )
-from ..models.task_model import DeliveryRequest, RequestStatus
+from ..security import get_current_user
 
 router = APIRouter(prefix="/wallet", tags=["wallet"])
+limiter = Limiter(key_func=get_remote_address)
+logger = logging.getLogger("handpocket.wallet")
 
 _MAX_DEPOSIT = 10_000.0
 
@@ -59,7 +70,9 @@ def get_wallet(
 
 
 @router.post("/deposit", response_model=dict)
+@limiter.limit("10/minute")
 def deposit(
+    request: Request,
     payload: WalletDeposit,
     session: Session = Depends(get_session),
     current_user: User = Depends(get_current_user),
@@ -77,11 +90,14 @@ def deposit(
     session.add(tx)
     session.commit()
     session.refresh(current_user)
+    logger.info("deposit user_id=%s amount=%.2f new_balance=%.2f", current_user.id, payload.amount, current_user.wallet_balance)
     return {"balance": current_user.wallet_balance}
 
 
 @router.post("/withdraw", response_model=dict)
+@limiter.limit("10/minute")
 def withdraw(
+    request: Request,
     payload: WalletWithdraw,
     session: Session = Depends(get_session),
     current_user: User = Depends(get_current_user),
@@ -89,6 +105,7 @@ def withdraw(
     if payload.amount <= 0:
         raise HTTPException(status_code=400, detail="Geçersiz miktar")
     if current_user.wallet_balance < payload.amount:
+        logger.warning("withdraw_failed reason=insufficient_balance user_id=%s amount=%.2f balance=%.2f", current_user.id, payload.amount, current_user.wallet_balance)
         raise HTTPException(status_code=400, detail="Yetersiz bakiye")
     current_user.wallet_balance = round(current_user.wallet_balance - payload.amount, 2)
     session.add(current_user)
@@ -101,4 +118,5 @@ def withdraw(
     session.add(tx)
     session.commit()
     session.refresh(current_user)
+    logger.info("withdraw user_id=%s amount=%.2f new_balance=%.2f", current_user.id, payload.amount, current_user.wallet_balance)
     return {"balance": current_user.wallet_balance}

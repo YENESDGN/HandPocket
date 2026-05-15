@@ -46,3 +46,13 @@ class UserPublic(SQLModel):
     average_rating: Optional[float]
     is_banned: bool
     created_at: datetime
+
+
+class UserPublicLimited(SQLModel):
+    """Returned to other users — excludes wallet_balance and ban status."""
+    id: str
+    full_name: str
+    role: str
+    email: str
+    phone_number: Optional[str]
+    average_rating: Optional[float]

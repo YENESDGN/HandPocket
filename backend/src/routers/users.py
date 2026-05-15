@@ -1,19 +1,29 @@
-from fastapi import APIRouter, Depends, HTTPException
+import logging
+
+from fastapi import APIRouter, Depends, HTTPException, Request
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from sqlmodel import Session, select
+
 from ..database import get_session
+from ..models.user import User, UserCreate, UserPublic, UserPublicLimited, UserUpdate, UserRole
 from ..security import get_current_user, get_jwt_sub, require_role
-from ..models.user import User, UserCreate, UserPublic, UserUpdate, UserRole
 
 router = APIRouter(prefix="/users", tags=["users"])
+limiter = Limiter(key_func=get_remote_address)
+logger = logging.getLogger("handpocket.users")
 
 
 @router.post("/", response_model=UserPublic, status_code=201)
+@limiter.limit("5/minute")
 def register_user(
+    request: Request,
     payload: UserCreate,
     session: Session = Depends(get_session),
     jwt_sub: str = Depends(get_jwt_sub),
 ):
     if payload.id != jwt_sub:
+        logger.warning("register_mismatch ip=%s jwt_sub=%s payload_id=%s", request.client.host if request.client else "unknown", jwt_sub, payload.id)
         raise HTTPException(status_code=403, detail="Token subject does not match provided id")
 
     existing = session.exec(select(User).where(User.email == payload.email)).first()
@@ -46,7 +56,7 @@ def update_me(
     return current_user
 
 
-@router.get("/{user_id}", response_model=UserPublic)
+@router.get("/{user_id}", response_model=UserPublicLimited)
 def get_user(
     user_id: str,
     session: Session = Depends(get_session),

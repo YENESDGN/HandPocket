@@ -1,11 +1,16 @@
+import logging
 import os
 from functools import lru_cache
-from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+
 import jwt
+from fastapi import Depends, HTTPException, Request, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jwt import PyJWKClient, PyJWTError
 from sqlmodel import Session
+
 from .database import get_session
+
+logger = logging.getLogger("handpocket.security")
 
 bearer_scheme = HTTPBearer()
 
@@ -14,7 +19,12 @@ SUPABASE_URL = os.getenv("SUPABASE_URL", "")
 
 @lru_cache(maxsize=1)
 def _jwks_client() -> PyJWKClient:
-    return PyJWKClient(f"{SUPABASE_URL}/auth/v1/.well-known/jwks.json")
+    # timeout=5: if Supabase JWKS endpoint hangs, every auth request hangs with it.
+    return PyJWKClient(
+        f"{SUPABASE_URL}/auth/v1/.well-known/jwks.json",
+        timeout=5,
+        cache_keys=True,
+    )
 
 
 def get_current_user(
@@ -34,6 +44,7 @@ def get_current_user(
         )
         user_id: str = payload.get("sub", "")
     except PyJWTError as e:
+        logger.warning("auth_failure reason=invalid_token error=%s", str(e))
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token",
@@ -41,8 +52,10 @@ def get_current_user(
 
     user = session.get(User, user_id)
     if not user:
+        logger.warning("auth_failure reason=user_not_found user_id=%s", user_id)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     if user.is_banned:
+        logger.warning("auth_failure reason=banned user_id=%s", user_id)
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account is banned")
 
     return user
@@ -62,7 +75,8 @@ def get_jwt_sub(
             audience="authenticated",
         )
         return payload.get("sub", "")
-    except PyJWTError:
+    except PyJWTError as e:
+        logger.warning("auth_failure reason=invalid_token (sub-only) error=%s", str(e))
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token",

@@ -11,7 +11,7 @@ class WalletTransaction(SQLModel, table=True):
     label: str
     type: str  # 'credit' | 'debit'
     amount: float
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=datetime.utcnow, index=True)
 
 
 class WalletDeposit(SQLModel):

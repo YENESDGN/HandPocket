@@ -52,6 +52,8 @@
 - Sağ harita: h-[900px] Mapbox GL JS harita
 - Harita üstünde toggle butonu (isPanelVisible useState) + compact hesaplama paneli (w-56, absolute bottom-4 right-4)
 - Hesaplama paneli: Mesafe / Süre / Hesaplanan Ücret + "Teslimat Oluştur" butonu
+- **Fiyat formülü**: `distance_km × weight_kg × open_time_multiplier` — backend ile birebir aynı; eski additive formül (BASE_COST + rate*d + rate*w + rate*p) kaldırıldı
+- **Ücret dağılımı**: panel Mesafe / Ağırlık / Öncelik çarpanı olarak gösterir
 - **Bakiye kontrolü**: `handleSubmit` çağrılmadan önce `user.wallet_balance >= calcResult.price` kontrolü; yetersizse "Yetersiz bakiye." modal gösterilir, "Bakiye Yükle" butonu `/profil`'e yönlendirir
 - Backend 402 hatası da yakalanır; başarılı submitten sonra `refreshUser()` çağrılır
 
@@ -379,6 +381,44 @@ backend/
 
 ---
 
+## Production Hazırlık Katmanı (Faz 4 — tamamlandı)
+
+### Güvenlik eklentileri
+- **`main.py` — Rate limiting** (`slowapi>=0.1.9`): `POST /users/` → 5/dk, `POST /wallet/deposit` + `/withdraw` → 10/dk, `POST /tasks/` → 20/dk; 429 döner
+- **`main.py` — HSTS middleware**: `Strict-Transport-Security: max-age=31536000; includeSubDomains; preload` her yanıtta
+- **`main.py` — Global exception handler**: yakalanmayan tüm hatalar `handpocket` logger'dan geçer, client'a traceback sızmaz
+- **`models/user.py` — `UserPublicLimited`**: `GET /users/{user_id}` artık `wallet_balance` ve `is_banned` dönmüyor; yalnızca `GET /users/me` tam `UserPublic` döner
+- **`security.py` — JWKS timeout**: `PyJWKClient(timeout=5, cache_keys=True)` — Supabase JWKS endpoint takılırsa auth istekleri sonsuza asılı kalmaz
+- **Frontend — `npm audit fix`**: vite (high) + postcss (moderate) güvenlik açıkları kapatıldı
+
+### Performans
+- **`main.py` — GZipMiddleware**: `minimum_size=500` — JSON liste yanıtları ~%70 küçülür
+- **`database.py` — Connection pooling**: `pool_size=10, max_overflow=20, pool_pre_ping=True, pool_recycle=300` — Supabase pooler ile stale connection hatası önlendi
+- **`models/task_model.py` — Composite index**: `(status, created_at)` — `GET /tasks/open` sorgusu için optimize
+- **`models/wallet.py` — Index**: `created_at` — işlem geçmişi sıralaması için
+- **`routers/tasks.py` — TTLCache**: `GET /tasks/open` sonuçları 10 saniye bellekte; task oluşturma/kabul etmede anında temizlenir (`cachetools>=5.3.0`)
+
+### Gözlemlenebilirlik
+- **`main.py` — RequestLoggingMiddleware**: her istek için `method`, `path`, `status`, `duration_ms`, `ip` loglanır; 4xx+ WARNING seviyesinde
+- **`security.py`**: auth hataları `reason` + `user_id` ile loglanır
+- **`routers/wallet.py`**: deposit/withdraw işlemleri amount + yeni bakiye ile loglanır
+- **`routers/tasks.py`**: task oluşturma `task_id`, `sender_id`, `price` ile loglanır
+
+### Güvenilirlik
+- **`main.py` — Health check (derin)**: `GET /health` artık `SELECT 1` ile DB bağlantısını doğrular; DB erişilemezse `503` döner — load balancer hatalı instance'ı devre dışı bırakır
+- **`requirements.txt`**: `slowapi>=0.1.9`, `cachetools>=5.3.0` eklendi
+
+### Üretim öncesi yapılacaklar (kod dışı)
+- **Alembic**: `metadata.create_all()` schema migration için yetersiz — mevcut tablolarda kolon değişikliğini yaymaz; ilk deploy öncesi Alembic kurulmalı
+- **Sentry**: `sentry-sdk[fastapi]` + 3 satır `main.py`'de; deploy günü ekle
+- **Staging ortamı**: `staging` branch'inden Render/Fly.io free instance
+- **Horizontal scale**: birden fazla instance'da `slowapi` Redis backend'e geçmeli (`Limiter(storage_uri="redis://...")`)
+
+### Düzeltilen bug
+- **`RequestPage.tsx` — fiyat formülü uyumsuzluğu**: frontend `BASE_COST + distance×1.5 + weight×1.0 + priority×1.2` kullanıyordu; backend `distance × weight × multiplier` hesaplıyordu → gösterilen ücret ile kesilen ücret farklıydı. Frontend backend formülüyle eşleştirildi.
+
+---
+
 ## Kimlik doğrulama ve API (Faz 2 — başlangıç)
 
 ### Ortam değişkenleri
@@ -399,7 +439,7 @@ backend/
 - `POST /tasks/` — bakiye < `calculated_price` ise 402 döner; başarılıysa bakiyeyi düşer ve `debit` transaction kaydeder
 - Task iptalinde gönderici bakiyesi iade edilir (`credit` transaction); tamamlamada kurye bakiyesi artırılır (`credit` transaction)
 - `PATCH /tasks/{id}/proof` → `{ proof_url: string }` (JSON body) — teslimat kanıtı fotoğraf URL'ini kaydeder (yalnızca atanmış kurye)
-- `GET /users/{id}` — artık herhangi bir giriş yapmış kullanıcı erişebilir (admin değil)
+- `GET /users/{id}` — giriş yapmış herhangi bir kullanıcı erişebilir; `UserPublicLimited` döner (`wallet_balance` ve `is_banned` hariç)
 
 ### Supabase Storage
 - Teslimat kanıtı fotoğrafları için `delivery-proofs` adında **public** bucket oluşturulmalı (Supabase Dashboard → Storage)

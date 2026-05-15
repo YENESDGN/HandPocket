@@ -27,13 +27,8 @@ interface CalcResult {
     price: number;
 }
 
-const DISTANCE_RATE = 1.5;
-const WEIGHT_RATE   = 1.0;
-const PRIORITY_RATE = 1.2;
-const BASE_COST     = 1;
-
 function calcPrice(distanceKm: number, weightKg: number, priority: number): number {
-    return BASE_COST + distanceKm * DISTANCE_RATE + weightKg * WEIGHT_RATE + priority * PRIORITY_RATE;
+    return Math.round(distanceKm * weightKg * priority * 100) / 100;
 }
 
 function LocationInput({ label, placeholder, value, onChange }: {
@@ -446,19 +441,16 @@ export default function RequestPage() {
                                     {calcResult ? (
                                         <div className='flex flex-col gap-0.5 mt-0.5'>
                                             <div className='flex justify-between text-[10px] text-gray-500'>
-                                                <span>Baz</span><span>1.00 TL</span>
+                                                <span>Mesafe</span>
+                                                <span>{calcResult.distanceKm.toFixed(2)} km</span>
                                             </div>
                                             <div className='flex justify-between text-[10px] text-gray-500'>
-                                                <span>Mesafe ({calcResult.distanceKm.toFixed(1)} × 1.5)</span>
-                                                <span>{(calcResult.distanceKm * DISTANCE_RATE).toFixed(2)} TL</span>
+                                                <span>Ağırlık</span>
+                                                <span>{weightKg} kg</span>
                                             </div>
                                             <div className='flex justify-between text-[10px] text-gray-500'>
-                                                <span>Ağırlık ({weightKg} × 1.0)</span>
-                                                <span>{(parseFloat(weightKg) * WEIGHT_RATE).toFixed(2)} TL</span>
-                                            </div>
-                                            <div className='flex justify-between text-[10px] text-gray-500'>
-                                                <span>Öncelik ({priority} × 1.2)</span>
-                                                <span>{(parseFloat(priority) * PRIORITY_RATE).toFixed(2)} TL</span>
+                                                <span>Öncelik çarpanı</span>
+                                                <span>×{priority}</span>
                                             </div>
                                         </div>
                                     ) : (
