@@ -1,8 +1,89 @@
-import { useState } from 'react';
-import { Globe, Clock, Shield, Smartphone, AlertTriangle, Package, Star } from 'lucide-react';
+import { useRef, useState, useEffect } from 'react';
+import { Globe, Clock, Shield, Smartphone, AlertTriangle, Package, Star, Camera, Loader2 } from 'lucide-react';
+import { useAuthStore } from '../store/auth';
+
+const COUNTRIES = [
+  { code: '+90', label: '🇹🇷 +90' },
+  { code: '+1',  label: '🇺🇸 +1'  },
+  { code: '+44', label: '🇬🇧 +44' },
+  { code: '+49', label: '🇩🇪 +49' },
+  { code: '+33', label: '🇫🇷 +33' },
+  { code: '+39', label: '🇮🇹 +39' },
+  { code: '+34', label: '🇪🇸 +34' },
+  { code: '+31', label: '🇳🇱 +31' },
+  { code: '+7',  label: '🇷🇺 +7'  },
+  { code: '+86', label: '🇨🇳 +86' },
+  { code: '+91', label: '🇮🇳 +91' },
+  { code: '+81', label: '🇯🇵 +81' },
+];
+
+function formatPhone(digits: string): string {
+  const d = digits.slice(0, 10);
+  if (d.length <= 3) return d;
+  if (d.length <= 6) return `${d.slice(0, 3)} ${d.slice(3)}`;
+  return `${d.slice(0, 3)} ${d.slice(3, 6)} ${d.slice(6)}`;
+}
+
+function parseStoredPhone(stored: string): { code: string; digits: string } {
+  for (const c of COUNTRIES) {
+    if (stored.startsWith(c.code)) {
+      const rest = stored.slice(c.code.length).replace(/\D/g, '').slice(0, 10);
+      return { code: c.code, digits: rest };
+    }
+  }
+  return { code: '+90', digits: stored.replace(/\D/g, '').slice(0, 10) };
+}
 
 export default function SettingsPanel() {
-  const [timeFormat, setTimeFormat] = useState<'12' | '24'>('24');
+  const [timeFormat,   setTimeFormat]   = useState<'12' | '24'>('24');
+  const [firstName,    setFirstName]    = useState('');
+  const [lastName,     setLastName]     = useState('');
+  const [countryCode,  setCountryCode]  = useState('+90');
+  const [phoneDigits,  setPhoneDigits]  = useState('');
+  const [saving,       setSaving]       = useState(false);
+  const [saved,        setSaved]        = useState(false);
+
+  const user          = useAuthStore((s) => s.user);
+  const setAvatarUrl  = useAuthStore((s) => s.setAvatarUrl);
+  const updateProfile = useAuthStore((s) => s.updateProfile);
+  const fileInputRef  = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    const parts = user.full_name?.split(' ') ?? [];
+    setFirstName(parts[0] ?? '');
+    setLastName(parts.slice(1).join(' '));
+    if (user.phone_number) {
+      const { code, digits } = parseStoredPhone(user.phone_number);
+      setCountryCode(code);
+      setPhoneDigits(digits);
+    }
+  }, [user]);
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setAvatarUrl(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const handlePhoneInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPhoneDigits(e.target.value.replace(/\D/g, '').slice(0, 10));
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    setSaved(false);
+    try {
+      const fullPhone = phoneDigits ? `${countryCode} ${formatPhone(phoneDigits)}` : undefined;
+      await updateProfile(`${firstName} ${lastName}`.trim(), fullPhone);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
       <div className="flex flex-col gap-10 font-sextary">
@@ -14,37 +95,82 @@ export default function SettingsPanel() {
           <div className="rounded-lg overflow-hidden shadow-md settings-card-left">
             <div className="bg-secondary-blue px-8 py-5  flex items-center justify-between">
               <span className="text-white font-bold text-xl tracking-wide font-sextary">Kişisel Bilgiler</span>
-              <button className="bg-dark-blue text-white text-sm font-semibold px-5 py-2 rounded-xl hover:opacity-90 transition-opacity tracking-wide font-sextary">
-                Profili Güncelle
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="flex items-center gap-2 bg-dark-blue text-white text-sm font-semibold px-5 py-2 rounded-xl hover:opacity-90 transition-opacity tracking-wide font-sextary disabled:opacity-60"
+              >
+                {saving ? <Loader2 size={14} className="animate-spin" /> : saved ? '✓' : null}
+                {saved ? 'Kaydedildi' : 'Profili Güncelle'}
               </button>
             </div>
             <div className="bg-white px-8 py-10 flex gap-6 items-start">
-              <div className="w-34 h-34 rounded-lg overflow-hidden flex-shrink-0 border border-white/20 shadow-lg">
+              <div
+                className="relative w-34 h-34 rounded-lg overflow-hidden flex-shrink-0 border border-white/20 shadow-lg cursor-pointer group"
+                onClick={() => fileInputRef.current?.click()}
+              >
                 <img
-                  src="/assets/favicon.png"
+                  key={user?.avatar_url ?? 'default'}
+                  src={user?.avatar_url ?? '/assets/favicon.png'}
                   alt="Profil"
                   className="w-full h-full px-2 py-2 object-cover"
-                  onError={(e) => {
-                    const target = e.currentTarget;
-                    target.style.background = '#206988';
-                  }}
+                  onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                />
+                <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Camera size={20} className="text-white" />
+                  <span className="text-white text-xs mt-1 font-sextary">Değiştir</span>
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleAvatarChange}
                 />
               </div>
               <div className="grid grid-cols-2 gap-x-4 gap-y-4 flex-1">
-                {[
-                  { label: 'İsim' },
-                  { label: 'Soyisim' },
-                  { label: 'E-Posta' },
-                  { label: 'Telefon Numarası' },
-                ].map(({ label }) => (
-                  <div key={label} className="flex flex-col gap-1.5">
-                    <label className="text-darker-blue text-xs font-semibold uppercase tracking-wider font-sextary">{label}</label>
+                {/* İsim */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-darker-blue text-xs font-semibold uppercase tracking-wider font-sextary">İsim</label>
+                  <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)}
+                    className="bg-secondary-blue rounded-lg px-3 py-2 text-sm text-white font-bold outline-none focus:ring-2 focus:ring-primary-blue shadow-sm font-sextary" />
+                </div>
+                {/* Soyisim */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-darker-blue text-xs font-semibold uppercase tracking-wider font-sextary">Soyisim</label>
+                  <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)}
+                    className="bg-secondary-blue rounded-lg px-3 py-2 text-sm text-white font-bold outline-none focus:ring-2 focus:ring-primary-blue shadow-sm font-sextary" />
+                </div>
+                {/* E-Posta */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-darker-blue text-xs font-semibold uppercase tracking-wider font-sextary">E-Posta</label>
+                  <input type="text" value={user?.email ?? ''} readOnly
+                    className="bg-secondary-blue rounded-lg px-3 py-2 text-sm text-white font-bold outline-none shadow-sm font-sextary opacity-60 cursor-not-allowed" />
+                </div>
+                {/* Telefon */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-darker-blue text-xs font-semibold uppercase tracking-wider font-sextary">Telefon Numarası</label>
+                  <div className="flex rounded-lg overflow-hidden shadow-sm focus-within:ring-2 focus-within:ring-primary-blue">
+                    <select
+                      value={countryCode}
+                      onChange={(e) => setCountryCode(e.target.value)}
+                      className="bg-darker-blue text-white text-xs font-bold px-2 outline-none cursor-pointer font-sextary appearance-none flex-shrink-0"
+                    >
+                      {COUNTRIES.map((c) => (
+                        <option key={c.code} value={c.code}>{c.label}</option>
+                      ))}
+                    </select>
                     <input
                       type="text"
-                      className="bg-secondary-blue rounded-lg px-3 py-2 text-sm text-white font-bold outline-none focus:ring-2 focus:ring-primary-blue shadow-sm font-sextary"
+                      inputMode="numeric"
+                      value={formatPhone(phoneDigits)}
+                      onChange={handlePhoneInput}
+                      maxLength={12}
+                      placeholder="535 000 0000"
+                      className="bg-secondary-blue flex-1 min-w-0 px-3 py-2 text-sm text-white font-bold outline-none font-sextary placeholder:text-white/40"
                     />
                   </div>
-                ))}
+                </div>
               </div>
             </div>
           </div>

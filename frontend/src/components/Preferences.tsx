@@ -28,12 +28,34 @@ function Toggle({ enabled, onToggle }: { enabled: boolean; onToggle: () => void 
   );
 }
 
+function applyTheme(t: Theme) {
+  if (t === 'dark') {
+    document.documentElement.classList.add('dark');
+  } else {
+    document.documentElement.classList.remove('dark');
+  }
+}
+
 export default function PreferencesPanel() {
-  const [theme, setTheme] = useState<Theme>('light');
+  const [theme, setTheme] = useState<Theme>(() => {
+    const saved = localStorage.getItem('hp_theme');
+    return (saved === 'dark' ? 'dark' : 'light') as Theme;
+  });
+  const [pendingTheme, setPendingTheme] = useState<Theme>(theme);
   const [notifications, setNotifications] = useState<Record<string, boolean>>({ email: true, sms: false, push: true });
 
   const toggleNotification = (id: string) =>
     setNotifications(prev => ({ ...prev, [id]: !prev[id] }));
+
+  const handleApply = () => {
+    applyTheme(pendingTheme);
+    localStorage.setItem('hp_theme', pendingTheme);
+    setTheme(pendingTheme);
+  };
+
+  const handleCancel = () => {
+    setPendingTheme(theme);
+  };
 
   return (
     <div className="flex flex-col gap-6 font-sextary">
@@ -55,8 +77,8 @@ export default function PreferencesPanel() {
               <div className="flex gap-6">
                 {/* Light Mode */}
                 <button
-                  onClick={() => setTheme('light')}
-                  className={`flex-1 rounded-lg overflow-hidden border-2 transition-all ${theme === 'light' ? 'border-primary-blue shadow-md' : 'border-primary-blue/20'}`}
+                  onClick={() => setPendingTheme('light')}
+                  className={`flex-1 rounded-lg overflow-hidden border-2 transition-all ${pendingTheme === 'light' ? 'border-primary-blue shadow-md' : 'border-primary-blue/20'}`}
                 >
                   <div className="bg-secondary-blue/10 px-6 pt-6 pb-3">
                     <div className="bg-white rounded-md px-4 py-4 shadow-sm space-y-2">
@@ -69,15 +91,15 @@ export default function PreferencesPanel() {
                       </div>
                     </div>
                   </div>
-                  <div className={`px-4 py-3 text-base font-semibold font-sextary ${theme === 'light' ? 'text-primary-blue' : 'text-dark-blue'}`}>
+                  <div className={`px-4 py-3 text-base font-semibold font-sextary ${pendingTheme === 'light' ? 'text-primary-blue' : 'text-dark-blue'}`}>
                     Açık Mod
                   </div>
                 </button>
 
                 {/* Dark Mode */}
                 <button
-                  onClick={() => setTheme('dark')}
-                  className={`flex-1 rounded-lg overflow-hidden border-2 transition-all ${theme === 'dark' ? 'border-primary-blue shadow-md' : 'border-primary-blue/20'}`}
+                  onClick={() => setPendingTheme('dark')}
+                  className={`flex-1 rounded-lg overflow-hidden border-2 transition-all ${pendingTheme === 'dark' ? 'border-primary-blue shadow-md' : 'border-primary-blue/20'}`}
                 >
                   <div className="bg-darker-blue px-6 pt-6 pb-3">
                     <div className="bg-dark-blue/80 rounded-md px-4 py-4 shadow-sm space-y-2">
@@ -90,7 +112,7 @@ export default function PreferencesPanel() {
                       </div>
                     </div>
                   </div>
-                  <div className={`px-4 py-3 text-base font-semibold font-sextary ${theme === 'dark' ? 'text-primary-blue' : 'text-dark-blue'}`}>
+                  <div className={`px-4 py-3 text-base font-semibold font-sextary ${pendingTheme === 'dark' ? 'text-primary-blue' : 'text-dark-blue'}`}>
                     Koyu Mod
                   </div>
                 </button>
@@ -171,10 +193,18 @@ export default function PreferencesPanel() {
 
       {/* Bottom action bar */}
       <div className="flex items-center justify-end gap-4 pt-2 prefs-actions">
-        <button className="text-dark-blue text-sm font-semibold font-sextary hover:text-darker-blue transition-colors px-4 py-2">
+        <button
+          onClick={handleCancel}
+          disabled={pendingTheme === theme}
+          className="text-dark-blue text-sm font-semibold font-sextary hover:text-darker-blue transition-colors px-4 py-2 disabled:opacity-40"
+        >
           Değişiklikleri İptal Et
         </button>
-        <button className="bg-secondary-blue text-white font-bold py-3 px-8 text-sm rounded-lg hover:opacity-90 transition-opacity tracking-widest uppercase font-sextary shadow-sm">
+        <button
+          onClick={handleApply}
+          disabled={pendingTheme === theme}
+          className="bg-secondary-blue text-white font-bold py-3 px-8 text-sm rounded-lg hover:opacity-90 transition-opacity tracking-widest uppercase font-sextary shadow-sm disabled:opacity-40"
+        >
           Ayarları Uygula
         </button>
       </div>

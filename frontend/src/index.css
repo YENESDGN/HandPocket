@@ -246,3 +246,90 @@ button {
 .modal-backdrop.closing { animation: fadeOut  0.18s ease-out forwards; }
 .modal-card             { animation: scaleIn  0.25s ease-out forwards; }
 .modal-card.closing     { animation: scaleOut 0.18s ease-out forwards; }
+
+/* ─── Dark Mode ──────────────────────────────────────────── */
+/*
+  Color derivation from the default palette:
+    #08b4fb  primary-blue    →  kept as accent (works on dark)
+    #1ea4dc  secondary-blue  →  #063048  (deep dark panel, same hue)
+    #1e91c1  tertiary-blue   →  #052438  (deeper variant)
+    #206988  dark-blue       →  #a8d8ea  (inverted: light blue for text)
+    #004561  darker-blue     →  #020e17  (pushed darker for surfaces)
+    white                    →  #0d2535  (dark navy card body)
+    gray-*                   →  blue-tinted dark scale
+*/
+
+html.dark {
+  color-scheme: dark;
+}
+
+/* ── Surfaces ── */
+html.dark .bg-white             { background-color: #0d2535; }
+html.dark .bg-gray-50           { background-color: #0f2b3d; }
+html.dark .bg-gray-100          { background-color: #112f42; }
+html.dark .bg-darker-blue       { background-color: #020e17; }
+html.dark .bg-dark-blue         { background-color: #0d2a3d; }
+html.dark .bg-secondary-blue    { background-color: #063048; }
+html.dark .bg-tertiary-blue     { background-color: #052438; }
+
+/* ── Text — grays (blue-tinted scale) ── */
+html.dark .text-black           { color: #e2f4fb; }
+html.dark .text-gray-800        { color: #e2f4fb; }
+html.dark .text-gray-700        { color: #cce8f4; }
+html.dark .text-gray-600        { color: #a8d8ea; }
+html.dark .text-gray-500        { color: #7ec8e3; }
+html.dark .text-gray-400        { color: #5ab8d8; }
+html.dark .text-gray-300        { color: #4aa8cb; }
+
+/* ── Text — blues (palette-derived) ── */
+html.dark .text-darker-blue     { color: #cce8f4; }
+html.dark .text-dark-blue       { color: #a8d8ea; }
+html.dark .text-secondary-blue  { color: #4abfe8; }
+/* text-primary-blue (#08b4fb) unchanged — vivid accent readable on dark */
+
+/* ── Text — reds (lighten for dark bg) ── */
+html.dark .text-red-700         { color: #fca5a5; }
+html.dark .text-red-600         { color: #f87171; }
+html.dark .text-red-500         { color: #f87171; }
+html.dark .text-red-400         { color: #fc8181; }
+html.dark .text-red-300         { color: #fca5a5; }
+html.dark .text-red-200         { color: #fecaca; }
+
+/* ── Text — greens (lighten for dark bg) ── */
+html.dark .text-green-700       { color: #86efac; }
+html.dark .text-green-600       { color: #4ade80; }
+
+/* ── Text — yellows / ambers (lighten for dark bg) ── */
+html.dark .text-yellow-700      { color: #fde047; }
+html.dark .text-yellow-600      { color: #facc15; }
+html.dark .text-amber-700       { color: #fcd34d; }
+
+/* ── Text — other semantic (lighten for dark bg) ── */
+html.dark .text-blue-700        { color: #93c5fd; }
+html.dark .text-indigo-700      { color: #a5b4fc; }
+html.dark .text-purple-700      { color: #c4b5fd; }
+html.dark .text-orange-500      { color: #fb923c; }
+
+/* ── Borders ── */
+html.dark .border-gray-200      { border-color: rgba(255,255,255,0.10); }
+html.dark .border-gray-100      { border-color: rgba(255,255,255,0.06); }
+html.dark .border-gray-300      { border-color: rgba(255,255,255,0.15); }
+
+/* ── Interactive ── */
+html.dark .hover\:bg-gray-50:hover  { background-color: #0f2b3d; }
+html.dark .hover\:bg-white:hover    { background-color: #112f42; }
+
+/* ── Page backgrounds ── */
+html.dark .main-bg {
+  background-color: #020e17;
+  filter: none;
+}
+html.dark .profile-bg::before {
+  filter: blur(10px) opacity(0.25);
+}
+
+/* ── LandingPage hero left (large bg-primary-blue surface) ── */
+html.dark .landing-hero-left   { background-color: #004561; }
+html.dark .landing-feature-card-1 { background-color: #020e17; }
+html.dark .landing-feature-card-2 { background-color: #0d2535; }
+html.dark .landing-feature-card-3 { background-color: #063048; }

@@ -3,6 +3,7 @@ import { useAuthStore } from '../store/auth';
 
 export default function SecondNavBar() {
     const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
+    const user       = useAuthStore((s) => s.user);
 
     return (
         <nav className='profile-bg px-8 py-4 flex items-center justify-between font-tertiary'>
@@ -22,11 +23,13 @@ export default function SecondNavBar() {
 
             {isLoggedIn ? (
                 <Link to="/profil">
-                    <div className='w-14 h-14 rounded-full overflow-hidden bg-gray-300 border-2 border-primary-blue'>
+                    <div className='w-14 h-14 rounded-full overflow-hidden bg-primary-blue border-2 border-primary-blue'>
                         <img
-                            src="/assets/favicon.png"
+                            key={user?.avatar_url ?? 'default'}
+                            src={user?.avatar_url ?? '/assets/favicon.png'}
                             alt="Profil"
                             className='w-full h-full object-cover'
+                            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
                         />
                     </div>
                 </Link>

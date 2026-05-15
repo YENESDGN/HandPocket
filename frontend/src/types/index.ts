@@ -22,6 +22,7 @@ export interface User {
     avarage_rating?: number;
     is_banned?: boolean;
     created_at: Date;
+    avatar_url?: string;
 }
 
 export interface DeliveryRequest {
@@ -67,4 +68,16 @@ export interface WalletTransaction {
     type: 'credit' | 'debit';
     amount: number;
     date: string;
+}
+
+export interface WalletStats {
+    total_spent: number;
+    total_deliveries: number;
+    avg_order: number;
+}
+
+export interface WalletSummary {
+    balance: number;
+    stats: WalletStats;
+    transactions: WalletTransaction[];
 }

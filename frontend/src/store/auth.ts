@@ -16,6 +16,9 @@ interface AuthState {
     signOut: () => Promise<void>;
     initialize: () => Promise<void>;
     clearError: () => void;
+    setAvatarUrl: (url: string) => void;
+    updateProfile: (full_name: string, phone_number?: string) => Promise<void>;
+    refreshUser: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -62,6 +65,8 @@ export const useAuthStore = create<AuthState>((set) => ({
             if (error) throw error;
 
             const { data: profile } = await api.get<User>('/users/me');
+            const savedAvatar = localStorage.getItem(`hp_avatar_${profile.id}`);
+            if (savedAvatar && !profile.avatar_url) profile.avatar_url = savedAvatar;
             set({
                 isLoggedIn: true,
                 role: profile.role as UserRole,
@@ -85,6 +90,8 @@ export const useAuthStore = create<AuthState>((set) => ({
         if (!session) return;
         try {
             const { data: profile } = await api.get<User>('/users/me');
+            const savedAvatar = localStorage.getItem(`hp_avatar_${profile.id}`);
+            if (savedAvatar && !profile.avatar_url) profile.avatar_url = savedAvatar;
             set({
                 isLoggedIn: true,
                 role: profile.role as UserRole,
@@ -96,4 +103,22 @@ export const useAuthStore = create<AuthState>((set) => ({
     },
 
     clearError: () => set({ error: null }),
+
+    setAvatarUrl: (url) => {
+        set((s) => ({ user: s.user ? { ...s.user, avatar_url: url } : s.user }));
+        const userId = useAuthStore.getState().user?.id;
+        if (userId) localStorage.setItem(`hp_avatar_${userId}`, url);
+    },
+
+    updateProfile: async (full_name, phone_number) => {
+        const { data: updated } = await api.patch<User>('/users/me', { full_name, phone_number });
+        const savedAvatar = useAuthStore.getState().user?.avatar_url;
+        set((s) => ({ user: { ...updated, avatar_url: savedAvatar ?? s.user?.avatar_url } }));
+    },
+
+    refreshUser: async () => {
+        const { data: profile } = await api.get<User>('/users/me');
+        const savedAvatar = useAuthStore.getState().user?.avatar_url;
+        set((s) => ({ user: { ...profile, avatar_url: savedAvatar ?? s.user?.avatar_url } }));
+    },
 }));

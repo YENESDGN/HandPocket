@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
+import { useAuthStore } from '../store/auth';
 
 export default function ReceiverNavBar() {
+    const user = useAuthStore((s) => s.user);
     return (
         <nav className='profile-bg px-8 py-4 flex items-center justify-between font-tertiary'>
             <div className='flex items-center gap-2'>
@@ -17,13 +19,17 @@ export default function ReceiverNavBar() {
                 <Link to="/iletisim" className='btn-hover-blue'>İletişim</Link>
             </div>
 
-            <div className='w-14 h-14 rounded-full overflow-hidden bg-gray-300 border-2 border-primary-blue'>
-                <img
-                    src="/assets/favicon.png"
-                    alt="Profil"
-                    className='w-full h-full object-cover'
-                />
-            </div>
+            <Link to="/profil">
+                <div className='w-14 h-14 rounded-full overflow-hidden bg-primary-blue border-2 border-primary-blue'>
+                    <img
+                        key={user?.avatar_url ?? 'default'}
+                        src={user?.avatar_url ?? '/assets/favicon.png'}
+                        alt="Profil"
+                        className='w-full h-full object-cover'
+                        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                    />
+                </div>
+            </Link>
         </nav>
     );
 }

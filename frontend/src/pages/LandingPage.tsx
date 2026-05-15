@@ -5,7 +5,7 @@ export default function LandingPage() {
     return (
         <>
             <section className="grid grid-cols-2">
-                <div className="bg-[#08b4fb] w-full h-full grid grid-cols-1 text-white gap-20 p-10 landing-hero-left">
+                <div className="bg-primary-blue w-full h-full grid grid-cols-1 text-white gap-20 p-10 landing-hero-left">
                     <div>
                         <img 
                         className="relative top-5"

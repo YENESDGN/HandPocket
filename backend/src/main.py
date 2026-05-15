@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .database import create_db_and_tables
-from .routers import tasks, users, reviews, disputes, locations
+from .routers import tasks, users, reviews, disputes, locations, wallet
 
 
 @asynccontextmanager
@@ -31,6 +31,7 @@ app.include_router(tasks.router)
 app.include_router(reviews.router)
 app.include_router(disputes.router)
 app.include_router(locations.router)
+app.include_router(wallet.router)
 
 
 @app.get("/health", tags=["health"])

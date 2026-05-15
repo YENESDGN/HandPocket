@@ -3,7 +3,8 @@ import { useAuthStore } from '../store/auth'
 
 export default function NavBar() {
     const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
-    const role = useAuthStore((s) => s.role);
+    const role       = useAuthStore((s) => s.role);
+    const user       = useAuthStore((s) => s.user);
 
     return (
         <section className="flex flex-row gap-7 items-center top-10 right-15 absolute font-tertiary">
@@ -25,11 +26,13 @@ export default function NavBar() {
 
             {isLoggedIn ? (
                 <Link to="/profil">
-                    <div className='w-12 h-12 rounded-full overflow-hidden bg-gray-300 border-2 border-primary-blue'>
+                    <div className='w-12 h-12 rounded-full overflow-hidden bg-primary-blue border-2 border-primary-blue'>
                         <img
-                            src="/assets/favicon.png"
+                            key={user?.avatar_url ?? 'default'}
+                            src={user?.avatar_url ?? '/assets/favicon.png'}
                             alt="Profil"
                             className='w-full h-full object-cover'
+                            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
                         />
                     </div>
                 </Link>

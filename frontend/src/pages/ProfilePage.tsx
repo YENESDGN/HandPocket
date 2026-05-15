@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Package, Settings, Shield, List, HelpCircle, LogOut, Wallet, Loader2 } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Package, Settings, Shield, List, HelpCircle, LogOut, Wallet, Loader2, Camera, X } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/auth';
 import SettingsPanel from '../components/settings';
@@ -7,7 +7,7 @@ import SecurityPanel from '../components/Security';
 import PreferencesPanel from '../components/Preferences';
 import NeedHelpPanel from '../components/NeedHelp';
 import api from '../lib/api';
-import type { WalletTransaction, DeliveryRequest as ApiDeliveryRequest } from '../types';
+import type { WalletTransaction, WalletSummary, DeliveryRequest as ApiDeliveryRequest } from '../types';
 
 type NavItem = 'teslimatlar' | 'ayarlar' | 'guvenlik' | 'tercihler' | 'yardim' | 'cuzdan';
 
@@ -105,75 +105,177 @@ function DeliveryTable({ title, rows, animClass }: { title: string; rows: Delive
   );
 }
 
-const walletBalance = 236;
+type ModalType = 'deposit' | 'withdraw' | null;
 
-const mockTransactions: WalletTransaction[] = [
-  { id: 'tx-1', label: 'Teslimat Ödemesi #KRG-1', type: 'debit',  amount: 87,  date: '24.09.2025' },
-  { id: 'tx-2', label: 'Teslimat Ödemesi #KRG-2', type: 'debit',  amount: 53,  date: '24.12.2025' },
-  { id: 'tx-3', label: 'Bakiye Yükleme',          type: 'credit', amount: 500, date: '10.01.2026' },
-  { id: 'tx-4', label: 'Teslimat Ödemesi #KRG-3', type: 'debit',  amount: 124, date: '15.02.2026' },
-];
+function WalletModal({ type, onClose, onConfirm, loading }: {
+  type: ModalType;
+  onClose: () => void;
+  onConfirm: (amount: number) => Promise<void>;
+  loading: boolean;
+}) {
+  const [amount, setAmount] = useState('');
+  const [error, setError]   = useState('');
 
-const walletStats = [
-  { label: 'Toplam Harcama', value: '264 TL' },
-  { label: 'Toplam Teslimat', value: '3' },
-  { label: 'Ortalama Sipariş', value: '88 TL' },
-];
+  if (!type) return null;
 
-function WalletPanel() {
+  const isDeposit = type === 'deposit';
+  const title     = isDeposit ? 'Bakiye Yükle' : 'Para Çek';
+
+  const handleSubmit = async () => {
+    const val = parseFloat(amount);
+    if (!amount || isNaN(val) || val <= 0) { setError('Geçerli bir miktar girin.'); return; }
+    setError('');
+    await onConfirm(val);
+  };
+
   return (
-    <div className='flex flex-col gap-6'>
-      <div className='bg-secondary-blue rounded-2xl p-8 flex items-center justify-between drop-shadow-[0_0_15px_rgba(0,0,0,0.3)] fade-in-up'>
-        <div>
-          <span className='text-white/70 text-sm block mb-1'>Mevcut Bakiye</span>
-          <span className='text-white font-bold text-5xl'>{walletBalance} TL</span>
-          <p className='text-white/50 text-xs mt-2'>Son güncelleme: 15.02.2026</p>
+    <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm'>
+      <div className='bg-white rounded-2xl shadow-2xl p-7 w-full max-w-sm mx-4 font-sextary'>
+        <div className='flex items-center justify-between mb-5'>
+          <h2 className='text-darker-blue font-bold text-lg'>{title}</h2>
+          <button onClick={onClose} className='text-gray-400 hover:text-gray-600'><X size={18} /></button>
         </div>
-        <div className='flex flex-col gap-2 items-end'>
-          <button className='bg-white text-secondary-blue font-bold px-6 py-2.5 rounded-full text-sm hover:bg-primary-blue hover:text-white transition-all active:scale-95'>
-            Bakiye Yükle
-          </button>
-          <button className='bg-white/15 border border-white/25 text-white font-semibold px-6 py-2.5 rounded-full text-sm hover:bg-white/25 transition-all active:scale-95'>
-            Para Çek
-          </button>
-        </div>
-      </div>
-
-      <div className='grid grid-cols-3 gap-4 fade-in-up-delay-1'>
-        {walletStats.map((s) => (
-          <div key={s.label} className='bg-white rounded-xl p-5 drop-shadow-[0_0_8px_rgba(0,0,0,0.1)]'>
-            <span className='text-gray-400 text-xs block mb-1'>{s.label}</span>
-            <span className='text-darker-blue font-bold text-2xl'>{s.value}</span>
-          </div>
-        ))}
-      </div>
-
-      <div className='bg-white rounded-xl overflow-hidden drop-shadow-[0_0_8px_rgba(0,0,0,0.1)] fade-in-up-delay-2'>
-        <div className='bg-darker-blue px-5 py-3'>
-          <span className='text-white font-bold text-sm tracking-wide uppercase'>İşlem Geçmişi</span>
-        </div>
-        <table className='w-full text-sm font-sextary'>
-          <thead>
-            <tr className='border-b border-gray-100'>
-              <th className='text-left px-5 py-3 text-gray-500 font-semibold'>İşlem</th>
-              <th className='text-left px-5 py-3 text-gray-500 font-semibold'>Tarih</th>
-              <th className='text-right px-5 py-3 text-gray-500 font-semibold'>Tutar</th>
-            </tr>
-          </thead>
-          <tbody>
-            {mockTransactions.map((tx) => (
-              <tr key={tx.id} className='border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors'>
-                <td className='px-5 py-3 text-gray-800'>{tx.label}</td>
-                <td className='px-5 py-3 text-gray-400'>{tx.date}</td>
-                <td className={`px-5 py-3 text-right font-bold ${tx.type === 'credit' ? 'text-green-600' : 'text-red-500'}`}>
-                  {tx.type === 'credit' ? '+' : '−'}{tx.amount} TL
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <input
+          type='number'
+          min='1'
+          step='1'
+          placeholder='Miktar (TL)'
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          className='w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-800 outline-none focus:border-primary-blue transition-colors mb-2'
+        />
+        {error && <p className='text-red-500 text-xs mb-2'>{error}</p>}
+        <button
+          onClick={handleSubmit}
+          disabled={loading}
+          className='w-full bg-primary-blue text-white font-bold py-3 rounded-xl hover:bg-secondary-blue transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 mt-1'
+        >
+          {loading && <Loader2 size={16} className='animate-spin' />}
+          {title}
+        </button>
       </div>
     </div>
+  );
+}
+
+function WalletPanel() {
+  const refreshUser = useAuthStore((s) => s.refreshUser);
+  const [summary, setSummary]   = useState<WalletSummary | null>(null);
+  const [wLoading, setWLoading] = useState(true);
+  const [modal, setModal]       = useState<ModalType>(null);
+  const [txLoading, setTxLoading] = useState(false);
+  const [txError, setTxError]     = useState('');
+
+  const load = async () => {
+    try {
+      const { data } = await api.get<WalletSummary>('/wallet/');
+      setSummary(data);
+    } finally {
+      setWLoading(false);
+    }
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const handleTransaction = async (amount: number) => {
+    setTxLoading(true);
+    setTxError('');
+    try {
+      const endpoint = modal === 'deposit' ? '/wallet/deposit' : '/wallet/withdraw';
+      const { data } = await api.post<{ balance: number }>(endpoint, { amount });
+      setSummary((prev) => prev ? { ...prev, balance: data.balance } : prev);
+      await Promise.all([load(), refreshUser()]);
+      setModal(null);
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ?? 'İşlem başarısız.';
+      setTxError(msg);
+    } finally {
+      setTxLoading(false);
+    }
+  };
+
+  if (wLoading) return (
+    <div className='flex justify-center py-16'><Loader2 size={32} className='text-primary-blue animate-spin' /></div>
+  );
+
+  const stats = summary?.stats;
+  const walletStats = [
+    { label: 'Toplam Harcama',  value: stats ? `${stats.total_spent.toFixed(2)} TL` : '— TL' },
+    { label: 'Toplam Teslimat', value: stats ? String(stats.total_deliveries) : '—' },
+    { label: 'Ortalama Sipariş', value: stats ? `${stats.avg_order.toFixed(2)} TL` : '— TL' },
+  ];
+
+  return (
+    <>
+      <WalletModal type={modal} onClose={() => setModal(null)} onConfirm={handleTransaction} loading={txLoading} />
+
+      <div className='flex flex-col gap-6'>
+        {txError && (
+          <div className='bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl flex items-center justify-between'>
+            <span>{txError}</span>
+            <button onClick={() => setTxError('')}><X size={14} /></button>
+          </div>
+        )}
+
+        <div className='bg-secondary-blue rounded-2xl p-8 flex items-center justify-between drop-shadow-[0_0_15px_rgba(0,0,0,0.3)] fade-in-up'>
+          <div>
+            <span className='text-white/70 text-sm block mb-1'>Mevcut Bakiye</span>
+            <span className='text-white font-bold text-5xl'>{summary ? summary.balance.toFixed(2) : '—'} TL</span>
+          </div>
+          <div className='flex flex-col gap-2 items-end'>
+            <button
+              onClick={() => setModal('deposit')}
+              className='bg-white text-secondary-blue font-bold px-6 py-2.5 rounded-full text-sm hover:bg-primary-blue hover:text-white transition-all active:scale-95'
+            >
+              Bakiye Yükle
+            </button>
+            <button
+              onClick={() => setModal('withdraw')}
+              className='bg-white/15 border border-white/25 text-white font-semibold px-6 py-2.5 rounded-full text-sm hover:bg-white/25 transition-all active:scale-95'
+            >
+              Para Çek
+            </button>
+          </div>
+        </div>
+
+        <div className='grid grid-cols-3 gap-4 fade-in-up-delay-1'>
+          {walletStats.map((s) => (
+            <div key={s.label} className='bg-white rounded-xl p-5 drop-shadow-[0_0_8px_rgba(0,0,0,0.1)]'>
+              <span className='text-gray-400 text-xs block mb-1'>{s.label}</span>
+              <span className='text-darker-blue font-bold text-2xl'>{s.value}</span>
+            </div>
+          ))}
+        </div>
+
+        <div className='bg-white rounded-xl overflow-hidden drop-shadow-[0_0_8px_rgba(0,0,0,0.1)] fade-in-up-delay-2'>
+          <div className='bg-darker-blue px-5 py-3'>
+            <span className='text-white font-bold text-sm tracking-wide uppercase'>İşlem Geçmişi</span>
+          </div>
+          <table className='w-full text-sm font-sextary'>
+            <thead>
+              <tr className='border-b border-gray-100'>
+                <th className='text-left px-5 py-3 text-gray-500 font-semibold'>İşlem</th>
+                <th className='text-left px-5 py-3 text-gray-500 font-semibold'>Tarih</th>
+                <th className='text-right px-5 py-3 text-gray-500 font-semibold'>Tutar</th>
+              </tr>
+            </thead>
+            <tbody>
+              {!summary || summary.transactions.length === 0 ? (
+                <tr><td colSpan={3} className='px-5 py-4 text-center text-gray-400 text-xs'>İşlem bulunamadı</td></tr>
+              ) : summary.transactions.map((tx: WalletTransaction) => (
+                <tr key={tx.id} className='border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors'>
+                  <td className='px-5 py-3 text-gray-800'>{tx.label}</td>
+                  <td className='px-5 py-3 text-gray-400'>{tx.date}</td>
+                  <td className={`px-5 py-3 text-right font-bold ${tx.type === 'credit' ? 'text-green-600' : 'text-red-500'}`}>
+                    {tx.type === 'credit' ? '+' : '−'}{tx.amount.toFixed(2)} TL
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -181,10 +283,20 @@ export default function ProfilePage() {
   const [activeNav, setActiveNav] = useState<NavItem>('teslimatlar');
   const [rows, setRows]           = useState<DeliveryRow[]>([]);
   const [tasksLoading, setTasksLoading] = useState(true);
-  const signOut = useAuthStore((s) => s.signOut);
-  const user    = useAuthStore((s) => s.user);
-  const role    = useAuthStore((s) => s.role);
-  const navigate = useNavigate();
+  const signOut      = useAuthStore((s) => s.signOut);
+  const user         = useAuthStore((s) => s.user);
+  const role         = useAuthStore((s) => s.role);
+  const setAvatarUrl = useAuthStore((s) => s.setAvatarUrl);
+  const navigate     = useNavigate();
+  const avatarRef    = useRef<HTMLInputElement>(null);
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setAvatarUrl(reader.result as string);
+    reader.readAsDataURL(file);
+  };
 
   useEffect(() => {
     api.get<ApiDeliveryRequest[]>('/tasks/my')
@@ -205,17 +317,21 @@ export default function ProfilePage() {
       <aside className="w-52 bg-darker-blue flex flex-col flex-shrink-0 profile-sidebar">
         {/* Profile section */}
         <div className="flex flex-col items-center pt-8 pb-6 px-4 border-b border-white/10">
-          <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-white/30 mb-3">
+          <div
+            className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-white/30 mb-3 bg-primary-blue cursor-pointer group"
+            onClick={() => avatarRef.current?.click()}
+          >
             <img
-              src="/assets/avatar-placeholder.png"
+              key={user?.avatar_url ?? 'default'}
+              src={user?.avatar_url ?? '/assets/avatar-placeholder.png'}
               alt="Profil"
               className="w-full h-full object-cover"
-              onError={(e) => {
-                const target = e.currentTarget;
-                target.style.display = 'none';
-                target.parentElement!.classList.add('bg-primary-blue');
-              }}
+              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
             />
+            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <Camera size={16} className="text-white" />
+            </div>
+            <input ref={avatarRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
           </div>
           <p className="text-white font-bold text-sm text-center leading-tight">{user?.full_name ?? '—'}</p>
           <p className="text-white/70 text-xs mt-1">{user?.phone_number ?? ''}</p>
@@ -267,7 +383,7 @@ export default function ProfilePage() {
       <div className="flex flex-col flex-1 overflow-hidden">
         {/* Top navbar */}
         <header className="backdrop-blur-sm border-b border-gray-200 flex items-center justify-between px-8 py-5 flex-shrink-0 profile-header">
-          <div className="flex bg-items-center gap-2">
+          <div className="flex items-center gap-2">
             <img src="/assets/favicon.png" alt="HandPocket" className="w-16 h-16 object-contain" />
           </div>
           <nav className="flex items-center gap-8 text-lg font-tertiary relative px-10">
@@ -275,6 +391,22 @@ export default function ProfilePage() {
             <Link to="/hakkimizda" className="text-gray-800 btn-hover-blue">Hakkımızda</Link>
             <Link to="/iletisim" className="text-gray-800 btn-hover-blue">İletişim</Link>
           </nav>
+          <button
+            onClick={() => avatarRef.current?.click()}
+            className="w-11 h-11 rounded-full overflow-hidden border-2 border-primary-blue bg-primary-blue flex-shrink-0 group relative"
+            title="Fotoğrafı Değiştir"
+          >
+            <img
+              key={user?.avatar_url ?? 'default'}
+              src={user?.avatar_url ?? '/assets/favicon.png'}
+              alt="Profil"
+              className="w-full h-full object-cover"
+              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+            />
+            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <Camera size={13} className="text-white" />
+            </div>
+          </button>
         </header>
 
         {/* Page body */}

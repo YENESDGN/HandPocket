@@ -28,6 +28,22 @@ def create_task(
     session: Session = Depends(get_session),
     current_user: User = Depends(require_role(UserRole.SENDER, UserRole.ADMIN)),
 ):
+    price = payload.calculated_price or 0.0
+    if current_user.wallet_balance < price:
+        raise HTTPException(status_code=402, detail="Yetersiz bakiye")
+
+    current_user.wallet_balance = round(current_user.wallet_balance - price, 2)
+    session.add(current_user)
+
+    from ..models.wallet import WalletTransaction
+    tx = WalletTransaction(
+        user_id=current_user.id,
+        label=f"Teslimat Ödemesi — {payload.package_description or 'Kargo'}",
+        type="debit",
+        amount=price,
+    )
+    session.add(tx)
+
     task = DeliveryRequest(**payload.model_dump(), sender_id=current_user.id)
     session.add(task)
     session.commit()
@@ -111,6 +127,20 @@ def update_status(
         if task.courier_id != current_user.id:
             raise HTTPException(status_code=403, detail="Only the assigned courier can advance this status")
 
+    if payload.status == RequestStatus.CANCELLED:
+        # Refund sender when a task is cancelled
+        sender = session.get(User, task.sender_id)
+        if sender and task.calculated_price:
+            sender.wallet_balance = round(sender.wallet_balance + task.calculated_price, 2)
+            session.add(sender)
+            from ..models.wallet import WalletTransaction
+            session.add(WalletTransaction(
+                user_id=task.sender_id,
+                label=f"İade — {task.package_description or 'Kargo'}",
+                type="credit",
+                amount=task.calculated_price,
+            ))
+
     if payload.status == RequestStatus.COMPLETED:
         if task.sender_id != current_user.id:
             raise HTTPException(status_code=403, detail="Only the sender can confirm completion")
@@ -118,8 +148,15 @@ def update_status(
         if task.courier_id and task.calculated_price:
             courier = session.get(User, task.courier_id)
             if courier:
-                courier.wallet_balance += task.calculated_price
+                courier.wallet_balance = round(courier.wallet_balance + task.calculated_price, 2)
                 session.add(courier)
+                from ..models.wallet import WalletTransaction
+                session.add(WalletTransaction(
+                    user_id=task.courier_id,
+                    label=f"Teslimat Kazancı — {task.package_description or 'Kargo'}",
+                    type="credit",
+                    amount=task.calculated_price,
+                ))
 
     task.status = payload.status
     task.updated_at = datetime.utcnow()

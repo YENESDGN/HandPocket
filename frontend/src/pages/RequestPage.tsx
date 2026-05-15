@@ -3,6 +3,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ImagePlus, X, Loader2 } from 'lucide-react';
 import api from '../lib/api';
+import { useAuthStore } from '../store/auth';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
@@ -198,8 +199,11 @@ function RouteMap({ pickup, delivery, routeCoords }: {
 }
 
 export default function RequestPage() {
-    const navigate = useNavigate();
+    const navigate    = useNavigate();
+    const user        = useAuthStore((s) => s.user);
+    const refreshUser = useAuthStore((s) => s.refreshUser);
     const [isPanelVisible, setIsPanelVisible] = useState(true);
+    const [insufficientBalance, setInsufficientBalance] = useState(false);
     const [cargoName, setCargoName]   = useState('');
     const [pickup, setPickup]         = useState<LocationState>({ address: '', lat: null, lon: null });
     const [delivery, setDelivery]     = useState<LocationState>({ address: '', lat: null, lon: null });
@@ -228,6 +232,12 @@ export default function RequestPage() {
 
     const handleSubmit = async () => {
         if (!calcResult) return;
+        setInsufficientBalance(false);
+        const balance = user?.wallet_balance ?? 0;
+        if (balance < calcResult.price) {
+            setInsufficientBalance(true);
+            return;
+        }
         setSubmitError(null);
         setSubmitLoading(true);
         try {
@@ -241,8 +251,11 @@ export default function RequestPage() {
                 estimated_time_mins: calcResult.durationMins,
                 calculated_price: calcResult.price,
             });
+            await refreshUser();
             setShowSuccess(true);
-        } catch {
+        } catch (err: unknown) {
+            const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+            if (detail === 'Yetersiz bakiye') { setInsufficientBalance(true); return; }
             setSubmitError('Teslimat oluşturulamadı. Lütfen tekrar deneyin.');
         } finally {
             setSubmitLoading(false);
@@ -474,6 +487,35 @@ export default function RequestPage() {
                     )}
                 </div>
             </section>
+            {insufficientBalance && (
+                <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm'>
+                    <div className='bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full mx-4 font-sextary flex flex-col items-center gap-4'>
+                        <div className='w-16 h-16 rounded-full bg-red-100 flex items-center justify-center'>
+                            <svg xmlns="http://www.w3.org/2000/svg" className='w-8 h-8 text-red-500' fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                            </svg>
+                        </div>
+                        <p className='text-darker-blue font-bold text-lg text-center'>Yetersiz bakiye.</p>
+                        <p className='text-gray-500 text-sm text-center'>
+                            Mevcut bakiyeniz bu teslimat için yeterli değil. Lütfen bakiyenizi yükleyin.
+                        </p>
+                        <div className='flex gap-3 w-full'>
+                            <button
+                                onClick={() => setInsufficientBalance(false)}
+                                className='flex-1 border border-gray-200 text-gray-600 font-semibold py-3 rounded-xl hover:bg-gray-50 transition-all'
+                            >
+                                Kapat
+                            </button>
+                            <button
+                                onClick={() => navigate('/profil')}
+                                className='flex-1 bg-primary-blue text-white font-semibold py-3 rounded-xl hover:bg-secondary-blue transition-all'
+                            >
+                                Bakiye Yükle
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
             {showSuccess && (
                 <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm'>
                     <div className='bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full mx-4 font-sextary flex flex-col items-center gap-4'>
