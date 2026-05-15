@@ -2,7 +2,7 @@ import SecondNavBar from '../components/SecondNavBar';
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ImagePlus, X, Loader2 } from 'lucide-react';
-import api from '../lib/api';
+import { createTask } from '../services/taskService';
 import { useAuthStore } from '../store/auth';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -241,7 +241,7 @@ export default function RequestPage() {
         setSubmitError(null);
         setSubmitLoading(true);
         try {
-            await api.post('/tasks/', {
+            await createTask({
                 package_description: cargoName || 'Kargo',
                 pickup_address: pickup.address,
                 delivery_address: delivery.address,

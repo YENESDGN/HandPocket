@@ -4,7 +4,7 @@ import { CheckCircle2, XCircle, Clock, Truck, PackageCheck, Loader2 } from 'luci
 import ReceiverNavBar from '../components/ReceiverNavBar';
 import MapboxMap from '../components/MapboxMap';
 import type { MapMarker } from '../components/MapboxMap';
-import api from '../lib/api';
+import { getTaskById } from '../services/taskService';
 import type { DeliveryRequest } from '../types';
 import { RequestStatus } from '../types';
 
@@ -65,8 +65,8 @@ export default function DeliveryDetailPage() {
 
     useEffect(() => {
         if (!id) { setNotFound(true); setLoading(false); return; }
-        api.get<DeliveryRequest>(`/tasks/${id}`)
-            .then(({ data }) => setRequest(data))
+        getTaskById(id)
+            .then((data) => setRequest(data))
             .catch(() => setNotFound(true))
             .finally(() => setLoading(false));
     }, [id]);
@@ -232,6 +232,7 @@ export default function DeliveryDetailPage() {
                         {request.status === RequestStatus.ACCEPTED && (
                             <Link
                                 to='/takip'
+                                state={{ request }}
                                 className='mt-1 w-full bg-secondary-blue text-white py-2.5 rounded-xl font-bold text-sm text-center hover:bg-dark-blue transition-all active:scale-[0.98]'
                             >
                                 Canlı Takip

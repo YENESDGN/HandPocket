@@ -4,7 +4,8 @@ import ProofOfDeliveryModal from '../components/ProofOfDeliveryModal';
 import MapboxMap from '../components/MapboxMap';
 import type { MapMarker } from '../components/MapboxMap';
 import type { DeliveryRequest } from '../types';
-import api from '../lib/api';
+import { updateTaskStatus, setProofPhoto } from '../services/taskService';
+import { supabase } from '../lib/supabase';
 
 async function geocode(address: string): Promise<{ lat: number; lng: number } | null> {
     try {
@@ -95,12 +96,24 @@ export default function NavigationPage() {
         return () => ctrl.abort();
     }, [request?.id]);
 
-    const handleComplete = async () => {
+    const handleComplete = async (file: File | null) => {
         if (!request) return;
         setCompleting(true);
         try {
-            await api.patch(`/tasks/${request.id}/status`, { status: 'picked_up' });
-            await api.patch(`/tasks/${request.id}/status`, { status: 'delivered' });
+            if (file) {
+                const ext = file.name.split('.').pop() ?? 'jpg';
+                const { data } = await supabase.storage
+                    .from('delivery-proofs')
+                    .upload(`${request.id}/proof.${ext}`, file, { upsert: true });
+                if (data?.path) {
+                    const { data: urlData } = supabase.storage
+                        .from('delivery-proofs')
+                        .getPublicUrl(data.path);
+                    await setProofPhoto(request.id, urlData.publicUrl);
+                }
+            }
+            await updateTaskStatus(request.id, 'picked_up');
+            await updateTaskStatus(request.id, 'delivered');
             navigate('/profil');
         } catch {
             setCompleting(false);
@@ -111,7 +124,7 @@ export default function NavigationPage() {
         if (!request) return;
         setCancelling(true);
         try {
-            await api.patch(`/tasks/${request.id}/status`, { status: 'cancelled' });
+            await updateTaskStatus(request.id, 'cancelled');
         } catch { /* best-effort */ }
         navigate('/talep-al');
     };

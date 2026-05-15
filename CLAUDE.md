@@ -44,14 +44,16 @@
 - bg-dark-blue arka plan
 - Text-white renk
 
-### RequestPage.tsx (127 satır)
+### RequestPage.tsx
 - Kargo talebi oluşturma sayfası (gönderici rolü)
 - SecondNavBar kullanımı
-- 23/77 grid layout: sol form paneli + sağ Google Maps iframe
+- 23/77 grid layout: sol form paneli + sağ Mapbox harita
 - Sol: Kargo Adı, Başlangıç/Bitiş Konumu, Paket Fotoğrafı (opsiyonel), Ağırlık, Öncelik
-- Sağ harita: h-[850px] Google Maps iframe
+- Sağ harita: h-[900px] Mapbox GL JS harita
 - Harita üstünde toggle butonu (isPanelVisible useState) + compact hesaplama paneli (w-56, absolute bottom-4 right-4)
 - Hesaplama paneli: Mesafe / Süre / Hesaplanan Ücret + "Teslimat Oluştur" butonu
+- **Bakiye kontrolü**: `handleSubmit` çağrılmadan önce `user.wallet_balance >= calcResult.price` kontrolü; yetersizse "Yetersiz bakiye." modal gösterilir, "Bakiye Yükle" butonu `/profil`'e yönlendirir
+- Backend 402 hatası da yakalanır; başarılı submitten sonra `refreshUser()` çağrılır
 
 ### RecieverPage.tsx
 - Kurye rolü için açık talepleri görme ve kabul etme sayfası
@@ -59,18 +61,22 @@
 - 3-kolon grid: [22%_1fr_22%] — sol detay paneli + orta harita + sağ bekleyen talepler listesi
 - ReceiverNavBar + DeliveryAmountCard kullanımı
 - Sol panel: seçili talebin read-only alanları (Kargo Adı, Başlangıç, Bitiş, Ağırlık, Öncelik badge) + DeliveryAmountCard
-- Orta: h-[850px] Google Maps iframe
+- Orta: h-[850px] **MapboxMap** (Nominatim geocoding + OSRM rota) — Google Maps iframe kaldırıldı
 - Sağ: kaydırılabilir bekleyen talepler listesi (bg-secondary-blue header, beyaz kartlar, aktif seçim ring)
-- availableRequests mock data (6 talep), useState ile seçili talep yönetimi
+- `getOpenTasks()` ile gerçek API verisi; useState ile seçili talep yönetimi
 - priorityLabel / priorityBadge yardımcı fonksiyonlar
-- **Kabul Et** (`DeliveryAmountCard.onAccept`): `useNavigate` ile **/navigasyon** (NavigationPage) — API henüz bağlı değil
+- **Kabul Et** (`DeliveryAmountCard.onAccept`): `acceptTask(id)` → `useNavigate` ile **/navigasyon** (state: { request })
 
-### TrackingPage.tsx (176 satır)
+### TrackingPage.tsx
 - Gönderi canlı takip sayfası (gönderici rolü)
 - Route: /takip
 - ReceiverNavBar kullanımı
+- **Veri kaynağı**: `location.state.request` (DeliveryDetailPage `<Link state={{ request }}>` ile geçirir); null ise "Gönderi bulunamadı" fallback ekranı
+- `getUserById(request.courier_id)` ile kurye adı çekilir (loading spinner)
+- ETA: `new Date() + estimated_time_mins` → `HH:MM` formatı
+- Harita merkezi: `request.pickup_address` Nominatim geocoding ile
 - 23/77 grid: sol 3 kart + sağ tam yükseklik harita
-- Sol kartlar: Status Card (Gönderi ID + ETA + Mesafe), Cargo Details Card (Timeline: BAŞLANGIÇ→TESLİMAT + ağırlık/öncelik), Courier Card (ad, filo ID, araç/plaka, telefon butonu)
+- Sol kartlar: Status Card (Gönderi ID + ETA + Mesafe), Cargo Details Card (Timeline: BAŞLANGIÇ→TESLİMAT + ağırlık/öncelik), Courier Card (full_name + email, telefon butonu)
 - Sağ harita: h-[calc(100vh-160px)], pulsing kurye marker overlay (animate-ping + bg-secondary-blue)
 
 ### DeliveryDetailPage.tsx (327 satır)
@@ -84,14 +90,15 @@
 - Kabul durumunda "Canlı Takip" linki (/takip)
 - Bulunamayan ID için 404 fallback ekranı
 
-### NavigationPage.tsx (157 satır)
+### NavigationPage.tsx
 - Kurye navigasyon sayfası (tam ekran harita)
 - Route: /navigasyon
-- Full-screen iframe harita (absolute inset-0)
+- Full-screen **MapboxMap** (Nominatim + OSRM adım adım yön)
 - Sol üst: Dönüş talimatı kartı (mesafe + talimat) + Tahmini varış / kalan km kartı
 - Sağ üst: Rota Zaman Çizelgesi paneli (Alım → Yolda → Varış → Teslim)
 - Alt: Kargo Özellikleri (ağırlık/mesafe/ID) + İptal / Tamamla butonları
-- ProofOfDeliveryModal entegrasyonu (useState showProofModal)
+- **ProofOfDeliveryModal** entegrasyonu: "Tamamla" → modal açılır → `onConfirm(file)` → Supabase Storage `delivery-proofs` bucket'a yükleme (best-effort) → `setProofPhoto(id, url)` → `updateTaskStatus` picked_up + delivered → `/profil`
+- İptal: `updateTaskStatus(id, 'cancelled')` → `/talep-al`
 
 ### AboutUs.tsx (116 satır)
 - Hakkımızda sayfası
@@ -132,17 +139,17 @@
 - Logo + Hizmetler/Hakkımızda/İletişim linkleri + Copyright
 - btn-hover-blue efektleri
 
-### ProfilePage.tsx (188 satır)
+### ProfilePage.tsx
 - Route: /profil
 - relative flex h-screen layout: sol sidebar + sağ main content
 - Arka plan: assets/RgLg_bg.png (absolute, opacity-50, blur-sm, z-[-1])
 - **Sidebar** (bg-darker-blue, w-52):
-  - Üst: Profil fotoğrafı (yuvarlak), Ad, Telefon, Email
+  - Üst: Profil fotoğrafı (yuvarlak, tıklanabilir → file picker), Ad, Telefon, Email
   - Orta nav: Teslimatlar, Ayarlar, Güvenlik, Tercihler (Lucide ikonlar)
   - Aktif nav item: bg-dark-blue + beyaz yazı (useState ile)
-  - Alt: Yardım Merkezi (NeedHelpPanel), Çıkış Yap (kırmızı) — `signOut()` + ana sayfaya yönlendirme
-- **Navbar** (bg-white, py-5): Logo sol, Anasayfa/Hakkımızda/İletişim sağ
-- **NavItem tipi**: 'teslimatlar' | 'ayarlar' | 'guvenlik' | 'tercihler' | 'yardim'
+  - Alt: Cüzdan, Yardım Merkezi (NeedHelpPanel), Çıkış Yap (kırmızı) — `signOut()` + ana sayfaya yönlendirme
+- **Navbar** (bg-white, py-5): Logo sol, Anasayfa/Hakkımızda/İletişim sağ, profil avatarı sağda (tıklanınca file picker açar)
+- **NavItem tipi**: 'teslimatlar' | 'ayarlar' | 'guvenlik' | 'tercihler' | 'yardim' | 'cuzdan'
 - **Tablolar** (DeliveryTable komponenti — teslimatlar sekmesi):
   - table-fixed + colgroup ile sabit kolon genişlikleri (15/45/20/20%)
   - Başlık satırı: bg-darker-blue, beyaz bold yazı
@@ -153,6 +160,8 @@
   - guvenlik → SecurityPanel (Security.tsx)
   - tercihler → PreferencesPanel (Preferences.tsx)
   - yardim → NeedHelpPanel (NeedHelp.tsx)
+  - cuzdan → WalletPanel (ProfilePage içinde tanımlı)
+- **WalletPanel**: `getWalletSummary()` ile gerçek bakiye + istatistikler + işlem geçmişi; WalletModal komponenti ile Bakiye Yükle (`deposit(amount)`) ve Para Çek (`withdraw(amount)`) işlemleri; işlem sonrası `refreshUser()` + panel yenileme
 
 ### settings.tsx (181 satır) — Ayarlar sekmesi
 - font-sextary, rounded-lg, shadow-md kartlar
@@ -204,15 +213,21 @@ frontend/src/
 │   ├── supabase.ts              (@supabase/supabase-js client — VITE_SUPABASE_*)
 │   └── api.ts                   (axios instance, JWT interceptor → FastAPI)
 ├── store/
-│   └── auth.ts                  (Zustand: signUp, signIn, signOut, initialize, role, user)
+│   └── auth.ts                  (Zustand: signUp, signIn, signOut, initialize, role, user, setAvatarUrl, updateProfile, refreshUser)
+├── services/                    (tüm API çağrıları buradan — lazy, sayfa içinde doğrudan api.* yok)
+│   ├── taskService.ts           (getOpenTasks, getMyTasks, getTaskById, createTask, acceptTask, updateTaskStatus, setProofPhoto)
+│   ├── walletService.ts         (getWalletSummary, deposit, withdraw)
+│   └── userService.ts           (createUser, getMe, updateMe, getUserById)
 ├── components/
 │   ├── NavBar.tsx               (LandingPage nav + rol bazlı Talep Oluştur / Talep Al)
 │   ├── SecondNavBar.tsx         (blur-bg navbar — RequestPage, AboutUs)
 │   ├── ReceiverNavBar.tsx       (beyaz navbar — kurye/takip/detay sayfaları)
+│   ├── MapboxMap.tsx            (Mapbox GL JS wrapper — center, zoom, markers, route props)
 │   ├── Footer.tsx               (3-kolon footer)
 │   ├── ContactInfo.tsx          (iletişim bilgileri — bg-dark-blue)
 │   ├── DeliveryAmountCard.tsx   (TESLİMAT MİKTARI kartı — RecieverPage)
-│   ├── ProofOfDeliveryModal.tsx (teslimat kanıtı modal — NavigationPage)
+│   ├── WalletModal.tsx          (Bakiye Yükle / Para Çek modal — onConfirm(amount), ModalType export)
+│   ├── ProofOfDeliveryModal.tsx (teslimat kanıtı modal — onConfirm(file: File|null))
 │   ├── settings.tsx             (ProfilePage — Ayarlar sekmesi)
 │   ├── Security.tsx             (ProfilePage — Güvenlik sekmesi)
 │   ├── Preferences.tsx          (ProfilePage — Tercihler sekmesi)
@@ -243,8 +258,8 @@ backend/
     ├── main.py
     ├── database.py
     ├── security.py
-    ├── models/                  (user, task_model, review, dispute, location)
-    └── routers/                 (users, tasks, reviews, disputes, locations)
+    ├── models/                  (user, task_model, review, dispute, location, wallet)
+    └── routers/                 (users, tasks, reviews, disputes, locations, wallet)
 
 .vscode/
 └── settings.json (CSS linter ayarları)
@@ -342,6 +357,19 @@ backend/
 3. **Axios** (`api.ts`): her istekte `supabase.auth.getSession()` ile `Authorization: Bearer <access_token>`
 4. **Uygulama açılışı**: `App.tsx` içinde `useAuthStore.initialize()` — geçerli session varsa profil yüklenir; `/users/me` başarısızsa Supabase oturumu temizlenir
 5. **Çıkış**: `supabase.auth.signOut` + store sıfırlama (`ProfilePage`, `AdminDashboard`)
+
+### Cüzdan API
+- `GET /wallet/` → `WalletSummary { balance, stats, transactions }` — stats tamamlanan teslimatlardan hesaplanır
+- `POST /wallet/deposit` → `{ amount }` — bakiye yükler, `credit` transaction kaydeder
+- `POST /wallet/withdraw` → `{ amount }` — yetersiz bakiyede 400 döner, `debit` transaction kaydeder
+- `POST /tasks/` — bakiye < `calculated_price` ise 402 döner; başarılıysa bakiyeyi düşer ve `debit` transaction kaydeder
+- Task iptalinde gönderici bakiyesi iade edilir (`credit` transaction); tamamlamada kurye bakiyesi artırılır (`credit` transaction)
+- `PATCH /tasks/{id}/proof` → `{ proof_url: string }` (JSON body) — teslimat kanıtı fotoğraf URL'ini kaydeder (yalnızca atanmış kurye)
+- `GET /users/{id}` — artık herhangi bir giriş yapmış kullanıcı erişebilir (admin değil)
+
+### Supabase Storage
+- Teslimat kanıtı fotoğrafları için `delivery-proofs` adında **public** bucket oluşturulmalı (Supabase Dashboard → Storage)
+- Upload path: `{task_id}/proof.{ext}` — upsert açık, bucket yoksa yükleme sessizce atlanır, teslimat yine de tamamlanır
 
 ### Güvenlik notu
 - `sb_secret_` (service / JWT secret) **asla** frontend'e konmamalı; sadece backend `.env`.

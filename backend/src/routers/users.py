@@ -47,7 +47,7 @@ def update_me(
 def get_user(
     user_id: str,
     session: Session = Depends(get_session),
-    current_user: User = Depends(require_role(UserRole.ADMIN)),
+    current_user: User = Depends(get_current_user),
 ):
     user = session.get(User, user_id)
     if not user:

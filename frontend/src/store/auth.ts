@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
-import api from '../lib/api';
+import { createUser, getMe, updateMe } from '../services/userService';
 import type { User } from '../types';
 
 type UserRole = 'sender' | 'courier';
@@ -37,12 +37,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
             // Profile creation is best-effort — auth user is already created in Supabase
             try {
-                await api.post('/users', {
-                    id: data.user.id,
-                    full_name: fullName,
-                    role,
-                    email,
-                });
+                await createUser({ id: data.user.id, full_name: fullName, role, email });
             } catch {
                 console.warn('Profile row could not be created — backend may be offline.');
             }
@@ -64,7 +59,7 @@ export const useAuthStore = create<AuthState>((set) => ({
             const { error } = await supabase.auth.signInWithPassword({ email, password });
             if (error) throw error;
 
-            const { data: profile } = await api.get<User>('/users/me');
+            const profile = await getMe();
             const savedAvatar = localStorage.getItem(`hp_avatar_${profile.id}`);
             if (savedAvatar && !profile.avatar_url) profile.avatar_url = savedAvatar;
             set({
@@ -89,7 +84,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) return;
         try {
-            const { data: profile } = await api.get<User>('/users/me');
+            const profile = await getMe();
             const savedAvatar = localStorage.getItem(`hp_avatar_${profile.id}`);
             if (savedAvatar && !profile.avatar_url) profile.avatar_url = savedAvatar;
             set({
@@ -111,13 +106,13 @@ export const useAuthStore = create<AuthState>((set) => ({
     },
 
     updateProfile: async (full_name, phone_number) => {
-        const { data: updated } = await api.patch<User>('/users/me', { full_name, phone_number });
+        const updated = await updateMe({ full_name, phone_number });
         const savedAvatar = useAuthStore.getState().user?.avatar_url;
         set((s) => ({ user: { ...updated, avatar_url: savedAvatar ?? s.user?.avatar_url } }));
     },
 
     refreshUser: async () => {
-        const { data: profile } = await api.get<User>('/users/me');
+        const profile = await getMe();
         const savedAvatar = useAuthStore.getState().user?.avatar_url;
         set((s) => ({ user: { ...profile, avatar_url: savedAvatar ?? s.user?.avatar_url } }));
     },

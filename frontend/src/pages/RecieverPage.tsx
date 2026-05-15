@@ -5,7 +5,7 @@ import ReceiverNavBar from '../components/ReceiverNavBar';
 import DeliveryAmountCard from '../components/DeliveryAmountCard';
 import MapboxMap from '../components/MapboxMap';
 import type { MapMarker } from '../components/MapboxMap';
-import api from '../lib/api';
+import { getOpenTasks, acceptTask } from '../services/taskService';
 import type { DeliveryRequest } from '../types';
 
 const priorityLabel = (m: number) => m >= 2 ? 'Çok Acil' : m >= 1.5 ? 'Acil' : 'Normal';
@@ -43,8 +43,8 @@ export default function RecieverPage() {
     const navigate = useNavigate();
 
     useEffect(() => {
-        api.get<DeliveryRequest[]>('/tasks/open')
-            .then(({ data }) => {
+        getOpenTasks()
+            .then((data) => {
                 setRequests(data);
                 if (data.length > 0) setSelected(data[0]);
             })
@@ -94,7 +94,7 @@ export default function RecieverPage() {
         if (!selected) return;
         setAccepting(true);
         try {
-            await api.patch(`/tasks/${selected.id}/accept`);
+            await acceptTask(selected.id);
             navigate('/navigasyon', { state: { request: selected } });
         } catch {
             setError('Talep kabul edilemedi. Başkası almış olabilir.');

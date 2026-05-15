@@ -1,6 +1,6 @@
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlmodel import Session, select
+from sqlmodel import Session, SQLModel, select
 from ..database import get_session
 from ..security import get_current_user, require_role
 from ..models.task_model import (
@@ -11,6 +11,10 @@ from ..models.task_model import (
     StatusUpdate,
 )
 from ..models.user import User, UserRole
+
+
+class ProofPayload(SQLModel):
+    proof_url: str
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 
@@ -169,7 +173,7 @@ def update_status(
 @router.patch("/{task_id}/proof", response_model=DeliveryRequestPublic)
 def set_proof_photo(
     task_id: str,
-    proof_url: str,
+    payload: ProofPayload,
     session: Session = Depends(get_session),
     current_user: User = Depends(require_role(UserRole.COURIER)),
 ):
@@ -177,7 +181,7 @@ def set_proof_photo(
     if not task or task.courier_id != current_user.id:
         raise HTTPException(status_code=404, detail="Task not found")
 
-    task.delivery_proof_photo_url = proof_url
+    task.delivery_proof_photo_url = payload.proof_url
     task.updated_at = datetime.utcnow()
     session.add(task)
     session.commit()
