@@ -11,6 +11,8 @@ from ..models.task_model import DeliveryRequest, RequestStatus
 
 router = APIRouter(prefix="/wallet", tags=["wallet"])
 
+_MAX_DEPOSIT = 10_000.0
+
 
 def _to_public(t: WalletTransaction) -> WalletTransactionPublic:
     return WalletTransactionPublic(
@@ -62,8 +64,8 @@ def deposit(
     session: Session = Depends(get_session),
     current_user: User = Depends(get_current_user),
 ):
-    if payload.amount <= 0:
-        raise HTTPException(status_code=400, detail="Geçersiz miktar")
+    if payload.amount <= 0 or payload.amount > _MAX_DEPOSIT:
+        raise HTTPException(status_code=400, detail=f"Miktar 0 ile {_MAX_DEPOSIT:.0f} arasında olmalı")
     current_user.wallet_balance = round(current_user.wallet_balance + payload.amount, 2)
     session.add(current_user)
     tx = WalletTransaction(

@@ -48,6 +48,27 @@ def get_current_user(
     return user
 
 
+def get_jwt_sub(
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+) -> str:
+    """Validates JWT and returns the sub UUID without requiring a DB user row."""
+    try:
+        client = _jwks_client()
+        signing_key = client.get_signing_key_from_jwt(credentials.credentials)
+        payload = jwt.decode(
+            credentials.credentials,
+            signing_key.key,
+            algorithms=["ES256"],
+            audience="authenticated",
+        )
+        return payload.get("sub", "")
+    except PyJWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token",
+        )
+
+
 def require_role(*roles: str):
     def dependency(current_user=Depends(get_current_user)):
         if current_user.role not in roles:

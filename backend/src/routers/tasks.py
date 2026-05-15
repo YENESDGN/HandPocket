@@ -32,7 +32,9 @@ def create_task(
     session: Session = Depends(get_session),
     current_user: User = Depends(require_role(UserRole.SENDER, UserRole.ADMIN)),
 ):
-    price = payload.calculated_price or 0.0
+    price = round(
+        (payload.distance_km or 0.0) * payload.weight_kg * payload.open_time_multiplier, 2
+    )
     if current_user.wallet_balance < price:
         raise HTTPException(status_code=402, detail="Yetersiz bakiye")
 
@@ -49,6 +51,7 @@ def create_task(
     session.add(tx)
 
     task = DeliveryRequest(**payload.model_dump(), sender_id=current_user.id)
+    task.calculated_price = price
     session.add(task)
     session.commit()
     session.refresh(task)
@@ -132,6 +135,8 @@ def update_status(
             raise HTTPException(status_code=403, detail="Only the assigned courier can advance this status")
 
     if payload.status == RequestStatus.CANCELLED:
+        if current_user.id not in (task.sender_id, task.courier_id):
+            raise HTTPException(status_code=403, detail="Only the sender or assigned courier can cancel this task")
         # Refund sender when a task is cancelled
         sender = session.get(User, task.sender_id)
         if sender and task.calculated_price:

@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Literal, Optional
 from datetime import datetime
 from sqlmodel import Field, SQLModel
 
@@ -26,7 +26,7 @@ class User(SQLModel, table=True):
 class UserCreate(SQLModel):
     id: str  # Supabase auth.users UUID passed from frontend after signUp
     full_name: str
-    role: str
+    role: Literal["sender", "courier"]
     email: str
     phone_number: Optional[str] = None
 

@@ -1,18 +1,21 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 from ..database import get_session
-from ..security import get_current_user, require_role
+from ..security import get_current_user, get_jwt_sub, require_role
 from ..models.user import User, UserCreate, UserPublic, UserUpdate, UserRole
 
 router = APIRouter(prefix="/users", tags=["users"])
 
 
 @router.post("/", response_model=UserPublic, status_code=201)
-def register_user(payload: UserCreate, session: Session = Depends(get_session)):
-    """
-    Called once after Supabase Auth signup to create the user profile row.
-    The id must match the Supabase auth.users UUID.
-    """
+def register_user(
+    payload: UserCreate,
+    session: Session = Depends(get_session),
+    jwt_sub: str = Depends(get_jwt_sub),
+):
+    if payload.id != jwt_sub:
+        raise HTTPException(status_code=403, detail="Token subject does not match provided id")
+
     existing = session.exec(select(User).where(User.email == payload.email)).first()
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")

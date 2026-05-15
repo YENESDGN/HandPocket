@@ -345,6 +345,40 @@ backend/
 - Button hover: `className="btn-hover-blue"`
 - Animasyonlar: `fade-in-up`, `fade-in-up-delay-1/2/3`
 
+## Güvenlik Katmanı (Faz 3 — tamamlandı)
+
+### Backend güvenlik düzeltmeleri
+- **`security.py`**: `get_jwt_sub()` bağımlılığı eklendi — JWT doğrular, DB lookup yapmadan `sub` UUID döner (kayıt endpoint'i için)
+- **`routers/users.py` — `POST /users/`**: `get_jwt_sub` ile korunuyor; `payload.id != jwt_sub` ise 403, `role` allowlist dışındaysa 422 (Literal tip zorlaması)
+- **`models/user.py` — `UserCreate.role`**: `str` → `Literal["sender", "courier"]` — admin rolü hiçbir zaman kayıt yoluyla atanamaz
+- **`routers/tasks.py` — `PATCH /{id}/status`**: `cancelled` geçişinde sahiplik kontrolü eklendi (`current_user.id not in (sender_id, courier_id)` → 403)
+- **`routers/tasks.py` — `POST /`**: `calculated_price` artık client'tan alınmıyor; `distance_km * weight_kg * open_time_multiplier` ile sunucu tarafında hesaplanıyor
+- **`routers/wallet.py`**: `POST /deposit` için `_MAX_DEPOSIT = 10_000.0` üst sınırı eklendi
+- **`main.py`**: CORS `allow_origins=["*"]` → `os.getenv("FRONTEND_URL", "http://localhost:5173")` (production'da `.env`'ye `FRONTEND_URL` eklenecek)
+
+### Frontend güvenlik düzeltmeleri (`App.tsx`)
+- **`PrivateRoute`**: `isLoggedIn` kontrolü — değilse `/giris`'e yönlendir
+- **`SenderRoute`**: `isLoggedIn` + `role === 'sender'` — değilse `/giris` veya `/`'e yönlendir
+- **`CourierRoute`**: `isLoggedIn` + `role === 'courier'` — değilse `/giris` veya `/`'e yönlendir
+- **`AdminRoute`**: `isLoggedIn` + `role === 'admin'` — değilse `/giris` veya `/`'e yönlendir
+- Route korumaları:
+  - `/talep` → `SenderRoute`
+  - `/talep/:id` → `PrivateRoute`
+  - `/profil` → `PrivateRoute`
+  - `/talep-al` → `CourierRoute`
+  - `/takip` → `SenderRoute`
+  - `/navigasyon` → `CourierRoute`
+  - `/admin` → `AdminRoute`
+
+### Güvenlik notları
+- `FRONTEND_URL` production `.env`'ye eklenmeli: `FRONTEND_URL=https://handpocket.com`
+- Supabase Dashboard → Auth → JWT expiry kısaltılabilir (varsayılan 1 saat)
+- Supabase Dashboard → Auth → Refresh token rotation açık olmalı
+- HTTPS deployment zorunlu (Render/Fly.io TLS termination)
+- Kalan öneri: `DeliveryRequestCreate` modelinde `weight_kg`, `distance_km`, `open_time_multiplier` için Pydantic `Field(gt=0)` sınırları eklenebilir
+
+---
+
 ## Kimlik doğrulama ve API (Faz 2 — başlangıç)
 
 ### Ortam değişkenleri
