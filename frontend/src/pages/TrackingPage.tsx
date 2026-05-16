@@ -6,6 +6,9 @@ import MapboxMap from '../components/MapboxMap';
 import type { MapMarker } from '../components/MapboxMap';
 import type { DeliveryRequest, User } from '../types';
 import { getUserById } from '../services/userService';
+import { getLatestLocation } from '../services/locationService';
+
+const COURIER_POLL_INTERVAL_MS = 15_000;
 
 const statusLabel = (status: string): string => {
     const labels: Record<string, string> = {
@@ -50,7 +53,8 @@ export default function TrackingPage() {
 
     const [courier, setCourier]     = useState<User | null>(null);
     const [courierLoading, setCourierLoading] = useState(false);
-    const [mapMarkers, setMapMarkers] = useState<MapMarker[]>([]);
+    const [pickupPos, setPickupPos] = useState<{ lng: number; lat: number } | null>(null);
+    const [courierPos, setCourierPos] = useState<{ lng: number; lat: number } | null>(null);
     const [mapCenter, setMapCenter]   = useState<[number, number]>([29.01, 41.025]);
 
     useEffect(() => {
@@ -67,9 +71,35 @@ export default function TrackingPage() {
         geocode(request.pickup_address).then((coords) => {
             if (!coords) return;
             setMapCenter([coords.lng, coords.lat]);
-            setMapMarkers([{ lng: coords.lng, lat: coords.lat, color: '#1ea4dc', popup: 'Kurye Konumu' }]);
+            setPickupPos(coords);
         });
     }, [request?.pickup_address]);
+
+    useEffect(() => {
+        if (!request) return;
+        const stopped = ['delivered', 'cancelled'].includes(request.status);
+        if (stopped) return;
+
+        let cancelled = false;
+        const tick = () => {
+            getLatestLocation(request.id)
+                .then((pin) => {
+                    if (cancelled) return;
+                    setCourierPos({ lng: pin.longitude, lat: pin.latitude });
+                })
+                .catch(() => { /* 404 until courier pushes first ping */ });
+        };
+        tick();
+        const id = setInterval(tick, COURIER_POLL_INTERVAL_MS);
+        return () => {
+            cancelled = true;
+            clearInterval(id);
+        };
+    }, [request?.id, request?.status]);
+
+    const mapMarkers: MapMarker[] = [];
+    if (pickupPos) mapMarkers.push({ lng: pickupPos.lng, lat: pickupPos.lat, color: '#004561', popup: 'Alım' });
+    if (courierPos) mapMarkers.push({ lng: courierPos.lng, lat: courierPos.lat, color: '#1ea4dc', popup: 'Kurye Konumu' });
 
     if (!request) {
         return (
@@ -197,16 +227,11 @@ export default function TrackingPage() {
                         markers={mapMarkers}
                         showUserLocation
                     />
-                    <div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 pointer-events-none'>
-                        <div className='relative flex items-center justify-center'>
-                            <div className='absolute w-14 h-14 bg-secondary-blue/30 rounded-full animate-ping' />
-                            <div className='relative bg-secondary-blue text-white p-2.5 rounded-full shadow-xl border-2 border-white'>
-                                <svg xmlns="http://www.w3.org/2000/svg" className='w-5 h-5' fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                </svg>
-                            </div>
+                    {!courierPos && (
+                        <div className='absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full shadow-lg text-darker-blue text-sm font-semibold'>
+                            Kurye konumu bekleniyor...
                         </div>
-                    </div>
+                    )}
                 </div>
             </section>
         </>

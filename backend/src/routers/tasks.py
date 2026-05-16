@@ -175,8 +175,10 @@ def update_status(
                 amount=task.calculated_price,
             ))
 
-    if payload.status == RequestStatus.DELIVERED:
-        # Credit the courier's wallet when they mark delivery complete
+    if payload.status == RequestStatus.COMPLETED:
+        if task.sender_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Only the sender can confirm completion")
+        # Credit the courier's wallet only after sender confirms the delivery
         if task.courier_id and task.calculated_price:
             courier = session.get(User, task.courier_id)
             if courier:
@@ -190,15 +192,48 @@ def update_status(
                     amount=task.calculated_price,
                 ))
 
-    if payload.status == RequestStatus.COMPLETED:
-        if task.sender_id != current_user.id:
-            raise HTTPException(status_code=403, detail="Only the sender can confirm completion")
-
     task.status = payload.status
     task.updated_at = datetime.utcnow()
     session.add(task)
     session.commit()
     session.refresh(task)
+    return task
+
+
+@router.patch("/{task_id}/verify", response_model=DeliveryRequestPublic)
+def verify_task(
+    task_id: str,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    """Sender confirms a delivered task — transitions delivered → completed and credits the courier."""
+    task = session.get(DeliveryRequest, task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    if task.sender_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Only the sender can confirm completion")
+    if task.status != RequestStatus.DELIVERED:
+        raise HTTPException(status_code=400, detail=f"Cannot verify a task with status '{task.status}'")
+
+    if task.courier_id and task.calculated_price:
+        courier = session.get(User, task.courier_id)
+        if courier:
+            courier.wallet_balance = round(courier.wallet_balance + task.calculated_price, 2)
+            session.add(courier)
+            from ..models.wallet import WalletTransaction
+            session.add(WalletTransaction(
+                user_id=task.courier_id,
+                label=f"Teslimat Kazancı — {task.package_description or 'Kargo'}",
+                type="credit",
+                amount=task.calculated_price,
+            ))
+
+    task.status = RequestStatus.COMPLETED
+    task.updated_at = datetime.utcnow()
+    session.add(task)
+    session.commit()
+    session.refresh(task)
+    logger.info("task_verified task_id=%s sender_id=%s", task.id, current_user.id)
     return task
 
 

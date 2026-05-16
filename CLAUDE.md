@@ -81,19 +81,26 @@
 - Harita merkezi: `request.pickup_address` Nominatim geocoding ile
 - 23/77 grid: sol 3 kart + sağ tam yükseklik harita
 - Sol kartlar: Status Card (Gönderi ID + ETA + Mesafe), Cargo Details Card (Timeline: BAŞLANGIÇ→TESLİMAT + ağırlık/öncelik), Courier Card (full_name + email, telefon butonu)
-- Sağ harita: h-[calc(100vh-160px)], pulsing kurye marker overlay (animate-ping + bg-secondary-blue); `showUserLocation` açık
+- Sağ harita: h-[calc(100vh-160px)], `showUserLocation` açık
+- **Canlı kurye konumu**: 15 sn'de bir `getLatestLocation(request.id)` polling; kurye marker'ı (secondary-blue) gerçek koordinata göre çizilir. Status `delivered/cancelled` olduğunda polling durur. Konum henüz yoksa "Kurye konumu bekleniyor..." rozeti.
 
-### DeliveryDetailPage.tsx (327 satır)
+### DeliveryDetailPage.tsx
 - Tekil teslimat detay sayfası
 - Route: /talep/:id (useParams ile id okuma)
 - ReceiverNavBar kullanımı
-- 30/70 grid: sol 3 kart + sağ harita
-- Sol kartlar: ID+Status Card, Durum Zaman Çizelgesi (4-adım timeline: Talep → Kabul → Alındı → Teslim), Kargo Bilgileri (açıklama, ağırlık, öncelik, mesafe, güzergah)
-- StatusBadge inline component (renk kodlu, Lucide ikonlar)
-- statusOrder / statusSteps ile timeline render
+- 30/70 grid: sol kartlar + sağ harita
+- Sol kartlar: ID+Status Card, Durum Zaman Çizelgesi (5-adım: Talep → Kabul → Alındı → Teslim → Gönderici Onayladı), **Teslimat Kanıtı kartı** (status `delivered`/`completed` iken), Kargo Bilgileri
+- StatusBadge inline component — `delivered/completed/disputed/cancelled` dahil tüm statüler için renk kodlu badge'ler (Lucide: ShieldCheck, AlertTriangle vb.)
 - Kabul durumunda "Canlı Takip" linki (/takip)
 - Bulunamayan ID için 404 fallback ekranı
 - Harita: `showUserLocation` açık
+- **Sender confirmation flow** (`status === delivered && currentUser.id === sender_id`):
+  - Proof fotoğrafı büyük gösterilir (tıklanınca tam ekran açılır)
+  - "Teslimatı Onayla" → `verifyTask(id)` → status `completed`, kurye cüzdanı kredilenir, `refreshUser()`
+  - "İtiraz Et" → `DisputeModal` → `createDispute({ request_id, reason })` → status `disputed`
+- **Review flow** (`status === completed`, sender veya courier):
+  - "Değerlendir" butonu → `ReviewModal` (5 yıldız + opsiyonel yorum) → `createReview({ request_id, reviewee_id, score, comment })`
+  - Karşı taraf: sender ise courier_id, courier ise sender_id; backend ortalama puanı otomatik günceller
 
 ### NavigationPage.tsx
 - Kurye navigasyon sayfası (tam ekran harita)
@@ -104,6 +111,7 @@
 - Alt: Kargo Özellikleri (ağırlık/mesafe/ID) + İptal / Tamamla butonları
 - **ProofOfDeliveryModal** entegrasyonu: "Tamamla" → modal açılır → `onConfirm(file)` → Supabase Storage `delivery-proofs` bucket'a yükleme (best-effort) → `setProofPhoto(id, url)` → `updateTaskStatus` picked_up + delivered → `refreshUser()` → `/profil`
 - İptal: `updateTaskStatus(id, 'cancelled')` → `/talep-al`
+- **Canlı konum push**: `request.status ∈ {accepted, picked_up}` iken `navigator.geolocation.watchPosition` aktif; `lastPushRef` ile 30 sn throttle → `postLocation(request.id, lat, lng)`. İzin reddi sessiz fallback.
 
 ### AboutUs.tsx (116 satır)
 - Hakkımızda sayfası
@@ -127,17 +135,18 @@
 - "Anasayfaya Dön" + "Geri Git" (useNavigate(-1)) butonları
 - fade-in-up animasyonu
 
-### AdminDashboard.tsx (268 satır)
+### AdminDashboard.tsx
 - Admin paneli
 - Route: /admin
 - ProfilePage ile aynı sidebar+main layout (profile-bg, relative flex h-screen)
-- Sidebar (bg-darker-blue, w-52): ShieldCheck ikon, Admin Paneli başlık, 3 nav: Genel Bakış/Kullanıcılar/Teslimatlar (Lucide ikonlar), Çıkış Yap
+- Sidebar (bg-darker-blue, w-52): ShieldCheck ikon, Admin Paneli başlık, 4 nav: Genel Bakış/Kullanıcılar/Teslimatlar/**İtirazlar** (Lucide ikonlar), Çıkış Yap
 - **Çıkış Yap**: `useAuthStore.signOut` + `navigate('/')` (Supabase oturumu kapanır)
 - Header: logo sol + "Admin Paneli" merkez
-- AdminNav tipi: 'genel' | 'kullanicilar' | 'teslimatlar'
+- AdminNav tipi: 'genel' | 'kullanicilar' | 'teslimatlar' | 'itirazlar'
 - **Genel Bakış**: 4 stat kartı (Kullanıcı/Kurye/Teslimat/Gelir) + Son Teslimatlar tablosu + Son Kullanıcılar tablosu
 - **Kullanıcılar**: Tüm kullanıcılar tablosu (Ad, E-Posta, Rol badge, Bakiye, Puan, Durum, Yasakla/Kaldır butonu)
 - **Teslimatlar**: Tüm teslimatlar tablosu (ID, Açıklama, Güzergah, Mesafe, Ücret, Durum badge)
+- **İtirazlar**: `getAllDisputes()` ile gerçek API; tablo: Talep ID (link), Açan, Sebep, Tarih, Durum (Çözüldü/Açık badge); açık satırlarda "Çözüldü olarak işaretle" → `resolveDispute(id)`
 
 ### Footer.tsx (27 satır) - eski FooterButtons
 - 3 kolonlu footer layout
@@ -223,9 +232,12 @@ frontend/src/
 ├── store/
 │   └── auth.ts                  (Zustand: signUp, signIn, signOut, initialize, role, user, setAvatarUrl, updateProfile, refreshUser, deleteAccount)
 ├── services/                    (tüm API çağrıları buradan — lazy, sayfa içinde doğrudan api.* yok)
-│   ├── taskService.ts           (getOpenTasks, getMyTasks, getTaskById, createTask, acceptTask, updateTaskStatus, setProofPhoto)
+│   ├── taskService.ts           (getOpenTasks, getMyTasks, getTaskById, createTask, acceptTask, updateTaskStatus, setProofPhoto, verifyTask)
 │   ├── walletService.ts         (getWalletSummary, deposit, withdraw)
-│   └── userService.ts           (createUser, getMe, updateMe, getUserById, deleteMe)
+│   ├── userService.ts           (createUser, getMe, updateMe, getUserById, deleteMe)
+│   ├── locationService.ts       (postLocation, getLatestLocation)
+│   ├── reviewService.ts         (createReview, getReviewsForUser)
+│   └── disputeService.ts        (createDispute, getAllDisputes, resolveDispute)
 ├── components/
 │   ├── NavBar.tsx               (LandingPage nav + rol bazlı Talep Oluştur / Talep Al)
 │   ├── SecondNavBar.tsx         (blur-bg navbar — RequestPage, AboutUs)
@@ -236,6 +248,8 @@ frontend/src/
 │   ├── DeliveryAmountCard.tsx   (TESLİMAT MİKTARI kartı — RecieverPage)
 │   ├── WalletModal.tsx          (Bakiye Yükle / Para Çek modal — onConfirm(amount), ModalType export)
 │   ├── ProofOfDeliveryModal.tsx (teslimat kanıtı modal — onConfirm(file: File|null))
+│   ├── ReviewModal.tsx          (5 yıldız + yorum — onConfirm(score, comment))
+│   ├── DisputeModal.tsx         (itiraz sebebi textarea — onConfirm(reason); min 5 karakter)
 │   ├── settings.tsx             (ProfilePage — Ayarlar sekmesi)
 │   ├── Security.tsx             (ProfilePage — Güvenlik sekmesi)
 │   ├── Preferences.tsx          (ProfilePage — Tercihler sekmesi)
@@ -422,8 +436,44 @@ backend/
 
 ### Düzeltilen buglar
 - **`RequestPage.tsx` — fiyat formülü uyumsuzluğu**: frontend `BASE_COST + distance×1.5 + weight×1.0 + priority×1.2` kullanıyordu; backend `distance × weight × multiplier` hesaplıyordu → gösterilen ücret ile kesilen ücret farklıydı. Frontend backend formülüyle eşleştirildi.
-- **`routers/tasks.py` — kurye cüzdan kredisi**: ödeme `COMPLETED` statüsünde tetikleniyordu (gönderici onayı gerekiyor, UI yok); `DELIVERED`'a taşındı — kurye tamamlamayı işaretlediğinde anında ödenir.
+- **`routers/tasks.py` — kurye cüzdan kredisi**: önce `COMPLETED`'taydı, Faz 4'te geçici olarak `DELIVERED`'a taşındı, **Faz 5'te gönderici onay UI'ı geldikten sonra tekrar `COMPLETED`'a geri taşındı** — kurye sadece gönderici "Teslimatı Onayla" dediğinde kredilenir.
 - **`NavigationPage.tsx` — profil yönlendirmesi**: teslimattan sonra `refreshUser()` eklendi, böylece `/profil`'e gidince cüzdan bakiyesi güncel görünür.
+
+---
+
+## v0.1 Mimari Boşluk Kapatma (Faz 5 — kısmen tamamlandı)
+
+[Plan.md](Plan.md) yol haritasının ilk 3 maddesi tamamlandı.
+
+### 1. Canlı Kurye Takibi — ✅ tamamlandı
+- **`services/locationService.ts`**: `postLocation(task_id, lat, lng)`, `getLatestLocation(task_id)`
+- **`NavigationPage.tsx`**: status `accepted | picked_up` iken `watchPosition` + 30 sn throttled push (`lastPushRef`)
+- **`TrackingPage.tsx`**: 15 sn polling, gerçek marker; sahte `animate-ping` overlay kaldırıldı; "Kurye konumu bekleniyor..." rozeti
+
+### 2. Gönderici Onayı (Sender Confirmation) — ✅ tamamlandı
+- **Backend `routers/tasks.py`**: `PATCH /tasks/{id}/verify` endpoint (sender-only, `delivered → completed`, kurye cüzdanını kredilendirir)
+- **Backend**: kurye kredilendirme `DELIVERED`'dan `COMPLETED`'a geri taşındı; hem `/verify` hem de generic `/status` (status=completed) bu noktada krediyi yatırır
+- **Frontend `taskService.ts`**: `verifyTask(id)`
+- **`DeliveryDetailPage.tsx`**: status `delivered` && sender → büyük proof fotoğrafı + "Teslimatı Onayla" butonu + "İtiraz Et" butonu
+- **`types/index.ts`**: `RequestStatus` artık `COMPLETED` + `DISPUTED` içeriyor; `DeliveryRequest.delivery_proof_photo_url` eklendi
+
+### 3. Reviews & Disputes UI — ✅ tamamlandı (admin resolve kısıtlı)
+- **`services/reviewService.ts`**: `createReview`, `getReviewsForUser`
+- **`services/disputeService.ts`**: `createDispute`, `getAllDisputes`, `resolveDispute`
+- **`components/ReviewModal.tsx`**: 5 yıldız + opsiyonel yorum
+- **`components/DisputeModal.tsx`**: sebep textarea (min 5 karakter)
+- **`DeliveryDetailPage.tsx`**:
+  - status `completed` && (sender || courier) → "Değerlendir" butonu
+  - status `delivered` && sender → "İtiraz Et" butonu (verify ile yan yana)
+- **`components/settings.tsx`**: "İstatistikler & Üyelik" puan değeri artık `user.average_rating?.toFixed(1)` (sabit 4.9 kaldırıldı)
+- **`AdminDashboard.tsx`**: yeni "İtirazlar" sekmesi — `getAllDisputes()` tablosu, "Çözüldü olarak işaretle" aksiyonu
+- **`types/index.ts`**: `User.avarage_rating` typo'su `average_rating` olarak düzeltildi (backend ile aynı); `Dispute` ve `Review` interface'leri eklendi/güncellendi
+- **Kısıt**: Backend `resolve_dispute` sadece `resolved=True` flag çevirir; "kurye lehine / gönderici lehine bakiye transferi" Plan.md'de önerildi ama backend bunu desteklemiyor — kapsamı genişletmemek için sadece flag flip'lendi. İhtiyaç olursa `Dispute.outcome` kolonu + wallet adjustment eklenmeli.
+
+### 4–6. Sıradakiler (henüz yapılmadı)
+- **Bildirim Servisi** (Flow 1.7 / 2.8 / 3.3) — sağlayıcı kararı bekleniyor (in-app + email Resend / FCM / OneSignal)
+- **Ödeme Hizmetleri** — iyzico/Stripe/PayTR kararı bekleniyor
+- **AI Görüntü Doğrulama** — Claude Vision / Cloud Vision / EXIF kararı bekleniyor
 
 ---
 
@@ -505,16 +555,15 @@ backend/
 - ❌ **Görüntü İşleme / Yapay Zeka** — teslimat kanıtı fotoğrafları yükleniyor ama AI doğrulaması yok
 
 ### API Sequence Diagram — eksik adımlar
-- **Flow 1, adım 7**: "Çevredeki aktif kuryelere bildirim tetikle" → uygulanmadı (Bildirim Servisi yok)
-- **Flow 2, adım 8**: "Göndericiye bilgilendirme mesajı" → uygulanmadı
-- **Flow 3, adım 3**: "Göndericiye kanıt fotoğrafıyla bildirim ilet" → uygulanmadı
-- **Flow 2, adım 6**: `POST /verify` (gönderici onayı → completed) → UI yok; geçici çözüm olarak kurye cüzdanı `DELIVERED`'da kredilendiriliyor (Faz 4'te düzeltildi)
+- **Flow 1, adım 7**: "Çevredeki aktif kuryelere bildirim tetikle" → ❌ uygulanmadı (Bildirim Servisi yok)
+- **Flow 2, adım 8**: "Göndericiye bilgilendirme mesajı" → ❌ uygulanmadı
+- **Flow 3, adım 3**: "Göndericiye kanıt fotoğrafıyla bildirim ilet" → ❌ uygulanmadı
+- **Flow 2, adım 6**: `POST /verify` (gönderici onayı → completed) → ✅ **Faz 5'te tamamlandı** (`PATCH /tasks/{id}/verify` + DeliveryDetailPage UI)
 
-### Frontend service katmanı eksikleri
-Backend hazır, frontend service/UI yok:
-- `/reviews` → `reviewService.ts` yok, teslimat sonrası değerlendirme UI'ı yok
-- `/disputes` → `disputeService.ts` yok, anlaşmazlık açma/çözme UI'ı yok
-- `/locations` → `locationService.ts` yok → **`TrackingPage.tsx` sahte pulsing marker gösteriyor**, gerçekte `/locations/{task_id}/latest` polling'i yok; `NavigationPage.tsx` da kurye konumunu push etmiyor
+### Frontend service katmanı eksikleri — ✅ Faz 5'te tamamlandı
+- `/reviews` → ✅ `reviewService.ts` + ReviewModal + DeliveryDetailPage entegrasyonu
+- `/disputes` → ✅ `disputeService.ts` + DisputeModal + DeliveryDetailPage + AdminDashboard "İtirazlar" sekmesi
+- `/locations` → ✅ `locationService.ts` + NavigationPage push + TrackingPage polling (sahte marker kaldırıldı)
 
 ### Mobil branch'e geçmeden önce notlar
 - Bildirim servisi mobilde daha kritik (push notifications) — backend tarafında entegrasyon kararı verilmeli (FCM önerilir)

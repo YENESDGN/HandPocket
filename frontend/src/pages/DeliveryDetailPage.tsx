@@ -1,12 +1,17 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { CheckCircle2, XCircle, Clock, Truck, PackageCheck, Loader2 } from 'lucide-react';
+import { CheckCircle2, XCircle, Clock, Truck, PackageCheck, Loader2, ShieldCheck, AlertTriangle, Star } from 'lucide-react';
 import ReceiverNavBar from '../components/ReceiverNavBar';
 import MapboxMap from '../components/MapboxMap';
 import type { MapMarker } from '../components/MapboxMap';
-import { getTaskById } from '../services/taskService';
+import ReviewModal from '../components/ReviewModal';
+import DisputeModal from '../components/DisputeModal';
+import { getTaskById, verifyTask } from '../services/taskService';
+import { createReview } from '../services/reviewService';
+import { createDispute } from '../services/disputeService';
 import type { DeliveryRequest } from '../types';
 import { RequestStatus } from '../types';
+import { useAuthStore } from '../store/auth';
 
 async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
     try {
@@ -27,6 +32,8 @@ const statusConfig: Record<string, { label: string; icon: React.ReactNode; cls: 
     [RequestStatus.ACCEPTED]:  { label: 'Kabul Edildi',  icon: <Truck        size={13} />, cls: 'bg-blue-100   text-blue-700   border border-blue-200'   },
     [RequestStatus.PICKED_UP]: { label: 'Kargo Alındı',  icon: <PackageCheck size={13} />, cls: 'bg-indigo-100 text-indigo-700 border border-indigo-200' },
     [RequestStatus.DELIVERED]: { label: 'Teslim Edildi', icon: <CheckCircle2 size={13} />, cls: 'bg-green-100  text-green-700  border border-green-200'  },
+    [RequestStatus.COMPLETED]: { label: 'Onaylandı',     icon: <ShieldCheck  size={13} />, cls: 'bg-emerald-100 text-emerald-700 border border-emerald-200' },
+    [RequestStatus.DISPUTED]:  { label: 'İtirazda',      icon: <AlertTriangle size={13} />, cls: 'bg-orange-100 text-orange-700 border border-orange-200' },
     [RequestStatus.CANCELLED]: { label: 'İptal Edildi',  icon: <XCircle      size={13} />, cls: 'bg-red-100    text-red-600    border border-red-200'    },
 };
 
@@ -44,10 +51,11 @@ const statusSteps: { key: string; label: string }[] = [
     { key: RequestStatus.ACCEPTED,  label: 'Kurye Kabul Etti'  },
     { key: RequestStatus.PICKED_UP, label: 'Kargo Alındı'      },
     { key: RequestStatus.DELIVERED, label: 'Teslim Edildi'     },
+    { key: RequestStatus.COMPLETED, label: 'Gönderici Onayladı' },
 ];
 
 const statusOrder: Record<string, number> = {
-    pending: 0, accepted: 1, picked_up: 2, delivered: 3, cancelled: -1,
+    pending: 0, accepted: 1, picked_up: 2, delivered: 3, completed: 4, disputed: 3, cancelled: -1,
 };
 
 const priorityLabel = (m: number) => m >= 2 ? 'Çok Acil' : m >= 1.5 ? 'Acil' : 'Normal';
@@ -61,7 +69,70 @@ export default function DeliveryDetailPage() {
     const [notFound, setNotFound] = useState(false);
     const [mapMarkers, setMapMarkers] = useState<MapMarker[]>([]);
     const [mapRoute, setMapRoute]     = useState<[number, number][]>([]);
+    const [verifying, setVerifying]   = useState(false);
+    const [verifyError, setVerifyError] = useState<string | null>(null);
+    const [showReviewModal, setShowReviewModal] = useState(false);
+    const [reviewLoading, setReviewLoading] = useState(false);
+    const [reviewError, setReviewError]   = useState<string | null>(null);
+    const [reviewSent, setReviewSent]     = useState(false);
+    const [showDisputeModal, setShowDisputeModal] = useState(false);
+    const [disputeLoading, setDisputeLoading] = useState(false);
+    const [disputeError, setDisputeError]   = useState<string | null>(null);
     const routeAbortRef = useRef<AbortController | null>(null);
+    const currentUser = useAuthStore((s) => s.user);
+    const refreshUser = useAuthStore((s) => s.refreshUser);
+
+    const handleVerify = async () => {
+        if (!request) return;
+        setVerifying(true);
+        setVerifyError(null);
+        try {
+            const updated = await verifyTask(request.id);
+            setRequest(updated);
+            await refreshUser();
+        } catch {
+            setVerifyError('Onay başarısız. Lütfen tekrar deneyin.');
+        } finally {
+            setVerifying(false);
+        }
+    };
+
+    const otherPartyId = currentUser && request
+        ? (currentUser.id === request.sender_id ? request.courier_id : request.sender_id)
+        : null;
+
+    const handleReview = async (score: number, comment: string) => {
+        if (!request || !otherPartyId) return;
+        setReviewLoading(true);
+        setReviewError(null);
+        try {
+            await createReview({ request_id: request.id, reviewee_id: otherPartyId, score, comment: comment || undefined });
+            setReviewSent(true);
+            setShowReviewModal(false);
+        } catch (err: unknown) {
+            const msg = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ?? 'Değerlendirme gönderilemedi.';
+            setReviewError(msg);
+        } finally {
+            setReviewLoading(false);
+        }
+    };
+
+    const handleDispute = async (reason: string) => {
+        if (!request) return;
+        setDisputeLoading(true);
+        setDisputeError(null);
+        try {
+            await createDispute({ request_id: request.id, reason });
+            const refreshed = await getTaskById(request.id);
+            setRequest(refreshed);
+            setShowDisputeModal(false);
+        } catch (err: unknown) {
+            const msg = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ?? 'İtiraz gönderilemedi.';
+            setDisputeError(msg);
+        } finally {
+            setDisputeLoading(false);
+        }
+    };
 
     useEffect(() => {
         if (!id) { setNotFound(true); setLoading(false); return; }
@@ -189,6 +260,72 @@ export default function DeliveryDetailPage() {
                         </div>
                     </div>
 
+                    {/* Proof + sender verification */}
+                    {(request.status === RequestStatus.DELIVERED || request.status === RequestStatus.COMPLETED) && (
+                        <div className='bg-white rounded-xl p-5 drop-shadow-[0_0_15px_rgba(0,0,0,0.4)] flex flex-col gap-3'>
+                            <div className='flex items-center justify-between'>
+                                <h3 className='text-xs font-bold text-darker-blue uppercase tracking-widest'>Teslimat Kanıtı</h3>
+                                {request.status === RequestStatus.COMPLETED && (
+                                    <span className='inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-full'>
+                                        <ShieldCheck size={12} /> Onaylandı
+                                    </span>
+                                )}
+                            </div>
+                            {request.delivery_proof_photo_url ? (
+                                <a href={request.delivery_proof_photo_url} target='_blank' rel='noreferrer' className='block'>
+                                    <img
+                                        src={request.delivery_proof_photo_url}
+                                        alt='Teslimat kanıtı'
+                                        className='w-full h-56 object-cover rounded-lg border border-gray-200'
+                                    />
+                                </a>
+                            ) : (
+                                <div className='w-full h-32 flex items-center justify-center bg-gray-50 border border-dashed border-gray-200 rounded-lg text-gray-400 text-sm'>
+                                    Kanıt fotoğrafı yüklenmedi
+                                </div>
+                            )}
+
+                            {request.status === RequestStatus.DELIVERED && currentUser?.id === request.sender_id && (
+                                <>
+                                    <p className='text-gray-500 text-xs'>
+                                        Kargonun teslim edildiğini onaylayın. Onay sonrası ödeme kuryeye aktarılır.
+                                    </p>
+                                    {verifyError && <p className='text-red-500 text-xs'>{verifyError}</p>}
+                                    <div className='flex gap-2'>
+                                        <button
+                                            onClick={handleVerify}
+                                            disabled={verifying}
+                                            className='flex-1 bg-secondary-blue text-white py-2.5 rounded-xl font-bold text-sm hover:bg-dark-blue transition-all active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2'
+                                        >
+                                            {verifying ? <Loader2 size={16} className='animate-spin' /> : <ShieldCheck size={16} />}
+                                            Teslimatı Onayla
+                                        </button>
+                                        <button
+                                            type='button'
+                                            onClick={() => setShowDisputeModal(true)}
+                                            className='px-4 py-2.5 rounded-xl font-bold text-sm text-orange-600 bg-orange-50 border border-orange-200 hover:bg-orange-100 transition-all flex items-center gap-2'
+                                        >
+                                            <AlertTriangle size={16} /> İtiraz Et
+                                        </button>
+                                    </div>
+                                </>
+                            )}
+
+                            {request.status === RequestStatus.COMPLETED && currentUser && (currentUser.id === request.sender_id || currentUser.id === request.courier_id) && (
+                                <div className='flex gap-2'>
+                                    <button
+                                        type='button'
+                                        onClick={() => setShowReviewModal(true)}
+                                        disabled={reviewSent}
+                                        className='flex-1 bg-yellow-400 text-darker-blue py-2.5 rounded-xl font-bold text-sm hover:bg-yellow-300 transition-all active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2'
+                                    >
+                                        <Star size={16} /> {reviewSent ? 'Değerlendirme Gönderildi' : 'Değerlendir'}
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     {/* Package details */}
                     <div className='bg-white rounded-xl p-5 drop-shadow-[0_0_15px_rgba(0,0,0,0.4)] flex flex-col gap-3'>
                         <h3 className='text-xs font-bold text-darker-blue uppercase tracking-widest'>Kargo Bilgileri</h3>
@@ -246,6 +383,24 @@ export default function DeliveryDetailPage() {
                     <MapboxMap markers={mapMarkers} route={mapRoute} showUserLocation />
                 </div>
             </section>
+
+            {showReviewModal && (
+                <ReviewModal
+                    onClose={() => { setShowReviewModal(false); setReviewError(null); }}
+                    onConfirm={handleReview}
+                    loading={reviewLoading}
+                    error={reviewError}
+                />
+            )}
+
+            {showDisputeModal && (
+                <DisputeModal
+                    onClose={() => { setShowDisputeModal(false); setDisputeError(null); }}
+                    onConfirm={handleDispute}
+                    loading={disputeLoading}
+                    error={disputeError}
+                />
+            )}
         </>
     );
 }

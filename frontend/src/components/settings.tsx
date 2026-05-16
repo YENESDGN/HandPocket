@@ -244,7 +244,9 @@ export default function SettingsPanel() {
                 <div className="flex flex-col items-center gap-1">
                   <div className="flex items-center gap-2 text-darker-blue">
                     <Star size={18} className="text-darker-blue" />
-                    <span className="text-2xl font-bold font-sextary">4.9</span>
+                    <span className="text-2xl font-bold font-sextary">
+                      {user?.average_rating != null ? user.average_rating.toFixed(1) : '—'}
+                    </span>
                   </div>
                   <span className="text-darker-blue text-xs font-semibold uppercase tracking-wider font-sextary">Puan</span>
                 </div>

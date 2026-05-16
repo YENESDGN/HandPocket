@@ -30,3 +30,6 @@ export const updateTaskStatus = (id: string, status: 'picked_up' | 'delivered' |
 
 export const setProofPhoto = (id: string, proofUrl: string) =>
   api.patch<DeliveryRequest>(`/tasks/${id}/proof`, { proof_url: proofUrl }).then((r) => r.data);
+
+export const verifyTask = (id: string) =>
+  api.patch<DeliveryRequest>(`/tasks/${id}/verify`).then((r) => r.data);

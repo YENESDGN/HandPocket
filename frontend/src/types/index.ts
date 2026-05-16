@@ -9,6 +9,8 @@ export const RequestStatus = {
     ACCEPTED:  'accepted',
     PICKED_UP:'picked_up',
     DELIVERED:'delivered',
+    COMPLETED:'completed',
+    DISPUTED:'disputed',
     CANCELLED:'cancelled',
 } as const;
 
@@ -19,7 +21,7 @@ export interface User {
     email: string;
     phone_number: string;
     wallet_balance?: number;
-    avarage_rating?: number;
+    average_rating?: number;
     is_banned?: boolean;
     created_at: Date;
     avatar_url?: string;
@@ -39,27 +41,28 @@ export interface DeliveryRequest {
     open_time_multiplier: number;
     calculated_price: number;
     status: typeof RequestStatus[keyof typeof RequestStatus];
+    delivery_proof_photo_url?: string;
     created_at: Date;
     updated_at: Date;
 }
 
 export interface Dispute {
     id: string;
-    request_id : string;
-    raised_by : string;
+    request_id: string;
+    raised_by: string;
     reason: string;
-    resolved?: boolean;
-    created_at: Date;
+    resolved: boolean;
+    created_at: string;
 }
 
-export interface Transaction {
+export interface Review {
     id: string;
-    request_id : string;
-    review_id : string;
+    request_id: string;
+    reviewer_id: string;
     reviewee_id: string;
     score: number;
     comment?: string;
-    created_at?: Date;
+    created_at: string;
 }
 
 export interface WalletTransaction {

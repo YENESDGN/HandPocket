@@ -1,12 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import ProofOfDeliveryModal from '../components/ProofOfDeliveryModal';
 import MapboxMap from '../components/MapboxMap';
 import type { MapMarker } from '../components/MapboxMap';
 import type { DeliveryRequest } from '../types';
 import { updateTaskStatus, setProofPhoto } from '../services/taskService';
+import { postLocation } from '../services/locationService';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/auth';
+
+const LOCATION_PUSH_INTERVAL_MS = 30_000;
 
 async function geocode(address: string): Promise<{ lat: number; lng: number } | null> {
     try {
@@ -66,6 +69,26 @@ export default function NavigationPage() {
     const navigate  = useNavigate();
     const location  = useLocation();
     const request: DeliveryRequest | null = (location.state as { request?: DeliveryRequest })?.request ?? null;
+    const lastPushRef = useRef<number>(0);
+
+    useEffect(() => {
+        if (!request) return;
+        if (request.status !== 'accepted' && request.status !== 'picked_up') return;
+        if (!navigator.geolocation) return;
+
+        const watchId = navigator.geolocation.watchPosition(
+            (pos) => {
+                const now = Date.now();
+                if (now - lastPushRef.current < LOCATION_PUSH_INTERVAL_MS) return;
+                lastPushRef.current = now;
+                postLocation(request.id, pos.coords.latitude, pos.coords.longitude).catch(() => {});
+            },
+            () => { /* permission denied / unavailable — silent fallback */ },
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+        );
+
+        return () => navigator.geolocation.clearWatch(watchId);
+    }, [request?.id, request?.status]);
 
     useEffect(() => {
         if (!request) return;

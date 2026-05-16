@@ -1,18 +1,19 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, Package, LogOut, ShieldCheck } from 'lucide-react';
-import type { User, DeliveryRequest } from '../types';
+import { LayoutDashboard, Users, Package, LogOut, ShieldCheck, AlertTriangle, Loader2 } from 'lucide-react';
+import type { User, DeliveryRequest, Dispute } from '../types';
 import { UserRole, RequestStatus } from '../types';
 import { useAuthStore } from '../store/auth';
+import { getAllDisputes, resolveDispute } from '../services/disputeService';
 
-type AdminNav = 'genel' | 'kullanicilar' | 'teslimatlar';
+type AdminNav = 'genel' | 'kullanicilar' | 'teslimatlar' | 'itirazlar';
 
 const mockUsers: User[] = [
-    { id: 'u-1', full_name: 'Yağız Enes DOĞAN',  role: UserRole.SENDER,  email: 'yenesdogan@outlook.com.tr', phone_number: '+90 530 301 6118', wallet_balance: 236,  avarage_rating: 4.9, is_banned: false, created_at: new Date('2024-03-01') },
-    { id: 'u-2', full_name: 'Ahmet Yılmaz',       role: UserRole.COURIER, email: 'ahmet@mail.com',             phone_number: '+90 532 100 2233', wallet_balance: 1240, avarage_rating: 4.7, is_banned: false, created_at: new Date('2024-04-15') },
-    { id: 'u-3', full_name: 'Zeynep Kaya',        role: UserRole.SENDER,  email: 'zeynep@mail.com',            phone_number: '+90 541 200 3344', wallet_balance: 80,   avarage_rating: 4.5, is_banned: false, created_at: new Date('2024-05-20') },
-    { id: 'u-4', full_name: 'Mert Demir',         role: UserRole.COURIER, email: 'mert@mail.com',              phone_number: '+90 555 300 4455', wallet_balance: 750,  avarage_rating: 4.2, is_banned: true,  created_at: new Date('2024-06-10') },
-    { id: 'u-5', full_name: 'Admin',              role: UserRole.ADMIN,   email: 'admin@handpocket.com',       phone_number: '+90 212 000 0000', wallet_balance: 0,    avarage_rating: undefined, is_banned: false, created_at: new Date('2024-01-01') },
+    { id: 'u-1', full_name: 'Yağız Enes DOĞAN',  role: UserRole.SENDER,  email: 'yenesdogan@outlook.com.tr', phone_number: '+90 530 301 6118', wallet_balance: 236,  average_rating: 4.9, is_banned: false, created_at: new Date('2024-03-01') },
+    { id: 'u-2', full_name: 'Ahmet Yılmaz',       role: UserRole.COURIER, email: 'ahmet@mail.com',             phone_number: '+90 532 100 2233', wallet_balance: 1240, average_rating: 4.7, is_banned: false, created_at: new Date('2024-04-15') },
+    { id: 'u-3', full_name: 'Zeynep Kaya',        role: UserRole.SENDER,  email: 'zeynep@mail.com',            phone_number: '+90 541 200 3344', wallet_balance: 80,   average_rating: 4.5, is_banned: false, created_at: new Date('2024-05-20') },
+    { id: 'u-4', full_name: 'Mert Demir',         role: UserRole.COURIER, email: 'mert@mail.com',              phone_number: '+90 555 300 4455', wallet_balance: 750,  average_rating: 4.2, is_banned: true,  created_at: new Date('2024-06-10') },
+    { id: 'u-5', full_name: 'Admin',              role: UserRole.ADMIN,   email: 'admin@handpocket.com',       phone_number: '+90 212 000 0000', wallet_balance: 0,    average_rating: undefined, is_banned: false, created_at: new Date('2024-01-01') },
 ];
 
 const mockDeliveries: (DeliveryRequest & { delivery_address: string })[] = [
@@ -47,8 +48,30 @@ const statusLabel: Record<string, string> = {
 
 export default function AdminDashboard() {
     const [activeNav, setActiveNav] = useState<AdminNav>('genel');
+    const [disputes, setDisputes] = useState<Dispute[]>([]);
+    const [disputesLoading, setDisputesLoading] = useState(false);
+    const [resolvingId, setResolvingId] = useState<string | null>(null);
     const signOut = useAuthStore((s) => s.signOut);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        if (activeNav !== 'itirazlar') return;
+        setDisputesLoading(true);
+        getAllDisputes()
+            .then(setDisputes)
+            .catch(() => setDisputes([]))
+            .finally(() => setDisputesLoading(false));
+    }, [activeNav]);
+
+    const handleResolve = async (id: string) => {
+        setResolvingId(id);
+        try {
+            const updated = await resolveDispute(id);
+            setDisputes((prev) => prev.map((d) => d.id === id ? updated : d));
+        } finally {
+            setResolvingId(null);
+        }
+    };
 
     const navClass = (item: AdminNav) =>
         `flex items-center gap-3 px-3 py-2.5 rounded text-sm text-left w-full transition-all ${
@@ -77,6 +100,9 @@ export default function AdminDashboard() {
                     </button>
                     <button className={navClass('teslimatlar')} onClick={() => setActiveNav('teslimatlar')}>
                         <Package size={18} /> Teslimatlar
+                    </button>
+                    <button className={navClass('itirazlar')} onClick={() => setActiveNav('itirazlar')}>
+                        <AlertTriangle size={18} /> İtirazlar
                     </button>
                 </nav>
 
@@ -167,7 +193,7 @@ export default function AdminDashboard() {
                                             <tr key={u.id} className='border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors'>
                                                 <td className='px-5 py-3 font-semibold text-darker-blue'>{u.full_name}</td>
                                                 <td className='px-5 py-3 text-gray-600'>{roleLabel[u.role]}</td>
-                                                <td className='px-5 py-3 text-gray-700'>{u.avarage_rating ?? '—'}</td>
+                                                <td className='px-5 py-3 text-gray-700'>{u.average_rating ?? '—'}</td>
                                                 <td className='px-5 py-3'>
                                                     <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${u.is_banned ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-700'}`}>
                                                         {u.is_banned ? 'Yasaklı' : 'Aktif'}
@@ -210,7 +236,7 @@ export default function AdminDashboard() {
                                                 </span>
                                             </td>
                                             <td className='px-5 py-3 text-gray-700'>{u.wallet_balance ?? 0} TL</td>
-                                            <td className='px-5 py-3 text-gray-700'>{u.avarage_rating ?? '—'}</td>
+                                            <td className='px-5 py-3 text-gray-700'>{u.average_rating ?? '—'}</td>
                                             <td className='px-5 py-3'>
                                                 <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${u.is_banned ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-700'}`}>
                                                     {u.is_banned ? 'Yasaklı' : 'Aktif'}
@@ -225,6 +251,67 @@ export default function AdminDashboard() {
                                     ))}
                                 </tbody>
                             </table>
+                        </div>
+                    )}
+
+                    {/* İtirazlar */}
+                    {activeNav === 'itirazlar' && (
+                        <div className='bg-white rounded-xl overflow-hidden drop-shadow-[0_0_8px_rgba(0,0,0,0.1)] fade-in-up'>
+                            <div className='bg-darker-blue px-5 py-3 flex items-center justify-between'>
+                                <span className='text-white font-bold text-sm uppercase tracking-wide'>Tüm İtirazlar</span>
+                                <span className='text-white/60 text-xs'>{disputes.length} kayıt</span>
+                            </div>
+                            {disputesLoading ? (
+                                <div className='flex justify-center py-12'>
+                                    <Loader2 size={28} className='text-secondary-blue animate-spin' />
+                                </div>
+                            ) : disputes.length === 0 ? (
+                                <p className='text-center text-gray-400 text-sm py-10'>Açık itiraz yok.</p>
+                            ) : (
+                                <table className='w-full text-sm font-sextary'>
+                                    <thead>
+                                        <tr className='border-b border-gray-100'>
+                                            <th className='text-left px-5 py-3 text-gray-500 font-semibold'>Talep ID</th>
+                                            <th className='text-left px-5 py-3 text-gray-500 font-semibold'>Açan</th>
+                                            <th className='text-left px-5 py-3 text-gray-500 font-semibold'>Sebep</th>
+                                            <th className='text-left px-5 py-3 text-gray-500 font-semibold'>Tarih</th>
+                                            <th className='text-left px-5 py-3 text-gray-500 font-semibold'>Durum</th>
+                                            <th className='px-5 py-3' />
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {disputes.map((d) => (
+                                            <tr key={d.id} className='border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors'>
+                                                <td className='px-5 py-3'>
+                                                    <Link to={`/talep/${d.request_id}`} className='text-secondary-blue font-mono text-xs font-semibold hover:underline'>
+                                                        {d.request_id.slice(0, 8).toUpperCase()}
+                                                    </Link>
+                                                </td>
+                                                <td className='px-5 py-3 text-gray-700 font-mono text-xs'>{d.raised_by.slice(0, 8).toUpperCase()}</td>
+                                                <td className='px-5 py-3 text-gray-700 max-w-xs truncate' title={d.reason}>{d.reason}</td>
+                                                <td className='px-5 py-3 text-gray-500 text-xs'>{new Date(d.created_at).toLocaleDateString('tr-TR')}</td>
+                                                <td className='px-5 py-3'>
+                                                    <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${d.resolved ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
+                                                        {d.resolved ? 'Çözüldü' : 'Açık'}
+                                                    </span>
+                                                </td>
+                                                <td className='px-5 py-3 text-right'>
+                                                    {!d.resolved && (
+                                                        <button
+                                                            onClick={() => handleResolve(d.id)}
+                                                            disabled={resolvingId === d.id}
+                                                            className='text-xs bg-secondary-blue text-white font-semibold px-3 py-1.5 rounded-full hover:bg-dark-blue transition-colors disabled:opacity-60 inline-flex items-center gap-1.5'
+                                                        >
+                                                            {resolvingId === d.id && <Loader2 size={12} className='animate-spin' />}
+                                                            Çözüldü olarak işaretle
+                                                        </button>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
                         </div>
                     )}
 
