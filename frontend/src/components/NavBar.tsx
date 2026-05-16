@@ -1,13 +1,23 @@
 import { Link } from 'react-router-dom'
+import { Sun, Moon } from 'lucide-react'
 import { useAuthStore } from '../store/auth'
+import { useDarkMode } from '../lib/useDarkMode'
 
 export default function NavBar() {
     const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
     const role       = useAuthStore((s) => s.role);
     const user       = useAuthStore((s) => s.user);
+    const { dark, toggle } = useDarkMode();
 
     return (
         <section className="flex flex-row gap-7 items-center top-10 right-15 absolute font-tertiary">
+            <button
+                onClick={toggle}
+                aria-label="Tema değiştir"
+                className="theme-toggle-btn"
+            >
+                {dark ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
             <div className="text-black p-2 flex flex-row gap-7 text-lg">
                 <Link to="/" className="cursor-pointer btn-hover-blue">Anasayfa</Link>
                 <Link to="/hakkimizda" className="cursor-pointer btn-hover-blue">Hakkımızda</Link>
@@ -37,7 +47,7 @@ export default function NavBar() {
                     </div>
                 </Link>
             ) : (
-                <div className='text-white bg-[#08b4fb] p-1 pr-3 pl-3 rounded-[30px] flex flex-row justify-between items-center gap-3'>
+                <div className='text-white bg-primary-blue p-1 pr-3 pl-3 rounded-[30px] flex flex-row justify-between items-center gap-3'>
                     <Link to="/giris" className="cursor-pointer btn-hover-blue-secondary">
                         Giriş Yap
                     </Link>

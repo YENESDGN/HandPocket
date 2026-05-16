@@ -1,23 +1,9 @@
-import { useState, useEffect } from "react";
 import NavBar from "../components/NavBar";
 import Footer from "../components/Footer";
-
-function useDarkMode(): boolean {
-    const [dark, setDark] = useState(() =>
-        document.documentElement.classList.contains('dark')
-    );
-    useEffect(() => {
-        const obs = new MutationObserver(() =>
-            setDark(document.documentElement.classList.contains('dark'))
-        );
-        obs.observe(document.documentElement, { attributeFilter: ['class'] });
-        return () => obs.disconnect();
-    }, []);
-    return dark;
-}
+import { useDarkMode } from "../lib/useDarkMode";
 
 export default function LandingPage() {
-    const dark = useDarkMode();
+    const { dark } = useDarkMode();
     return (
         <>
             <section className="grid grid-cols-2">

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, ArrowRight, ShieldCheck, Loader2 } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, Loader2 } from 'lucide-react';
 import NavBar from '../components/NavBar';
 import { useAuthStore } from '../store/auth';
 
@@ -43,17 +43,9 @@ export default function AuthPage({ initialForm = 'login' }: AuthPageProps) {
     };
 
     return (
-        <div className="relative min-h-screen overflow-hidden">
-            {/* Background */}
-            <img
-                className="absolute inset-0 w-full h-full object-cover z-0 opacity-75 blur-sm"
-                src="/assets/RgLg_bg.png"
-                alt=""
-            />
-            <div className="absolute inset-0 bg-darker-blue/40 z-0" />
-
+        <div className="relative min-h-screen overflow-hidden profile-bg">
             {/* NavBar */}
-            <div className="relative flex flex-col justify-between border-b bg-white/85 border-white/70 bottom-4 h-[130px]">
+            <div className="relative flex flex-col auth-navbar justify-between border-b border-black/20 bottom-4 h-[130px]">
                 <div className="flex items-center h-full px-6">
                     <img
                         className="w-16 h-16 relative top-3 object-contain"
@@ -73,8 +65,8 @@ export default function AuthPage({ initialForm = 'login' }: AuthPageProps) {
                         <div className="w-20 h-20 bg-white border-2 border-secondary-blue/30 rounded-3xl flex items-center justify-center mb-3">
                             <img src="/assets/favicon.png" alt="HandPocket Logo" className="w-16 h-16 object-contain" />
                         </div>
-                        <h1 className="text-3xl font-bold text-white tracking-tight font-tertiary">HandPocket</h1>
-                        <p className="text-sm text-white/60 uppercase tracking-widest mt-1 font-secondary">
+                        <h1 className="text-3xl font-bold text-gray-800/90 tracking-tight font-tertiary">HandPocket</h1>
+                        <p className="text-sm text-gray-800/90 uppercase tracking-widest mt-1 font-secondary">
                             Hızlı & Güvenli Kargo Platformu
                         </p>
                     </div>
@@ -137,7 +129,7 @@ export default function AuthPage({ initialForm = 'login' }: AuthPageProps) {
                                     <button
                                         type="submit"
                                         disabled={loading}
-                                        className="w-full bg-white hover:bg-white/80 hover:text-primary-blue text-primary-blue font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-primary-blue/25 active:scale-[0.98] transition-all mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                                        className="w-full bg-white hover:bg-white/80 text-primary-blue font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-primary-blue/25 active:scale-[0.98] transition-all mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
                                     >
                                         {loading ? <Loader2 size={18} className="animate-spin" /> : <><span>Giriş Yap</span><ArrowRight size={18} /></>}
                                     </button>
@@ -271,7 +263,7 @@ export default function AuthPage({ initialForm = 'login' }: AuthPageProps) {
                                     <button
                                         type="submit"
                                         disabled={loading}
-                                        className="w-full bg-white hover:bg-white/80 hover:text-primary-blue text-primary-blue font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-primary-blue/25 active:scale-[0.98] transition-all mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                                        className="w-full bg-white hover:bg-white/80 text-primary-blue font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-primary-blue/25 active:scale-[0.98] transition-all mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
                                     >
                                         {loading ? <Loader2 size={18} className="animate-spin" /> : <><span>Hesap Oluştur</span><ArrowRight size={18} /></>}
                                     </button>
@@ -290,12 +282,6 @@ export default function AuthPage({ initialForm = 'login' }: AuthPageProps) {
                                 </div>
                             </div>
                         )}
-                    </div>
-
-                    {/* Footer hint */}
-                    <div className="mt-6 flex items-center justify-center gap-1 text-white/40">
-                        <ShieldCheck size={14} />
-                        <p className="text-xs uppercase tracking-widest">256-bit şifreli güvenli bağlantı</p>
                     </div>
                 </div>
             </div>

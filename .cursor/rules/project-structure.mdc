@@ -9,11 +9,15 @@ alwaysApply: true
 frontend/src/
 ├── pages/       # Route-level components (LandingPage.tsx, RequestPage.tsx, AuthPage.tsx, Contact.tsx)
 ├── components/  # Reusable components (NavBar.tsx, Footer.tsx, ContactInfo.tsx)
+├── lib/         # Shared utilities & hooks (supabase.ts, api.ts, useDarkMode.ts)
+├── store/       # Zustand stores (auth.ts)
+├── services/    # API call layer (taskService.ts, walletService.ts, ...)
 └── types/       # Shared TypeScript types (index.ts)
 ```
 
 - Pages (route-level) → `frontend/src/pages/`
 - Reusable UI → `frontend/src/components/`
+- Shared utilities, hooks, clients → `frontend/src/lib/` (**no separate `hooks/` folder**)
 - All types → `frontend/src/types/`
 - Backend → `backend/` (FastAPI, Python, SQLModel)
 

@@ -1,5 +1,7 @@
 # HandPocket - Proje Bağlamı
 
+> **Session init**: At the start of every conversation, read all files in `.cursor/rules/` before doing anything else.
+
 ## Proje
 - **Tip**: React/TypeScript kargo uygulaması
 - **Renk**: #08b4fb (mavi tema)
@@ -8,10 +10,11 @@
 ## Aktif Değişiklikler
 ### NavBar.tsx
 - Nav linkleri: Anasayfa, Hakkımızda, İletişim
-- Giriş yokken: Giriş Yap, Kayıt Ol (pill butonlar)
+- Giriş yokken: Giriş Yap, Kayıt Ol (pill butonlar — `bg-primary-blue` pill)
 - Giriş varken: profil avatarı → /profil
 - Rol bazlı ek link: `sender` → **Talep Oluştur** (/talep), `courier` → **Talep Al** (/talep-al); diğer rolde karşı tarafın linki gösterilmez
 - `useAuthStore`: `isLoggedIn`, `role`
+- **Karanlık mod toggle**: `useDarkMode()` hook, Sun/Moon Lucide ikon, `.theme-toggle-btn` CSS sınıfı (index.css'de tanımlı)
 
 ### LandingPage.tsx (85 satır)
 - 2 kolonlu grid layout
@@ -20,15 +23,17 @@
 - Alt: 3 özellik kartı (Gönderim, Teslimat, Memnuniyet)
 - Asset'ler: Logo, yol, ikonlar, store logoları
 - fade-in-up animasyonu kullanımı
-- **Karanlık mod resim değişimi**: `useDarkMode()` hook (MutationObserver ile `document.documentElement.classList` izler); dark → `bg_img1.png`, light → `bg_img.png`
+- **Karanlık mod resim değişimi**: `useDarkMode()` hook (`lib/useDarkMode.ts`); dark → `bg_img1.png`, light → `bg_img.png`
 
 ### AuthPage.tsx (/giris, /kayit)
-- Arka plan: `RgLg_bg.png` (blur + koyu overlay), üstte logo + NavBar
-- Stitch referansına yakın tek ortalanmış kart (`bg-secondary-blue`), Lucide ikonlar (Mail, Lock, User, ArrowRight, ShieldCheck, Loader2)
+- Arka plan: `profile-bg` (RgLg_bg.png blurred pseudo-element); overlay kaldırıldı
+- Üst navbar: `.auth-navbar` CSS sınıfı (frosted glass — `rgba(255,255,255,0.65)` + `backdrop-filter: blur`; dark modda `rgba(4,20,33,0.70)`)
+- Tek ortalanmış kart (`bg-primary-blue`), Lucide ikonlar (Mail, Lock, User, ArrowRight, Loader2)
 - Giriş / Kayıt tek kart içinde `activeForm` ile; alt linkten form değişimi; `fade-in-up` ile geçiş animasyonu
 - Kontrollü input state; hata bandı (`useAuthStore.error` + `clearError`); gönderimde `loading` + spinner
 - **Kayıt**: Ad Soyad, E-posta, E-posta Tekrar, Parola, Parola Tekrar, Gönderici/Kurye seçici → `signUp` (Supabase + profil satırı)
 - **Giriş**: E-posta, Parola → `signIn` (Supabase + `GET /users/me` ile rol)
+- **Karanlık mod**: Tamamen CSS-tabanlı (`html.dark .auth-navbar`, `html.dark .text-gray-800\/90` vb.) — Tailwind `dark:` varyantı yok
 
 ### Contact.tsx (91 satır)
 - İletişim formu sayfası
@@ -228,7 +233,8 @@
 frontend/src/
 ├── lib/
 │   ├── supabase.ts              (@supabase/supabase-js client — VITE_SUPABASE_*)
-│   └── api.ts                   (axios instance, JWT interceptor → FastAPI)
+│   ├── api.ts                   (axios instance, JWT interceptor → FastAPI)
+│   └── useDarkMode.ts           (MutationObserver hook — { dark, toggle }; shared by NavBar + LandingPage)
 ├── store/
 │   └── auth.ts                  (Zustand: signUp, signIn, signOut, initialize, role, user, setAvatarUrl, updateProfile, refreshUser, deleteAccount)
 ├── services/                    (tüm API çağrıları buradan — lazy, sayfa içinde doğrudan api.* yok)
@@ -366,6 +372,17 @@ backend/
 - Renkler: `bg-primary-blue`, `text-primary-blue` vb.
 - Button hover: `className="btn-hover-blue"`
 - Animasyonlar: `fade-in-up`, `fade-in-up-delay-1/2/3`
+
+## Karanlık Mod Sistemi
+
+**Kural**: Tüm dark mode overrides `html.dark .class` kurallarıyla `index.css`'de tanımlanır. Tailwind `dark:bg-*` / `dark:text-*` varyantları **kullanılmaz** — iki sistem aynı property'de çakışır.
+
+- `html.dark` sınıfı `<html>` elementine `localStorage.setItem('hp_theme', ...)` + `document.documentElement.classList.toggle('dark', ...)` ile eklenir/çıkarılır
+- Toggle: `useDarkMode()` hook (`frontend/src/lib/useDarkMode.ts`) — `{ dark: boolean, toggle: () => void }`; MutationObserver ile reaktif
+- `index.html`'de sayfa yüklenmeden önce `hp_theme` localStorage'dan okunur ve `html` sınıfına uygulanır (flash yok)
+- `dark:border-*` Tailwind varyantları kabul edilebilir (sadece renk değil, opacity modifier ile border)
+- `bg-primary-blue` için hem light hem dark explicit kural var: `.bg-primary-blue { #08b4fb }` / `html.dark .bg-primary-blue { #0D2534 }`
+- Özel sınıflar: `.auth-navbar`, `.theme-toggle-btn`, `.profile-bg::before` dark mod kuralları index.css'de tanımlı
 
 ## Güvenlik Katmanı (Faz 3 — tamamlandı)
 

@@ -30,7 +30,7 @@ button {
 }
 
 .btn-hover-blue-secondary:hover {
-  background-color: var(--color-tertiary-blue);
+  background-color: var(--color-secondary-blue);
   border-color: black;
   padding: 0px 15px 0px 15px;
   border-radius: 30px;
@@ -42,7 +42,7 @@ button {
 }
 
 .btn-hover-blue:hover {
-  background-color: var(--color-tertiary-blue);
+  background-color: var(--color-secondary-blue);
   border-color: black;
   border-radius: 30px;
   padding: 0px 15px 0px 15px;
@@ -267,6 +267,8 @@ html.dark {
 html.dark .bg-white             { background-color: #0d2535; }
 html.dark .bg-gray-50           { background-color: #0f2b3d; }
 html.dark .bg-gray-100          { background-color: #112f42; }
+html.dark .bg-gray-700          { background-color: #112f42; }
+html.dark .bg-gray-800          { background-color: #0d2535; }
 html.dark .bg-darker-blue       { background-color: #020e17; }
 html.dark .bg-dark-blue         { background-color: #0d2a3d; }
 html.dark .bg-secondary-blue    { background-color: #063048; }
@@ -275,11 +277,14 @@ html.dark .bg-tertiary-blue     { background-color: #052438; }
 /* ── Text — grays (blue-tinted scale) ── */
 html.dark .text-black           { color: #e2f4fb; }
 html.dark .text-gray-800        { color: #e2f4fb; }
+html.dark .text-gray-800\/90    { color: rgba(226, 244, 251, 0.90); }
 html.dark .text-gray-700        { color: #cce8f4; }
 html.dark .text-gray-600        { color: #a8d8ea; }
 html.dark .text-gray-500        { color: #7ec8e3; }
 html.dark .text-gray-400        { color: #5ab8d8; }
 html.dark .text-gray-300        { color: #4aa8cb; }
+html.dark .text-gray-100        { color: #e2f4fb; }
+html.dark .placeholder\:text-gray-400::placeholder { color: #5ab8d8; }
 
 /* ── Text — blues (palette-derived) ── */
 html.dark .text-darker-blue     { color: #cce8f4; }
@@ -316,8 +321,24 @@ html.dark .border-gray-100      { border-color: rgba(255,255,255,0.06); }
 html.dark .border-gray-300      { border-color: rgba(255,255,255,0.15); }
 
 /* ── Interactive ── */
-html.dark .hover\:bg-gray-50:hover  { background-color: #0f2b3d; }
-html.dark .hover\:bg-white:hover    { background-color: #112f42; }
+html.dark .hover\:bg-gray-50:hover  { background-color: var(--color-dark-blue); }
+html.dark .hover\:bg-white:hover    { background-color: var(--color-dark-blue); }
+html.dark .hover\:bg-gray-700:hover { background-color: var(--color-tertiary-blue); color: white; }
+html.dark .hover\:bg-white\/80:hover { background-color: var(--color-tertiary-blue); color: white; }
+
+html.dark .btn-hover-blue:hover     { background-color: var(--color-dark-blue); color: white; }
+html.dark .btn-hover-blue-secondary:hover { background-color: var(--color-dark-blue); color: white; }
+html.dark .theme-toggle-btn:hover   { background-color: var(--color-dark-blue); color: white; }
+
+/* ── AuthPage navbar bar ── */
+.auth-navbar {
+  background-color: white/20;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+html.dark .auth-navbar {
+  background-color: rgba(4, 20, 33, 0.70);
+}
 
 /* ── Page backgrounds ── */
 html.dark .main-bg {
@@ -327,6 +348,26 @@ html.dark .main-bg {
 html.dark .profile-bg::before {
   filter: blur(10px) opacity(0.25);
 }
+
+/* ── bg-primary-blue: keep vivid accent in both modes ── */
+.bg-primary-blue { background-color: #08b4fb; }
+html.dark .bg-primary-blue { background-color: #0D2534; }
+
+/* ── Theme toggle button ── */
+.theme-toggle-btn {
+  width: 2.25rem;
+  height: 2.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  transition: background-color 0.3s ease;
+  color: var(--color-tertiary-blue);
+  background-color: transparent;
+}
+.theme-toggle-btn:hover { background-color: rgb(0, 0, 0); }
+html.dark .theme-toggle-btn { color: var(--color-tertiary-blue); }
+html.dark .theme-toggle-btn:hover { background-color: rgba(255, 255, 255, 0.10); }
 
 /* ── LandingPage hero left (large bg-primary-blue surface) ── */
 html.dark .landing-hero-left   { background-color: #004561; }
