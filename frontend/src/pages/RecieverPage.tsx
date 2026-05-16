@@ -191,7 +191,7 @@ export default function RecieverPage() {
 
                 {/* Center — Mapbox map */}
                 <div className='relative w-full h-[850px] rounded-xl overflow-hidden receiver-map'>
-                    <MapboxMap markers={mapMarkers} route={mapRoute} />
+                    <MapboxMap markers={mapMarkers} route={mapRoute} showUserLocation />
                 </div>
 
                 {/* Right — available requests list */}

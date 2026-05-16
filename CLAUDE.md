@@ -20,6 +20,7 @@
 - Alt: 3 özellik kartı (Gönderim, Teslimat, Memnuniyet)
 - Asset'ler: Logo, yol, ikonlar, store logoları
 - fade-in-up animasyonu kullanımı
+- **Karanlık mod resim değişimi**: `useDarkMode()` hook (MutationObserver ile `document.documentElement.classList` izler); dark → `bg_img1.png`, light → `bg_img.png`
 
 ### AuthPage.tsx (/giris, /kayit)
 - Arka plan: `RgLg_bg.png` (blur + koyu overlay), üstte logo + NavBar
@@ -49,13 +50,14 @@
 - SecondNavBar kullanımı
 - 23/77 grid layout: sol form paneli + sağ Mapbox harita
 - Sol: Kargo Adı, Başlangıç/Bitiş Konumu, Paket Fotoğrafı (opsiyonel), Ağırlık, Öncelik
-- Sağ harita: h-[900px] Mapbox GL JS harita
+- Sağ harita: h-[900px] inline Mapbox GL JS (MapboxMap komponenti değil, doğrudan mapboxgl)
 - Harita üstünde toggle butonu (isPanelVisible useState) + compact hesaplama paneli (w-56, absolute bottom-4 right-4)
 - Hesaplama paneli: Mesafe / Süre / Hesaplanan Ücret + "Teslimat Oluştur" butonu
 - **Fiyat formülü**: `distance_km × weight_kg × open_time_multiplier` — backend ile birebir aynı; eski additive formül (BASE_COST + rate*d + rate*w + rate*p) kaldırıldı
 - **Ücret dağılımı**: panel Mesafe / Ağırlık / Öncelik çarpanı olarak gösterir
 - **Bakiye kontrolü**: `handleSubmit` çağrılmadan önce `user.wallet_balance >= calcResult.price` kontrolü; yetersizse "Yetersiz bakiye." modal gösterilir, "Bakiye Yükle" butonu `/profil`'e yönlendirir
 - Backend 402 hatası da yakalanır; başarılı submitten sonra `refreshUser()` çağrılır
+- **Kullanıcı konumu**: `navigator.geolocation.getCurrentPosition` → `jumpTo` + özel mavi nokta marker; `GeolocateControl` canlı takip butonu olarak eklendi
 
 ### RecieverPage.tsx
 - Kurye rolü için açık talepleri görme ve kabul etme sayfası
@@ -63,7 +65,7 @@
 - 3-kolon grid: [22%_1fr_22%] — sol detay paneli + orta harita + sağ bekleyen talepler listesi
 - ReceiverNavBar + DeliveryAmountCard kullanımı
 - Sol panel: seçili talebin read-only alanları (Kargo Adı, Başlangıç, Bitiş, Ağırlık, Öncelik badge) + DeliveryAmountCard
-- Orta: h-[850px] **MapboxMap** (Nominatim geocoding + OSRM rota) — Google Maps iframe kaldırıldı
+- Orta: h-[850px] **MapboxMap** (Nominatim geocoding + OSRM rota) — `showUserLocation` açık
 - Sağ: kaydırılabilir bekleyen talepler listesi (bg-secondary-blue header, beyaz kartlar, aktif seçim ring)
 - `getOpenTasks()` ile gerçek API verisi; useState ile seçili talep yönetimi
 - priorityLabel / priorityBadge yardımcı fonksiyonlar
@@ -79,7 +81,7 @@
 - Harita merkezi: `request.pickup_address` Nominatim geocoding ile
 - 23/77 grid: sol 3 kart + sağ tam yükseklik harita
 - Sol kartlar: Status Card (Gönderi ID + ETA + Mesafe), Cargo Details Card (Timeline: BAŞLANGIÇ→TESLİMAT + ağırlık/öncelik), Courier Card (full_name + email, telefon butonu)
-- Sağ harita: h-[calc(100vh-160px)], pulsing kurye marker overlay (animate-ping + bg-secondary-blue)
+- Sağ harita: h-[calc(100vh-160px)], pulsing kurye marker overlay (animate-ping + bg-secondary-blue); `showUserLocation` açık
 
 ### DeliveryDetailPage.tsx (327 satır)
 - Tekil teslimat detay sayfası
@@ -91,15 +93,16 @@
 - statusOrder / statusSteps ile timeline render
 - Kabul durumunda "Canlı Takip" linki (/takip)
 - Bulunamayan ID için 404 fallback ekranı
+- Harita: `showUserLocation` açık
 
 ### NavigationPage.tsx
 - Kurye navigasyon sayfası (tam ekran harita)
 - Route: /navigasyon
-- Full-screen **MapboxMap** (Nominatim + OSRM adım adım yön)
+- Full-screen **MapboxMap** (Nominatim + OSRM adım adım yön) — `showUserLocation` açık
 - Sol üst: Dönüş talimatı kartı (mesafe + talimat) + Tahmini varış / kalan km kartı
 - Sağ üst: Rota Zaman Çizelgesi paneli (Alım → Yolda → Varış → Teslim)
 - Alt: Kargo Özellikleri (ağırlık/mesafe/ID) + İptal / Tamamla butonları
-- **ProofOfDeliveryModal** entegrasyonu: "Tamamla" → modal açılır → `onConfirm(file)` → Supabase Storage `delivery-proofs` bucket'a yükleme (best-effort) → `setProofPhoto(id, url)` → `updateTaskStatus` picked_up + delivered → `/profil`
+- **ProofOfDeliveryModal** entegrasyonu: "Tamamla" → modal açılır → `onConfirm(file)` → Supabase Storage `delivery-proofs` bucket'a yükleme (best-effort) → `setProofPhoto(id, url)` → `updateTaskStatus` picked_up + delivered → `refreshUser()` → `/profil`
 - İptal: `updateTaskStatus(id, 'cancelled')` → `/talep-al`
 
 ### AboutUs.tsx (116 satır)
@@ -227,7 +230,7 @@ frontend/src/
 │   ├── NavBar.tsx               (LandingPage nav + rol bazlı Talep Oluştur / Talep Al)
 │   ├── SecondNavBar.tsx         (blur-bg navbar — RequestPage, AboutUs)
 │   ├── ReceiverNavBar.tsx       (beyaz navbar — kurye/takip/detay sayfaları)
-│   ├── MapboxMap.tsx            (Mapbox GL JS wrapper — center, zoom, markers, route props)
+│   ├── MapboxMap.tsx            (Mapbox GL JS wrapper — center, zoom, markers, route, showUserLocation props)
 │   ├── Footer.tsx               (3-kolon footer)
 │   ├── ContactInfo.tsx          (iletişim bilgileri — bg-dark-blue)
 │   ├── DeliveryAmountCard.tsx   (TESLİMAT MİKTARI kartı — RecieverPage)
@@ -417,8 +420,10 @@ backend/
 - **Staging ortamı**: `staging` branch'inden Render/Fly.io free instance
 - **Horizontal scale**: birden fazla instance'da `slowapi` Redis backend'e geçmeli (`Limiter(storage_uri="redis://...")`)
 
-### Düzeltilen bug
+### Düzeltilen buglar
 - **`RequestPage.tsx` — fiyat formülü uyumsuzluğu**: frontend `BASE_COST + distance×1.5 + weight×1.0 + priority×1.2` kullanıyordu; backend `distance × weight × multiplier` hesaplıyordu → gösterilen ücret ile kesilen ücret farklıydı. Frontend backend formülüyle eşleştirildi.
+- **`routers/tasks.py` — kurye cüzdan kredisi**: ödeme `COMPLETED` statüsünde tetikleniyordu (gönderici onayı gerekiyor, UI yok); `DELIVERED`'a taşındı — kurye tamamlamayı işaretlediğinde anında ödenir.
+- **`NavigationPage.tsx` — profil yönlendirmesi**: teslimattan sonra `refreshUser()` eklendi, böylece `/profil`'e gidince cüzdan bakiyesi güncel görünür.
 
 ---
 
@@ -434,6 +439,12 @@ backend/
 3. **Axios** (`api.ts`): her istekte `supabase.auth.getSession()` ile `Authorization: Bearer <access_token>`
 4. **Uygulama açılışı**: `App.tsx` içinde `useAuthStore.initialize()` — geçerli session varsa profil yüklenir; `/users/me` başarısızsa Supabase oturumu temizlenir
 5. **Çıkış**: `supabase.auth.signOut` + store sıfırlama (`ProfilePage`, `AdminDashboard`)
+
+### MapboxMap.tsx
+- Props: `center`, `zoom`, `markers`, `route`, `showUserLocation`
+- `showUserLocation=true`: `navigator.geolocation.getCurrentPosition` ile kullanıcı koordinatları alınır → `jumpTo` ile harita oraya taşınır → özel mavi nokta marker eklenir; `GeolocateControl` de eklenir (canlı takip için)
+- Konum alınamazsa (hata / izin reddedilmiş): sessizce fallback, harita prop'taki `center`'da kalır
+- **Contact.tsx haritasında `showUserLocation` yok** — İstanbul sabit konumunda kalır
 
 ### Cüzdan API
 - `GET /wallet/` → `WalletSummary { balance, stats, transactions }` — stats tamamlanan teslimatlardan hesaplanır
@@ -475,3 +486,37 @@ backend/
 - Cloud Depolama (Fotoğraf upload)
 - Ödeme Hizmetleri
 - Bildirim Servisi
+
+---
+
+## v0.1 Mimari Boşluklar — Diagram Karşılaştırması
+
+[Architecture/ER_Diagram.pdf](Architecture/ER_Diagram.pdf), [Architecture/System_Contex_Diagram.pdf](Architecture/System_Contex_Diagram.pdf) ve [Architecture/API_Sequence_Diagram.pdf](Architecture/API_Sequence_Diagram.pdf) ile yapılan denetim sonucu — **v0.1 demo için yeterli**, üretim için kapatılması gereken boşluklar:
+
+### ER Diagram — ✅ Tam (extension'larla)
+- Users, DeliveryRequests, Reviews (diagramda "Transactions" etiketli), Disputes — hepsi mevcut
+- Ekstra: `wallet_transactions`, `locations` tabloları, `cancelled` status, `admin` rolü (kasıtlı)
+
+### System Context dış servisler
+- ✅ **Haritada İzleme** — Mapbox + OSRM + Nominatim
+- ✅ **Cloud Depolama** — Supabase Storage (`delivery-proofs`)
+- ❌ **Bildirim Servisi** — FCM/OneSignal/WebSocket yok. `Preferences.tsx`'teki email/SMS/push toggle'ları sadece `useState`, backend'e bağlı değil
+- ❌ **Ödeme Hizmetleri** — Stripe/iyzico/PayTR yok. Cüzdan "deposit" gerçek para akışı olmadan sadece sayıyı artırıyor
+- ❌ **Görüntü İşleme / Yapay Zeka** — teslimat kanıtı fotoğrafları yükleniyor ama AI doğrulaması yok
+
+### API Sequence Diagram — eksik adımlar
+- **Flow 1, adım 7**: "Çevredeki aktif kuryelere bildirim tetikle" → uygulanmadı (Bildirim Servisi yok)
+- **Flow 2, adım 8**: "Göndericiye bilgilendirme mesajı" → uygulanmadı
+- **Flow 3, adım 3**: "Göndericiye kanıt fotoğrafıyla bildirim ilet" → uygulanmadı
+- **Flow 2, adım 6**: `POST /verify` (gönderici onayı → completed) → UI yok; geçici çözüm olarak kurye cüzdanı `DELIVERED`'da kredilendiriliyor (Faz 4'te düzeltildi)
+
+### Frontend service katmanı eksikleri
+Backend hazır, frontend service/UI yok:
+- `/reviews` → `reviewService.ts` yok, teslimat sonrası değerlendirme UI'ı yok
+- `/disputes` → `disputeService.ts` yok, anlaşmazlık açma/çözme UI'ı yok
+- `/locations` → `locationService.ts` yok → **`TrackingPage.tsx` sahte pulsing marker gösteriyor**, gerçekte `/locations/{task_id}/latest` polling'i yok; `NavigationPage.tsx` da kurye konumunu push etmiyor
+
+### Mobil branch'e geçmeden önce notlar
+- Bildirim servisi mobilde daha kritik (push notifications) — backend tarafında entegrasyon kararı verilmeli (FCM önerilir)
+- Live tracking için locations endpoint'i hazır; mobilde courier app'ten her 30-60 sn `POST /locations/` atılmalı, sender app'te de `GET /locations/{id}/latest` polling
+- Reviews/Disputes UI mobile-first tasarlanabilir; web'de eksik kalsa da olur

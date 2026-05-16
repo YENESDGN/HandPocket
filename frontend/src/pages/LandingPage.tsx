@@ -1,7 +1,23 @@
+import { useState, useEffect } from "react";
 import NavBar from "../components/NavBar";
 import Footer from "../components/Footer";
 
+function useDarkMode(): boolean {
+    const [dark, setDark] = useState(() =>
+        document.documentElement.classList.contains('dark')
+    );
+    useEffect(() => {
+        const obs = new MutationObserver(() =>
+            setDark(document.documentElement.classList.contains('dark'))
+        );
+        obs.observe(document.documentElement, { attributeFilter: ['class'] });
+        return () => obs.disconnect();
+    }, []);
+    return dark;
+}
+
 export default function LandingPage() {
+    const dark = useDarkMode();
     return (
         <>
             <section className="grid grid-cols-2">
@@ -37,8 +53,8 @@ export default function LandingPage() {
                 <div className="relative overflow-hidden landing-hero-right">
                     <img
                     className="w-full h-full object-none"
-                    src="../assets/bg_img.png"
-                    alt="Background Layout"     
+                    src={dark ? "../assets/bg_img1.png" : "../assets/bg_img.png"}
+                    alt="Background Layout"
                     />
                     <nav>
                         <NavBar />

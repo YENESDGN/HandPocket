@@ -6,6 +6,7 @@ import type { MapMarker } from '../components/MapboxMap';
 import type { DeliveryRequest } from '../types';
 import { updateTaskStatus, setProofPhoto } from '../services/taskService';
 import { supabase } from '../lib/supabase';
+import { useAuthStore } from '../store/auth';
 
 async function geocode(address: string): Promise<{ lat: number; lng: number } | null> {
     try {
@@ -61,6 +62,7 @@ export default function NavigationPage() {
     const [steps, setSteps]           = useState<OsrmStep[]>([]);
     const [totalDist, setTotalDist]   = useState(0);
     const [totalDur, setTotalDur]     = useState(0);
+    const refreshUser = useAuthStore((s) => s.refreshUser);
     const navigate  = useNavigate();
     const location  = useLocation();
     const request: DeliveryRequest | null = (location.state as { request?: DeliveryRequest })?.request ?? null;
@@ -114,6 +116,7 @@ export default function NavigationPage() {
             }
             await updateTaskStatus(request.id, 'picked_up');
             await updateTaskStatus(request.id, 'delivered');
+            await refreshUser();
             navigate('/profil');
         } catch {
             setCompleting(false);
@@ -134,7 +137,7 @@ export default function NavigationPage() {
 
             {/* Map Background */}
             <div className='absolute inset-0'>
-                <MapboxMap center={[28.97, 41.005]} zoom={12} markers={mapMarkers} route={mapRoute} />
+                <MapboxMap center={[28.97, 41.005]} zoom={12} markers={mapMarkers} route={mapRoute} showUserLocation />
             </div>
 
             {/* Top-left: Turn instruction */}

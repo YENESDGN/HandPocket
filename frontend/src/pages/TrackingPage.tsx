@@ -195,6 +195,7 @@ export default function TrackingPage() {
                         center={mapCenter}
                         zoom={13}
                         markers={mapMarkers}
+                        showUserLocation
                     />
                     <div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 pointer-events-none'>
                         <div className='relative flex items-center justify-center'>

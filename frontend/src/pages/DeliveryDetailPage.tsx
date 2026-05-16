@@ -243,7 +243,7 @@ export default function DeliveryDetailPage() {
 
                 {/* Map */}
                 <div className='relative w-full h-[calc(100vh-160px)] rounded-xl overflow-hidden drop-shadow-[0_0_15px_rgba(0,0,0,0.7)]'>
-                    <MapboxMap markers={mapMarkers} route={mapRoute} />
+                    <MapboxMap markers={mapMarkers} route={mapRoute} showUserLocation />
                 </div>
             </section>
         </>

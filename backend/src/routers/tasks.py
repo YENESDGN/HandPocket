@@ -175,10 +175,8 @@ def update_status(
                 amount=task.calculated_price,
             ))
 
-    if payload.status == RequestStatus.COMPLETED:
-        if task.sender_id != current_user.id:
-            raise HTTPException(status_code=403, detail="Only the sender can confirm completion")
-        # Credit the courier's wallet on completion
+    if payload.status == RequestStatus.DELIVERED:
+        # Credit the courier's wallet when they mark delivery complete
         if task.courier_id and task.calculated_price:
             courier = session.get(User, task.courier_id)
             if courier:
@@ -191,6 +189,10 @@ def update_status(
                     type="credit",
                     amount=task.calculated_price,
                 ))
+
+    if payload.status == RequestStatus.COMPLETED:
+        if task.sender_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Only the sender can confirm completion")
 
     task.status = payload.status
     task.updated_at = datetime.utcnow()

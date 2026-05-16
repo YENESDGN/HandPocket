@@ -114,9 +114,13 @@ function RouteMap({ pickup, delivery, routeCoords }: {
     const mapObj       = useRef<mapboxgl.Map | null>(null);
     const mkStart      = useRef<mapboxgl.Marker | null>(null);
     const mkEnd        = useRef<mapboxgl.Marker | null>(null);
+    const userMarker   = useRef<mapboxgl.Marker | null>(null);
+    const bestAccuracy = useRef<number>(Infinity);
+    const userCentered = useRef<boolean>(false);
 
     useEffect(() => {
         if (!containerRef.current || mapObj.current) return;
+
         mapObj.current = new mapboxgl.Map({
             container: containerRef.current,
             style: 'mapbox://styles/mapbox/streets-v12',
@@ -124,7 +128,63 @@ function RouteMap({ pickup, delivery, routeCoords }: {
             zoom: 10,
         });
         mapObj.current.addControl(new mapboxgl.NavigationControl(), 'top-left');
-        return () => { mapObj.current?.remove(); mapObj.current = null; };
+        mapObj.current.addControl(
+            new mapboxgl.GeolocateControl({
+                positionOptions: { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 },
+                trackUserLocation: true,
+                showUserHeading: true,
+                showAccuracyCircle: true,
+            }),
+            'top-left'
+        );
+
+        let watchId: number | null = null;
+
+        if (navigator.geolocation) {
+            watchId = navigator.geolocation.watchPosition(
+                (pos) => {
+                    const { latitude, longitude, accuracy } = pos.coords;
+                    if (accuracy > bestAccuracy.current) return;
+                    bestAccuracy.current = accuracy;
+
+                    const lnglat: [number, number] = [longitude, latitude];
+                    const placeOnMap = () => {
+                        if (!userCentered.current && accuracy <= 10000) {
+                            mapObj.current?.jumpTo({ center: lnglat, zoom: accuracy <= 1000 ? 14 : 12 });
+                            userCentered.current = true;
+                        }
+                        if (userMarker.current) {
+                            userMarker.current.setLngLat(lnglat);
+                        } else {
+                            const el = document.createElement('div');
+                            el.style.cssText = [
+                                'width:16px', 'height:16px', 'background:#08b4fb',
+                                'border:3px solid white', 'border-radius:50%',
+                                'box-shadow:0 0 0 6px rgba(8,180,251,0.25)',
+                            ].join(';');
+                            userMarker.current = new mapboxgl.Marker({ element: el })
+                                .setLngLat(lnglat)
+                                .setPopup(new mapboxgl.Popup({ offset: 15 }).setText('Konumunuz'))
+                                .addTo(mapObj.current!);
+                        }
+                    };
+                    if (mapObj.current?.isStyleLoaded()) placeOnMap();
+                    else mapObj.current?.once('load', placeOnMap);
+                },
+                (err) => {
+                    console.warn('[RequestPage] Geolocation error:', err.code, err.message);
+                },
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+            );
+        }
+
+        return () => {
+            if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+            userMarker.current?.remove();
+            userMarker.current = null;
+            mapObj.current?.remove();
+            mapObj.current = null;
+        };
     }, []);
 
     useEffect(() => {
