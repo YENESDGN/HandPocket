@@ -42,10 +42,13 @@ export default function SettingsPanel() {
   const [phoneDigits,  setPhoneDigits]  = useState('');
   const [saving,       setSaving]       = useState(false);
   const [saved,        setSaved]        = useState(false);
+  const [showDelete,   setShowDelete]   = useState(false);
+  const [deleting,     setDeleting]     = useState(false);
 
   const user          = useAuthStore((s) => s.user);
   const setAvatarUrl  = useAuthStore((s) => s.setAvatarUrl);
   const updateProfile = useAuthStore((s) => s.updateProfile);
+  const deleteAccount = useAuthStore((s) => s.deleteAccount);
   const fileInputRef  = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -86,7 +89,7 @@ export default function SettingsPanel() {
   };
 
   return (
-      <div className="flex flex-col gap-10 font-sextary">
+      <div className="relative flex flex-col gap-10 font-sextary">
 
         {/* Row 1 — Kişisel Bilgiler + Dil ve Zaman */}
         <div className="grid grid-cols-2 gap-6">
@@ -305,11 +308,45 @@ export default function SettingsPanel() {
               <span className="text-red-700 font-semibold text-sm font-sextary">Bu işlem geri alınamaz</span>
               <span className="text-red-500/80 text-xs font-sextary">Hesabınız kalıcı olarak silinecek ve tüm verileriniz kaldırılacaktır.</span>
             </div>
-            <button className="bg-red-600/75 border border-red-400/50 text-white text-sm font-bold px-6 py-2.5 rounded-xl hover:bg-red-500/25 transition-colors font-sextary tracking-wide">
+            <button
+              onClick={() => setShowDelete(true)}
+              className="bg-red-600/75 border border-red-400/50 text-white text-sm font-bold px-6 py-2.5 rounded-xl hover:bg-red-500/25 transition-colors font-sextary tracking-wide"
+            >
               Hesabı Sil
             </button>
           </div>
         </div>
+
+      {showDelete && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm rounded-lg">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full mx-4 font-sextary">
+            <p className="text-darker-blue font-bold text-lg text-center mb-6">
+              Hesabını silmek istediğine emin misin?
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDelete(false)}
+                disabled={deleting}
+                className="flex-1 border border-gray-300 text-gray-500 font-semibold py-3 rounded-xl hover:bg-gray-50 transition-all disabled:opacity-50"
+              >
+                Hayır
+              </button>
+              <button
+                onClick={async () => {
+                  setDeleting(true);
+                  await deleteAccount();
+                  window.location.href = '/';
+                }}
+                disabled={deleting}
+                className="flex-1 bg-red-500 text-white font-semibold py-3 rounded-xl hover:bg-red-600 transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+              >
+                {deleting && <Loader2 size={14} className="animate-spin" />}
+                Evet
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       </div>
     );

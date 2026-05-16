@@ -149,7 +149,7 @@
   - Üst: Profil fotoğrafı (yuvarlak, tıklanabilir → file picker), Ad, Telefon, Email
   - Orta nav: Teslimatlar, Ayarlar, Güvenlik, Tercihler (Lucide ikonlar)
   - Aktif nav item: bg-dark-blue + beyaz yazı (useState ile)
-  - Alt: Cüzdan, Yardım Merkezi (NeedHelpPanel), Çıkış Yap (kırmızı) — `signOut()` + ana sayfaya yönlendirme
+  - Alt: Cüzdan, Yardım Merkezi (NeedHelpPanel), Çıkış Yap (kırmızı) — `showLogout` modal ile onay alınır, sonra `signOut()` + `navigate('/')`
 - **Navbar** (bg-white, py-5): Logo sol, Anasayfa/Hakkımızda/İletişim sağ, profil avatarı sağda (tıklanınca file picker açar)
 - **NavItem tipi**: 'teslimatlar' | 'ayarlar' | 'guvenlik' | 'tercihler' | 'yardim' | 'cuzdan'
 - **Tablolar** (DeliveryTable komponenti — teslimatlar sekmesi):
@@ -165,7 +165,7 @@
   - cuzdan → WalletPanel (ProfilePage içinde tanımlı)
 - **WalletPanel**: `getWalletSummary()` ile gerçek bakiye + istatistikler + işlem geçmişi; WalletModal komponenti ile Bakiye Yükle (`deposit(amount)`) ve Para Çek (`withdraw(amount)`) işlemleri; işlem sonrası `refreshUser()` + panel yenileme
 
-### settings.tsx (181 satır) — Ayarlar sekmesi
+### settings.tsx — Ayarlar sekmesi
 - font-sextary, rounded-lg, shadow-md kartlar
 - **Kişisel Bilgiler** (bg-dark-blue header + bg-dark-blue/90 body):
   - Sol: profil fotoğrafı (rounded-lg, w-36 h-36)
@@ -182,6 +182,9 @@
   - Her kart: bg-dark-blue ikon tile + açıklama + aksiyon linki
 - **Hesabı Kapat** (bg-red-500/10, border-red-300/50):
   - AlertTriangle ikonu, uyarı metni, "Hesabı Sil" butonu (bg-red-500/15)
+  - "Hesabı Sil" → `showDelete` modal (absolute overlay, backdrop-blur-sm, NavigationPage cancel modal stili)
+  - Modal onay: `deleteAccount()` (store) → `window.location.href = '/'`
+  - `deleteAccount` store aksiyonu: `DELETE /users/me` (backend) → `supabase.auth.signOut` → store sıfırlama
 
 ### Security.tsx (156 satır) — Güvenlik sekmesi
 - Flex layout: sol kolon (flex-[3]) + sağ kolon (flex-[2], self-start)
@@ -215,11 +218,11 @@ frontend/src/
 │   ├── supabase.ts              (@supabase/supabase-js client — VITE_SUPABASE_*)
 │   └── api.ts                   (axios instance, JWT interceptor → FastAPI)
 ├── store/
-│   └── auth.ts                  (Zustand: signUp, signIn, signOut, initialize, role, user, setAvatarUrl, updateProfile, refreshUser)
+│   └── auth.ts                  (Zustand: signUp, signIn, signOut, initialize, role, user, setAvatarUrl, updateProfile, refreshUser, deleteAccount)
 ├── services/                    (tüm API çağrıları buradan — lazy, sayfa içinde doğrudan api.* yok)
 │   ├── taskService.ts           (getOpenTasks, getMyTasks, getTaskById, createTask, acceptTask, updateTaskStatus, setProofPhoto)
 │   ├── walletService.ts         (getWalletSummary, deposit, withdraw)
-│   └── userService.ts           (createUser, getMe, updateMe, getUserById)
+│   └── userService.ts           (createUser, getMe, updateMe, getUserById, deleteMe)
 ├── components/
 │   ├── NavBar.tsx               (LandingPage nav + rol bazlı Talep Oluştur / Talep Al)
 │   ├── SecondNavBar.tsx         (blur-bg navbar — RequestPage, AboutUs)

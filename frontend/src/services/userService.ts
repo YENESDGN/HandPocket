@@ -16,3 +16,5 @@ export const updateMe = (payload: { full_name?: string; phone_number?: string })
 
 export const getUserById = (id: string) =>
   api.get<User>(`/users/${id}`).then((r) => r.data);
+
+export const deleteMe = () => api.delete('/users/me');

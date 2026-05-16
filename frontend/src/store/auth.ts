@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
-import { createUser, getMe, updateMe } from '../services/userService';
+import { createUser, getMe, updateMe, deleteMe } from '../services/userService';
 import type { User } from '../types';
 
 type UserRole = 'sender' | 'courier';
@@ -19,6 +19,7 @@ interface AuthState {
     setAvatarUrl: (url: string) => void;
     updateProfile: (full_name: string, phone_number?: string) => Promise<void>;
     refreshUser: () => Promise<void>;
+    deleteAccount: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -109,6 +110,12 @@ export const useAuthStore = create<AuthState>((set) => ({
         const updated = await updateMe({ full_name, phone_number });
         const savedAvatar = useAuthStore.getState().user?.avatar_url;
         set((s) => ({ user: { ...updated, avatar_url: savedAvatar ?? s.user?.avatar_url } }));
+    },
+
+    deleteAccount: async () => {
+        await deleteMe();
+        await supabase.auth.signOut();
+        set({ isLoggedIn: false, role: null, user: null });
     },
 
     refreshUser: async () => {

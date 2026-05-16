@@ -229,8 +229,9 @@ function WalletPanel() {
 }
 
 export default function ProfilePage() {
-  const [activeNav, setActiveNav] = useState<NavItem>('teslimatlar');
-  const [rows, setRows]           = useState<DeliveryRow[]>([]);
+  const [activeNav, setActiveNav]       = useState<NavItem>('teslimatlar');
+  const [showLogout, setShowLogout]     = useState(false);
+  const [rows, setRows]                 = useState<DeliveryRow[]>([]);
   const [tasksLoading, setTasksLoading] = useState(true);
   const signOut      = useAuthStore((s) => s.signOut);
   const user         = useAuthStore((s) => s.user);
@@ -320,7 +321,7 @@ export default function ProfilePage() {
           <button
             className="flex items-center gap-3 px-3 py-2.5 rounded text-red-400 btn-hover-shadow-blue text-sm text-left font-semibold w-full profile-nav-item"
             style={{ animationDelay: '0.47s' }}
-            onClick={() => { signOut(); navigate('/'); }}
+            onClick={() => setShowLogout(true)}
           >
             <LogOut size={18} />
             Çıkış Yap
@@ -398,6 +399,30 @@ export default function ProfilePage() {
           {activeNav === 'yardim' && <NeedHelpPanel />}
         </main>
       </div>
+
+      {showLogout && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full mx-4 font-sextary">
+            <p className="text-darker-blue font-bold text-lg text-center mb-6">
+              Çıkış yapmak istediğinize emin misiniz?
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowLogout(false)}
+                className="flex-1 border border-gray-300 text-gray-500 font-semibold py-3 rounded-xl hover:bg-gray-50 transition-all"
+              >
+                Hayır
+              </button>
+              <button
+                onClick={() => { signOut(); navigate('/'); }}
+                className="flex-1 bg-red-500 text-white font-semibold py-3 rounded-xl hover:bg-red-600 transition-all"
+              >
+                Evet
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

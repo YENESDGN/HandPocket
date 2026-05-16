@@ -68,6 +68,15 @@ def get_user(
     return user
 
 
+@router.delete("/me", status_code=204)
+def delete_me(
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    session.delete(current_user)
+    session.commit()
+
+
 @router.patch("/{user_id}/ban", response_model=UserPublic)
 def toggle_ban(
     user_id: str,
