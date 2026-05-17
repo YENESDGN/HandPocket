@@ -1,24 +1,31 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from sqlmodel import Session, select
 from ..database import get_session
 from ..security import get_current_user, require_role
 from ..models.location import Location, LocationCreate, LocationPublic
-from ..models.task_model import DeliveryRequest
+from ..models.task_model import DeliveryRequest, RequestStatus
 from ..models.user import User, UserRole
 
 router = APIRouter(prefix="/locations", tags=["locations"])
+limiter = Limiter(key_func=get_remote_address)
 
 
 @router.post("/", response_model=LocationPublic, status_code=201)
+@limiter.limit("4/minute")
 def post_location(
+    request: Request,
     payload: LocationCreate,
     session: Session = Depends(get_session),
     current_user: User = Depends(require_role(UserRole.COURIER)),
 ):
-    """Courier pushes current coordinates every 2-3 minutes (polling model)."""
+    """Courier pushes current coordinates every 30-60 seconds."""
     task = session.get(DeliveryRequest, payload.task_id)
     if not task or task.courier_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not your task")
+    if task.status not in (RequestStatus.ACCEPTED, RequestStatus.PICKED_UP):
+        raise HTTPException(status_code=409, detail="Task is not active")
 
     pin = Location(**payload.model_dump(), courier_id=current_user.id)
     session.add(pin)

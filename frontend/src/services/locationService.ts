@@ -3,7 +3,6 @@ import api from '../lib/api';
 export interface LocationPin {
   id: string;
   task_id: string;
-  courier_id: string;
   latitude: number;
   longitude: number;
   timestamp: string;

@@ -181,6 +181,13 @@
   - yardim → NeedHelpPanel (NeedHelp.tsx)
   - cuzdan → WalletPanel (ProfilePage içinde tanımlı)
 - **WalletPanel**: `getWalletSummary()` ile gerçek bakiye + istatistikler + işlem geçmişi; WalletModal komponenti ile Bakiye Yükle (`deposit(amount)`) ve Para Çek (`withdraw(amount)`) işlemleri; işlem sonrası `refreshUser()` + panel yenileme
+- **Geçmiş Teslimatlar dropdown** (teslimatlar sekmesi):
+  - Terminal statüsler (completed / cancelled / disputed) < 7 gün → ana bölümde görünür; ≥ 7 gün → "Geçmiş Teslimatlar" collapsible dropdown'a düşer
+  - `isOlderThan7Days(dateStr)` + `SEVEN_DAYS_MS` sabiti ile hesaplanır
+  - Lazy load: `allRowsRef` (useRef) mount'ta tüm satırları saklar, dropdown ilk açıldığında filtre yapılır (`historyLoadedRef`); sonraki toggle'larda yeniden fetch/filtre yok
+  - Ana bölüm tabloları: AKTİF TESLİMATLAR (courier) / ONAY BEKLEYEN + BEKLEYEN TALEPLER (sender) + BAŞARILI TESLİMATLAR (completed, recent) + BAŞARISIZ TALEPLER (disputed + cancelled, recent)
+  - Dropdown tabloları: BAŞARILI (completed, old) + BAŞARISIZ TALEPLER (disputed + cancelled, old)
+  - `DeliveryRow` interface'e `createdAt: string` eklendi; `ChevronDown` Lucide ikonu (rotate-180 açıkken)
 
 ### settings.tsx — Ayarlar sekmesi
 - font-sextary, rounded-lg, shadow-md kartlar
@@ -463,9 +470,17 @@ backend/
 [Plan.md](Plan.md) yol haritasının ilk 3 maddesi tamamlandı.
 
 ### 1. Canlı Kurye Takibi — ✅ tamamlandı
-- **`services/locationService.ts`**: `postLocation(task_id, lat, lng)`, `getLatestLocation(task_id)`
+- **`services/locationService.ts`**: `postLocation(task_id, lat, lng)`, `getLatestLocation(task_id)`; `LocationPin` interface'de `courier_id` yok (gereksiz exposure kaldırıldı)
 - **`NavigationPage.tsx`**: status `accepted | picked_up` iken `watchPosition` + 30 sn throttled push (`lastPushRef`)
 - **`TrackingPage.tsx`**: 15 sn polling, gerçek marker; sahte `animate-ping` overlay kaldırıldı; "Kurye konumu bekleniyor..." rozeti
+
+#### Location endpoint güvenlik & performans (Faz 6)
+- **Rate limit**: `POST /locations/` → `4/minute` (30-60 sn push aralığına 2× buffer); `slowapi` + `get_remote_address`
+- **`courier_id` kaldırıldı**: `LocationPublic` response'dan çıkarıldı; DB'de saklanmaya devam eder
+- **Lat/lng doğrulama**: `LocationCreate.latitude = Field(ge=-90, le=90)`, `longitude = Field(ge=-180, le=180)` — 422 döner
+- **Task status guard**: sadece `accepted | picked_up` statüsündeki task'lara push izni; terminal/delivered task → 409
+- **`timestamp` index**: `ORDER BY timestamp DESC` sorgusunu hızlandırır
+- **`datetime.utcnow` → `datetime.now(timezone.utc)`**: Python 3.12+ deprecation düzeltildi
 
 ### 2. Gönderici Onayı (Sender Confirmation) — ✅ tamamlandı
 - **Backend `routers/tasks.py`**: `PATCH /tasks/{id}/verify` endpoint (sender-only, `delivered → completed`, kurye cüzdanını kredilendirir)

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Package, Settings, Shield, List, HelpCircle, LogOut, Wallet, Loader2, Camera, X } from 'lucide-react';
+import { Package, Settings, Shield, List, HelpCircle, LogOut, Wallet, Loader2, Camera, X, ChevronDown } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/auth';
 import SettingsPanel from '../components/settings';
@@ -21,10 +21,12 @@ interface DeliveryRow {
   date: string;
   status: DeliveryStatus;
   rawStatus: string;
+  createdAt: string;
 }
 
 const SUCCESSFUL_STATUSES = new Set(['delivered', 'completed']);
 const FAILED_STATUSES     = new Set(['cancelled', 'disputed']);
+const TERMINAL_STATUSES   = new Set(['completed', 'cancelled', 'disputed']);
 
 function mapStatus(apiStatus: string): DeliveryStatus {
   if (SUCCESSFUL_STATUSES.has(apiStatus)) return 'Başarılı';
@@ -44,7 +46,13 @@ function toRow(req: ApiDeliveryRequest): DeliveryRow {
     date: formatDate(req.created_at),
     status: mapStatus(req.status),
     rawStatus: req.status,
+    createdAt: String(req.created_at),
   };
+}
+
+const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+function isOlderThan7Days(dateStr: string): boolean {
+  return Date.now() - new Date(dateStr).getTime() > SEVEN_DAYS_MS;
 }
 
 const statusStyles: Record<DeliveryStatus, string> = {
@@ -233,6 +241,10 @@ export default function ProfilePage() {
   const [showLogout, setShowLogout]     = useState(false);
   const [rows, setRows]                 = useState<DeliveryRow[]>([]);
   const [tasksLoading, setTasksLoading] = useState(true);
+  const [historyRows, setHistoryRows]   = useState<DeliveryRow[]>([]);
+  const [historyOpen, setHistoryOpen]   = useState(false);
+  const allRowsRef                      = useRef<DeliveryRow[]>([]);
+  const historyLoadedRef                = useRef(false);
   const signOut      = useAuthStore((s) => s.signOut);
   const user         = useAuthStore((s) => s.user);
   const role         = useAuthStore((s) => s.role);
@@ -250,9 +262,23 @@ export default function ProfilePage() {
 
   useEffect(() => {
     getMyTasks()
-      .then((data) => setRows(data.map(toRow)))
+      .then((data) => {
+        const mapped = data.map(toRow);
+        allRowsRef.current = mapped;
+        // Main section: non-terminal OR terminal within 7 days
+        setRows(mapped.filter(r => !TERMINAL_STATUSES.has(r.rawStatus) || !isOlderThan7Days(r.createdAt)));
+      })
       .finally(() => setTasksLoading(false));
   }, []);
+
+  function handleHistoryToggle() {
+    if (!historyLoadedRef.current) {
+      // History: terminal AND older than 7 days
+      setHistoryRows(allRowsRef.current.filter(r => TERMINAL_STATUSES.has(r.rawStatus) && isOlderThan7Days(r.createdAt)));
+      historyLoadedRef.current = true;
+    }
+    setHistoryOpen(prev => !prev);
+  }
 
   const navItemClass = (item: NavItem) =>
     `flex items-center gap-3 px-3 py-2.5 rounded text-sm text-left w-full transition-all ${
@@ -366,29 +392,39 @@ export default function ProfilePage() {
               <div className='flex justify-center py-16'>
                 <Loader2 size={32} className='text-primary-blue animate-spin' />
               </div>
-            ) : role === 'courier' ? (
-              <>
-                <DeliveryTable
-                  title="AKTİF TESLİMATLAR"
-                  rows={rows.filter(r => ['accepted', 'picked_up'].includes(r.rawStatus))}
-                  animClass="delivery-table-1"
-                />
-                <DeliveryTable
-                  title="TAMAMLANAN TESLİMATLAR"
-                  rows={rows.filter(r => ['delivered', 'completed'].includes(r.rawStatus))}
-                  animClass="delivery-table-2"
-                />
-                <DeliveryTable
-                  title="İPTAL / ANLAŞMAZLIK"
-                  rows={rows.filter(r => ['cancelled', 'disputed'].includes(r.rawStatus))}
-                  animClass="delivery-table-3"
-                />
-              </>
             ) : (
               <>
-                <DeliveryTable title="BAŞARILI TALEPLER"  rows={rows.filter(r => r.status === 'Başarılı')}  animClass="delivery-table-1" />
-                <DeliveryTable title="BAŞARISIZ TALEPLER" rows={rows.filter(r => r.status === 'Başarısız')} animClass="delivery-table-2" />
-                <DeliveryTable title="BEKLEYEN TALEPLER"  rows={rows.filter(r => r.status === 'Bekliyor')}  animClass="delivery-table-3" />
+                {role === 'courier' ? (
+                  <DeliveryTable
+                    title="AKTİF TESLİMATLAR"
+                    rows={rows.filter(r => ['accepted', 'picked_up', 'delivered'].includes(r.rawStatus))}
+                    animClass="delivery-table-1"
+                  />
+                ) : (
+                  <>
+                    <DeliveryTable title="ONAY BEKLEYEN"    rows={rows.filter(r => r.rawStatus === 'delivered')}                          animClass="delivery-table-1" />
+                    <DeliveryTable title="BEKLEYEN TALEPLER" rows={rows.filter(r => ['pending', 'accepted', 'picked_up'].includes(r.rawStatus))} animClass="delivery-table-2" />
+                  </>
+                )}
+                <DeliveryTable title="BAŞARILI TESLİMATLAR" rows={rows.filter(r => r.rawStatus === 'completed')}                          animClass="delivery-table-2" />
+                <DeliveryTable title="BAŞARISIZ TALEPLER"   rows={rows.filter(r => ['disputed', 'cancelled'].includes(r.rawStatus))} animClass="delivery-table-3" />
+
+                {/* Geçmiş Teslimatlar — lazy loaded */}
+                <div className="mb-6 rounded overflow-hidden border border-gray-200 shadow-sm">
+                  <button
+                    onClick={handleHistoryToggle}
+                    className="w-full flex items-center justify-between bg-darker-blue px-4 py-3 text-white font-bold font-sextary tracking-wide text-sm hover:bg-dark-blue transition-colors"
+                  >
+                    <span>GEÇMİŞ TESLİMATLAR</span>
+                    <ChevronDown size={18} className={`transition-transform duration-200 ${historyOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  {historyOpen && (
+                    <div className="px-4 pt-4">
+                      <DeliveryTable title="BAŞARILI"          rows={historyRows.filter(r => r.rawStatus === 'completed')} />
+                      <DeliveryTable title="BAŞARISIZ TALEPLER" rows={historyRows.filter(r => ['disputed', 'cancelled'].includes(r.rawStatus))} />
+                    </div>
+                  )}
+                </div>
               </>
             )
           )}
