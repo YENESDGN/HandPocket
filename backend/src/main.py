@@ -13,7 +13,7 @@ from slowapi.util import get_remote_address
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from .database import create_db_and_tables
-from .routers import disputes, locations, reviews, tasks, users, wallet
+from .routers import disputes, locations, notifications, reviews, tasks, users, wallet
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -118,6 +118,7 @@ app.include_router(reviews.router)
 app.include_router(disputes.router)
 app.include_router(locations.router)
 app.include_router(wallet.router)
+app.include_router(notifications.router)
 
 
 @app.get("/health", tags=["health"])

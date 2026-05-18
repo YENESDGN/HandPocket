@@ -7,5 +7,8 @@ export const createDispute = (payload: { request_id: string; reason: string }) =
 export const getAllDisputes = () =>
   api.get<Dispute[]>('/disputes/').then((r) => r.data);
 
+export const getMyDisputes = () =>
+  api.get<Dispute[]>('/disputes/mine').then((r) => r.data);
+
 export const resolveDispute = (id: string) =>
   api.patch<Dispute>(`/disputes/${id}/resolve`).then((r) => r.data);

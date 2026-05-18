@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { Sun, Moon } from 'lucide-react'
 import { useAuthStore } from '../store/auth'
 import { useDarkMode } from '../lib/useDarkMode'
+import NotificationBell from './NotificationBell'
 
 export default function NavBar() {
     const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
@@ -33,6 +34,8 @@ export default function NavBar() {
                     </Link>
                 )}
             </div>
+
+            {isLoggedIn && <NotificationBell />}
 
             {isLoggedIn ? (
                 <Link to="/profil">

@@ -601,3 +601,217 @@ backend/
 - Bildirim servisi mobilde daha kritik (push notifications) — backend tarafında entegrasyon kararı verilmeli (FCM önerilir)
 - Live tracking için locations endpoint'i hazır; mobilde courier app'ten her 30-60 sn `POST /locations/` atılmalı, sender app'te de `GET /locations/{id}/latest` polling
 - Reviews/Disputes UI mobile-first tasarlanabilir; web'de eksik kalsa da olur
+
+---
+
+## Bildirim Servisi (Faz 7 — Mimari)
+
+Plan.md item 4 (Bildirim Servisi) için seçilen mimari — **bu faz yalnızca karar kaydı, kod yok**. Web kapsamlıdır; mobil entegrasyonu kendi branch'inde planlanacak.
+
+### Kapsam ve kanal seçimi
+- **v0.1 = yalnızca uygulama içi (in-app) DB tabanlı bildirim akışı.** FCM (push), Email (Resend), SMS — ileri faza ertelendi.
+- [Preferences.tsx](frontend/src/components/Preferences.tsx) içindeki E-Posta / SMS / Push toggle'ları görsel olarak kalır ama "yakında" rozeti ile işaretlenir; gerçek backend kolonuna bağlanmaz.
+- WebSocket / SSE yok; bell ikonu 60 sn'de bir `unread-count` polling yapar.
+
+### Veri modeli
+- Yeni tablo `notifications`:
+  - `id` (uuid pk), `user_id` (fk `users.id`, indexed)
+  - `type` (str): `task_created` (rezerve, henüz tetiklenmiyor), `task_accepted`, `task_picked_up`, `task_delivered`, `task_verified`, `task_cancelled`, `dispute_opened`, `dispute_resolved`
+  - `title` (str, TR) — bell satırında kalın başlık
+  - `body` (str, TR) — kısa açıklama
+  - `data_json` (jsonb) — örn. `{ "request_id": "...", "actor_id": "..." }`; deep-link için
+  - `read_at` (nullable datetime), `created_at` (datetime)
+- Composite index: `(user_id, read_at)` — unread count sorgusu için
+- Index: `created_at desc` — liste sıralaması için
+- **Yeni `users` kolonu yok.** Notification preferences tablosu yok (v0.1 scope dışı).
+
+### Backend servis katmanı
+- `backend/src/services/notify.py` — tek fonksiyon:
+  - `notify(session, user_id: str, type: str, title: str, body: str, data: dict | None = None) -> Notification`
+  - Saf DB insert + commit. Dış IO yok.
+  - **Tek soyutlama noktası**: gelecekte FCM/Email/SMS eklendiğinde fan-out burada yapılır; çağıran yerler (`tasks.py`, `disputes.py`) değişmez.
+
+### REST kontratı
+- `GET /notifications/` — current user'ın bildirimleri, `created_at desc`, default limit 50
+- `GET /notifications/unread-count` — `{ count: int }` (bell badge için)
+- `PATCH /notifications/{id}/read` — tek bildirimi okundu işaretler
+- `POST /notifications/read-all` — tüm bildirimleri okundu işaretler ("Tümünü oku" linki)
+- Yazma uçları (yeni bildirim oluşturma) **public değildir**; yalnızca `services/notify.py` çağırır.
+
+### Tetikleyici noktalar (Faz 1'de bildirilir, Faz 3'te bağlanır)
+Sadece bu yedi noktadan `notify()` çağrılır:
+- [tasks.py:44-77](backend/src/routers/tasks.py#L44-L77) `create_task` → **bildirim yok** (Flow 1.7 — coğrafi kurye filtresi olmadan tüm kuryelere spam olur)
+- [tasks.py:119-138](backend/src/routers/tasks.py#L119-L138) `accept_task` → göndericiye `task_accepted`
+- [tasks.py:141-200](backend/src/routers/tasks.py#L141-L200) `update_status` → `picked_up` / `delivered` / `cancelled` için göndericiye; gönderici iptalinde kuryeye
+- [tasks.py:203-237](backend/src/routers/tasks.py#L203-L237) `verify_task` → kuryeye `task_verified` ("kredilendiniz")
+- [tasks.py:240-256](backend/src/routers/tasks.py#L240-L256) `set_proof` → `delivered` transition zaten kapsar, ayrı bildirim yok
+- [disputes.py:13-30](backend/src/routers/disputes.py#L13-L30) `raise_dispute` → karşı tarafa `dispute_opened`
+- [disputes.py:43-55](backend/src/routers/disputes.py#L43-L55) `resolve_dispute` → açan kişiye `dispute_resolved`
+
+### Frontend kontratı
+- `frontend/src/services/notificationService.ts` — `getNotifications()`, `getUnreadCount()`, `markRead(id)`, `markAllRead()`
+- `frontend/src/components/NotificationBell.tsx` — ortak bell komponenti; üç navbar'da da kullanılır:
+  - [NavBar.tsx](frontend/src/components/NavBar.tsx) (Landing)
+  - [ReceiverNavBar.tsx](frontend/src/components/ReceiverNavBar.tsx) (kurye/takip sayfaları)
+  - [SecondNavBar.tsx](frontend/src/components/SecondNavBar.tsx) (RequestPage, AboutUs)
+- Davranış: 60 sn'de bir `getUnreadCount()`; dropdown açıldığında `getNotifications()` çekilir; satır tıklanınca `markRead(id)` + `/talep/{request_id}`'e yönlendirme
+
+### Kapsam dışı (scope creep'i engellemek için açıkça)
+- Push notifications (FCM / OneSignal / Web Push)
+- Email (Resend / SendGrid)
+- SMS
+- In-app ses / masaüstü browser notifikasyonu
+- Notification grouping / mute-by-type
+- Eski bildirim temizlik cron'u (retention)
+- Mobil istemci entegrasyonu
+
+### Sıradaki fazlar
+- **Faz 2 — Framework**: ✅ tamamlandı (aşağıda)
+- **Faz 3 — Wiring**: yedi tetik noktasına `notify(...)` çağrıları eklenir; E2E akış doğrulanır.
+
+---
+
+## Bildirim Servisi (Faz 7 — Framework) — ✅ tamamlandı
+
+İskelet kuruldu, tetikleyici henüz bağlanmadı. Mimariye birebir uyar (Faz 7 — Mimari'deki kararlar).
+
+### Backend
+- **`backend/src/models/notification.py`**: `Notification` tablosu — `id`, `user_id` (fk + index), `type`, `title`, `body`, `data_json` (Postgres JSONB), `read_at`, `created_at`. Composite index `(user_id, read_at)` (`ix_notifications_user_read`). `created_at` index'i unread sorgusunu hızlandırır. `NotificationPublic` ve `UnreadCount` response modelleri.
+- **`backend/src/services/notify.py`**: tek fonksiyon `notify(session, user_id, type, title, body, data=None) -> Notification`. Pure DB insert + commit + logger info. Dış IO yok. **Routers dışından çağrılmaz** — Faz 3'te tetikleyici noktalardan kullanılacak.
+- **`backend/src/routers/notifications.py`**: 4 endpoint, hepsi `get_current_user` ile korunuyor:
+  - `GET /notifications/` — limit query (default 50, max 200), `created_at desc`
+  - `GET /notifications/unread-count` → `{ count }`
+  - `PATCH /notifications/{id}/read` — sahiplik kontrolü; idempotent (zaten okunduysa no-op)
+  - `POST /notifications/read-all` → `{ updated: int }`
+- **`backend/src/main.py`**: `notifications` router import edildi ve `app.include_router(notifications.router)` ile kaydedildi (line 117 civarı). `services/__init__.py` boş paket olarak eklendi.
+
+### Frontend
+- **`frontend/src/types/index.ts`**: `NotificationType` union + `AppNotification` interface (backend `NotificationPublic` ile birebir).
+- **`frontend/src/services/notificationService.ts`**: `getNotifications(limit=50)`, `getUnreadCount()`, `markRead(id)`, `markAllRead()` — diğer servislerle aynı axios + JWT pattern.
+- **`frontend/src/components/NotificationBell.tsx`**: ortak bell komponenti
+  - Props: `variant?: 'dark' | 'light'` (NavBar/SecondNavBar light arka plan → `dark` ikon; LandingPage NavBar zaten kullanıyor)
+  - **60 sn polling**: `getUnreadCount()` `setInterval` ile; cleanup mount/unmount + `isLoggedIn` değişiminde
+  - Dropdown açılışında `getNotifications()` çekilir (lazy)
+  - Outside-click handler ile dropdown kapanır
+  - Satır tıklama: `markRead(id)` (zaten okunmadıysa) → state güncelleme → `data_json.request_id` varsa `/talep/{id}`'e yönlendirme
+  - "Tümünü oku" butonu sadece okunmamış satır varken görünür
+  - Badge: 99+ cap, kırmızı, sağ üst köşe
+  - `formatRelative()`: "şimdi" / "X dk" / "X sa" / "X g" (TR kısaltma)
+- **Mount noktaları**: `isLoggedIn && <NotificationBell />` üç navbar'da da, avatar'ın solunda:
+  - [NavBar.tsx](frontend/src/components/NavBar.tsx) (LandingPage)
+  - [ReceiverNavBar.tsx](frontend/src/components/ReceiverNavBar.tsx)
+  - [SecondNavBar.tsx](frontend/src/components/SecondNavBar.tsx)
+
+### Test ipucu
+Bildirim akışı tetiklenmediğinden el ile test edilir:
+1. Supabase Studio → `notifications` tablosuna satır ekle: `user_id` = giriş yapmış kullanıcının UUID'si, `type = 'task_accepted'`, `title = 'Test'`, `body = 'Test bildirimi'`, `data_json = {"request_id": "<bir task id>"}`
+2. Bell ikonu 60 sn içinde "1" badge gösterir (veya sayfa yenileme anında)
+3. Dropdown aç → satıra tıkla → `read_at` set olur, badge 0'a düşer, `/talep/{id}` yönlendirmesi çalışır
+
+### Faz 3'e kalan
+- `tasks.py` ve `disputes.py` tetik noktalarından `notify(session, ...)` çağrıları (Faz 7 — Mimari §5'teki yedi nokta) → ✅ aşağıda
+
+---
+
+## Bildirim Servisi (Faz 7 — Wiring) — ✅ tamamlandı
+
+### Refactor (önce)
+- `tasks.py` içindeki **kurye kredilendirme** mantığı iki yerde (update_status → completed ve verify_task) birebir tekrarlanıyordu → `_credit_courier_for_delivery(session, task)` helper'ına çıkarıldı.
+- `tasks.py` içindeki **gönderici iade** mantığı (cancelled) tek yerde kullanılıyor ama tutarlılık için aynı pattern ile `_refund_sender_for_cancellation(session, task)` helper'ına çıkarıldı.
+- Her iki helper saf state mutation yapar; commit'i çağıran fonksiyon yapar.
+
+### `_safe_notify` wrapper
+- `tasks.py` ve `disputes.py` içinde aynı imzalı `_safe_notify(session, user_id, type, title, body, request_id, actor_id=None)` helper'ı var.
+- `notify()` başarısız olursa (DB hatası vb.) `logger.warning` ile loglanır, **kullanıcının asıl aksiyonu (accept/verify/cancel/dispute) etkilenmez**.
+- `user_id` None ise sessizce no-op (örn. gönderici henüz kabul edilmemiş bir talebi iptal ediyorsa kuryeye bildirim atılmaz).
+
+### Tetik noktaları (yedisi de bağlandı)
+
+| Konum | Tetik | Alıcı | type | Başlık | Body |
+|-------|-------|-------|------|--------|------|
+| `tasks.py` `accept_task` | kurye kabul eder | `task.sender_id` | `task_accepted` | Talebiniz kabul edildi | Kuryeniz yola çıkıyor. |
+| `tasks.py` `update_status` `picked_up` | kurye yola çıkar | `task.sender_id` | `task_picked_up` | Kargonuz alındı | Kuryeniz kargoyu teslim aldı. |
+| `tasks.py` `update_status` `delivered` | kurye teslim eder | `task.sender_id` | `task_delivered` | Kargo teslim edildi | Kanıt fotoğrafını inceleyip teslimatı onaylayabilirsiniz. |
+| `tasks.py` `update_status` `cancelled` | herhangi bir taraf iptal eder | **karşı taraf** | `task_cancelled` | Teslimat iptal edildi | (kim iptal ettiğine göre asimetrik metin) |
+| `tasks.py` `update_status` `completed` | gönderici generic endpoint'ten onaylar | `task.courier_id` | `task_verified` | Ödemeniz cüzdanınıza geçti | Gönderici teslimatı onayladı. |
+| `tasks.py` `verify_task` | gönderici `/verify` ile onaylar | `task.courier_id` | `task_verified` | Ödemeniz cüzdanınıza geçti | Gönderici teslimatı onayladı. |
+| `disputes.py` `raise_dispute` | itiraz açılır | **karşı taraf** | `dispute_opened` | Teslimat için itiraz açıldı | Karşı taraf bu teslimat için itiraz açtı. |
+| `disputes.py` `resolve_dispute` | admin çözer | `dispute.raised_by` | `dispute_resolved` | İtirazınız çözüldü | Açtığınız itiraz çözümlendi olarak işaretlendi. |
+
+- `data_json` her zaman `{ "request_id": <id>, "actor_id": <current_user.id> }` içerir; `NotificationBell` satır tıklamada `/talep/{request_id}`'e yönlendirir.
+- `set_proof_photo` ayrı bildirim atmaz — `delivered` transition'ı zaten kapsar (mimari §5 kararı).
+
+### E2E test
+1. Gönderici hesabıyla talep oluştur (`/talep`) — sender'ın cüzdanından ücret düşer.
+2. Kurye hesabıyla `/talep-al`'dan kabul et → **sender'ın bell'i 60 sn içinde 1 olur**, "Talebiniz kabul edildi" satırı görünür.
+3. Navigasyon sayfasında "Tamamla" → `delivered` → sender'a bildirim.
+4. Sender `/talep/{id}`'de "Teslimatı Onayla" → kurye'ye `task_verified` bildirim + cüzdan kredisi.
+5. Sender "İtiraz Et" → kurye'ye `dispute_opened` bildirim.
+6. Admin panelinde "Çözüldü" → itiraz açan kişiye `dispute_resolved` bildirim.
+
+### Plan.md item 4 — durum
+- ✅ Bildirim Servisi (in-app, web) tamamlandı. Email/SMS/Push hala ertelenmiş durumda; Preferences toggle'ları ileride bağlanacak.
+
+---
+
+## Bildirim & İtiraz Sertleştirme (Faz 8 — Güvenlik & Performans)
+
+Faz 5 (Reviews/Disputes) ve Faz 7 (Bildirim Servisi) eklendikten sonra yapılan denetim sonucu uygulandı.
+
+### Performans
+- **`GET /notifications/unread-count`**: artık `select(func.count())` kullanıyor — tüm satırları materialize etmek yerine tek `int` döner. 60 sn polling × N kullanıcı yüküne uygun.
+- **`POST /notifications/read-all`**: tek bulk `UPDATE notifications SET read_at = :now WHERE user_id = :u AND read_at IS NULL` — N round-trip yerine 1.
+- **`GET /disputes/mine`**: önce iki sorgu + Python tarafında `IN (...)` listesi vardı; artık tek `JOIN` ile `Dispute → DeliveryRequest` üzerinden `OR (raised_by | sender_id | courier_id == me)` filtresi. `Dispute.created_at desc` ile sıralı.
+
+### Güvenlik
+- **Rate limit (`slowapi`)** `/notifications/*` üzerine eklendi:
+  - `GET /` → 30/dk
+  - `GET /unread-count` → 120/dk (60 sn polling × 2 buffer)
+  - `PATCH /{id}/read` → 60/dk
+  - `POST /read-all` → 10/dk
+- **`notify()` tip imzası sertleştirildi**: `type` parametresi artık `NotificationType = Literal[...]` (8 değer). `_safe_notify` helper'ları da aynı tipi alır — IDE/static check yanlış string'i yakalar.
+- **`data_json` artık Pydantic model**: `NotificationData(request_id: str, actor_id: Optional[str])`. `notify()` raw dict yerine model alır; `model_dump()` ile JSONB'ye yazılır. DB kolonu hâlâ JSONB (esneklik), ama yazma yolu tip-güvenli.
+
+### Retention
+- **Yeni endpoint**: `DELETE /notifications/purge?older_than_days=30` (admin-only) — read olup verilen günden eski bildirimleri siler. Cron tetiklemesi için: `curl -X DELETE -H "Authorization: Bearer <admin_jwt>" .../notifications/purge?older_than_days=30`.
+- Alembic + cron entegrasyonu Plan.md "Üretim öncesi yapılacaklar"da; endpoint hazır, planlayıcı bekliyor.
+
+### Frontend
+- `NotificationBell` üstüne tek-mount uyarısı yorumu eklendi. Her instance kendi 60 sn `setInterval`'ini tutar; aynı sayfada iki bell render edilirse polling iki katına çıkar.
+
+### Değiştirilen dosyalar
+- [backend/src/routers/notifications.py](backend/src/routers/notifications.py) — perf rewrite + rate limit + `/purge`
+- [backend/src/routers/disputes.py](backend/src/routers/disputes.py) — `/mine` JOIN
+- [backend/src/routers/tasks.py](backend/src/routers/tasks.py) — `_safe_notify` tip imzası
+- [backend/src/services/notify.py](backend/src/services/notify.py) — tipli signature
+- [backend/src/models/notification.py](backend/src/models/notification.py) — `NotificationType` Literal + `NotificationData` model
+- [frontend/src/components/NotificationBell.tsx](frontend/src/components/NotificationBell.tsx) — tek-mount yorumu
+
+---
+
+## İkinci Tur Sertleştirme (Faz 8.1)
+
+Faz 8 sonrası son denetimde tespit edilen kalan iyileştirmeler uygulandı.
+
+### DRY
+- **`safe_notify` artık `services/notify.py`'da**: önceden `tasks.py` ve `disputes.py` içinde birebir tekrarlanan `_safe_notify` helper'ı kaldırıldı; her ikisi de `from ..services.notify import safe_notify` ile aynı fonksiyonu kullanıyor. Tek değişiklik noktası — Sentry/email ileride eklenirse iki dosyayı senkron tutmak zorunda değiliz.
+
+### Güvenlik
+- **`POST /disputes/`** artık `slowapi.limit("10/minute")` ile rate-limit'li. Auth'lu kötü niyetli kullanıcı karşı tarafa bildirim spam'leyemez.
+
+### Performans / pagination
+- **`GET /tasks/my`** artık `limit` (1-500, default 200) + `offset` query parametreleri kabul ediyor; `created_at desc` ile sıralı. ProfilePage uzun vadede tüm geçmişi tek çağrıda çekmeyecek.
+- **`GET /disputes/`** (admin) artık `limit` (1-500, default 100) + `offset` parametreleri kabul ediyor; `created_at desc` ile sıralı. AdminDashboard İtirazlar sekmesi büyük tablo altında çökmeyecek.
+
+### NotificationBell
+- **Tab gizliyken polling duruyor**: `document.visibilityState !== 'visible'` iken `getUnreadCount` çağrısı atlanır.
+- **Visibility resume**: tab tekrar görünür olduğunda anında bir `tick()` tetiklenir (60 sn beklemez).
+- **Skip-refetch heuristiği**: dropdown açılışında `count` son fetch'ten beri değişmemişse ve `items` zaten varsa, `getNotifications()` tekrar çağrılmaz. `lastFetchedCountRef` ile takip edilir.
+
+### Kalan kabul edilebilir konular (v0.1 dışında ele alınacak)
+- `slowapi` in-memory (horizontal scale → Redis)
+- Alembic migration
+- `notify()` ek bir commit yapar (BG queue ile çözülebilir)
+- `locations` retention
+- `notifications` retention için cron tetiklemesi (endpoint hazır: `DELETE /notifications/purge`)
+- Kalan unbounded list'ler: `GET /users/` admin endpoint'i (varsa) ileride paginate edilebilir.

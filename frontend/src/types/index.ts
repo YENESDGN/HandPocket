@@ -65,6 +65,27 @@ export interface Review {
     created_at: string;
 }
 
+export type NotificationType =
+    | 'task_created'
+    | 'task_accepted'
+    | 'task_picked_up'
+    | 'task_delivered'
+    | 'task_verified'
+    | 'task_cancelled'
+    | 'dispute_opened'
+    | 'dispute_resolved';
+
+export interface AppNotification {
+    id: string;
+    user_id: string;
+    type: NotificationType | string;
+    title: string;
+    body: string;
+    data_json?: { request_id?: string; actor_id?: string; [k: string]: unknown } | null;
+    read_at: string | null;
+    created_at: string;
+}
+
 export interface WalletTransaction {
     id: string;
     label: string;

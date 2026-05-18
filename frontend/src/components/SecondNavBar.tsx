@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '../store/auth';
+import NotificationBell from './NotificationBell';
 
 export default function SecondNavBar() {
     const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
@@ -22,17 +23,20 @@ export default function SecondNavBar() {
             </div>
 
             {isLoggedIn ? (
-                <Link to="/profil">
-                    <div className='w-14 h-14 rounded-full overflow-hidden bg-primary-blue border-2 border-primary-blue'>
-                        <img
-                            key={user?.avatar_url ?? 'default'}
-                            src={user?.avatar_url ?? '/assets/favicon.png'}
-                            alt="Profil"
-                            className='w-full h-full object-cover'
-                            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-                        />
-                    </div>
-                </Link>
+                <div className='flex items-center gap-3'>
+                    <NotificationBell />
+                    <Link to="/profil">
+                        <div className='w-14 h-14 rounded-full overflow-hidden bg-primary-blue border-2 border-primary-blue'>
+                            <img
+                                key={user?.avatar_url ?? 'default'}
+                                src={user?.avatar_url ?? '/assets/favicon.png'}
+                                alt="Profil"
+                                className='w-full h-full object-cover'
+                                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                            />
+                        </div>
+                    </Link>
+                </div>
             ) : (
                 <div className='flex items-center gap-5 bg-secondary-blue rounded-full px-3 py-1'>
                     <Link to="/giris" className='text-white text-sm btn-hover-blue-secondary'>Giriş Yap</Link>

@@ -320,6 +320,16 @@ html.dark .border-gray-200      { border-color: rgba(255,255,255,0.10); }
 html.dark .border-gray-100      { border-color: rgba(255,255,255,0.06); }
 html.dark .border-gray-300      { border-color: rgba(255,255,255,0.15); }
 
+/* ── Status badge surfaces (green/red/yellow tinted for dark bg) ── */
+html.dark .bg-green-100         { background-color: rgba(16, 185, 129, 0.15); }
+html.dark .bg-red-100           { background-color: rgba(239, 68, 68, 0.15); }
+html.dark .bg-red-50            { background-color: rgba(239, 68, 68, 0.10); }
+html.dark .bg-yellow-100        { background-color: rgba(245, 158, 11, 0.15); }
+html.dark .border-green-300     { border-color: rgba(16, 185, 129, 0.40); }
+html.dark .border-red-300       { border-color: rgba(239, 68, 68, 0.40); }
+html.dark .border-red-200       { border-color: rgba(239, 68, 68, 0.30); }
+html.dark .border-yellow-300    { border-color: rgba(245, 158, 11, 0.40); }
+
 /* ── Interactive ── */
 html.dark .hover\:bg-gray-50:hover  { background-color: var(--color-dark-blue); }
 html.dark .hover\:bg-white:hover    { background-color: var(--color-dark-blue); }

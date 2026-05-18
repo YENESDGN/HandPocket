@@ -1,17 +1,21 @@
 import { useState, useEffect, useRef } from 'react';
-import { Package, Settings, Shield, List, HelpCircle, LogOut, Wallet, Loader2, Camera, X, ChevronDown } from 'lucide-react';
+import { Package, Settings, Shield, List, HelpCircle, LogOut, Wallet, Loader2, Camera, X, ChevronDown, Scale, Star } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/auth';
 import SettingsPanel from '../components/settings';
 import SecurityPanel from '../components/Security';
 import PreferencesPanel from '../components/Preferences';
 import NeedHelpPanel from '../components/NeedHelp';
+import DisputesPanel from '../components/Disputes';
+import ReviewsPanel from '../components/Reviews';
+import NotificationBell from '../components/NotificationBell';
 import WalletModal, { type ModalType } from '../components/WalletModal';
 import { getWalletSummary, deposit, withdraw } from '../services/walletService';
 import { getMyTasks } from '../services/taskService';
 import type { WalletTransaction, WalletSummary, DeliveryRequest as ApiDeliveryRequest } from '../types';
 
-type NavItem = 'teslimatlar' | 'ayarlar' | 'guvenlik' | 'tercihler' | 'yardim' | 'cuzdan';
+
+type NavItem = 'teslimatlar' | 'ayarlar' | 'guvenlik' | 'tercihler' | 'yardim' | 'cuzdan' | 'itirazlar' | 'degerlendirmeler';
 
 type DeliveryStatus = 'Başarılı' | 'Başarısız' | 'Bekliyor';
 
@@ -56,9 +60,9 @@ function isOlderThan7Days(dateStr: string): boolean {
 }
 
 const statusStyles: Record<DeliveryStatus, string> = {
-  'Başarılı':  'bg-green-100 text-green-700 border border-green-300 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-700',
-  'Başarısız': 'bg-red-100 text-red-700 border border-red-300 dark:bg-red-900/30 dark:text-red-400 dark:border-red-700',
-  'Bekliyor':  'bg-yellow-100 text-yellow-700 border border-yellow-300 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-700',
+  'Başarılı':  'bg-green-100 text-green-700 border border-green-300',
+  'Başarısız': 'bg-red-100 text-red-700 border border-red-300',
+  'Bekliyor':  'bg-yellow-100 text-yellow-700 border border-yellow-300',
 };
 
 function StatusBadge({ status }: { status: DeliveryStatus }) {
@@ -251,6 +255,7 @@ export default function ProfilePage() {
   const setAvatarUrl = useAuthStore((s) => s.setAvatarUrl);
   const navigate     = useNavigate();
   const avatarRef    = useRef<HTMLInputElement>(null);
+  
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -332,6 +337,14 @@ export default function ProfilePage() {
             <List size={18} />
             Tercihler
           </button>
+          <button className={`${navItemClass('degerlendirmeler')} profile-nav-item`} onClick={() => setActiveNav('degerlendirmeler')} style={{ animationDelay: '0.30s' }}>
+            <Star size={18} />
+            Değerlendirmelerim
+          </button>
+          <button className={`${navItemClass('itirazlar')} profile-nav-item`} onClick={() => setActiveNav('itirazlar')} style={{ animationDelay: '0.34s' }}>
+            <Scale size={18} />
+            İtirazlarım
+          </button>
         </nav>
 
         {/* Bottom actions */}
@@ -358,31 +371,16 @@ export default function ProfilePage() {
       {/* Main content */}
       <div className="flex flex-col flex-1 overflow-hidden">
         {/* Top navbar */}
-        <header className="backdrop-blur-sm border-b border-gray-200 flex items-center justify-between px-8 py-5 flex-shrink-0 profile-header">
+        <header className="backdrop-blur-sm border-b border-gray-200 flex items-center justify-between px-8 py-5 flex-shrink-0 profile-header relative z-50">
           <div className="flex items-center gap-2">
             <img src="/assets/favicon.png" alt="HandPocket" className="w-16 h-16 object-contain" />
           </div>
-          <nav className="flex items-center gap-8 text-lg font-tertiary relative px-10">
+          <nav className="flex items-right gap-8 text-lg font-tertiary relative px-10">
             <Link to="/" className="text-gray-800 btn-hover-blue">Anasayfa</Link>
             <Link to="/hakkimizda" className="text-gray-800 btn-hover-blue">Hakkımızda</Link>
             <Link to="/iletisim" className="text-gray-800 btn-hover-blue">İletişim</Link>
           </nav>
-          <button
-            onClick={() => avatarRef.current?.click()}
-            className="w-11 h-11 rounded-full overflow-hidden border-2 border-primary-blue bg-primary-blue flex-shrink-0 group relative"
-            title="Fotoğrafı Değiştir"
-          >
-            <img
-              key={user?.avatar_url ?? 'default'}
-              src={user?.avatar_url ?? '/assets/favicon.png'}
-              alt="Profil"
-              className="w-full h-full object-cover"
-              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-            />
-            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-              <Camera size={13} className="text-white" />
-            </div>
-          </button>
+          <NotificationBell />
         </header>
 
         {/* Page body */}
@@ -433,6 +431,8 @@ export default function ProfilePage() {
           {activeNav === 'tercihler' && <PreferencesPanel />}
           {activeNav === 'cuzdan' && <WalletPanel />}
           {activeNav === 'yardim' && <NeedHelpPanel />}
+          {activeNav === 'degerlendirmeler' && <ReviewsPanel />}
+          {activeNav === 'itirazlar' && <DisputesPanel />}
         </main>
       </div>
 
