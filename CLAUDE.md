@@ -7,6 +7,11 @@
 - **Renk**: #08b4fb (mavi tema)
 - **Dil**: Türkçe
 
+## Yön (2026-05-25 itibariyle) — ÖNEMLİ
+- **Web geliştirme durduruldu.** v0.1 (Faz 1-8.1) demo edilebilir durumda. Kullanıcı açıkça istemedikçe `frontend/`, `backend/` veya web ile ilgili hiçbir dosyada değişiklik / yeni feature / refactor yapma.
+- **Sıradaki odak: Mobil uygulama** (bkz. [Plan.md](Plan.md) Part B). Framework kararı + kurulum sonraki oturumda başlayacak — bu oturumda mobil kod yazılmaz.
+- Backend mobil için hazır (auth, tasks, locations, notifications, wallet, reviews, disputes — hepsi REST + JWT). Mobil istemci yeni codebase olacak.
+
 ## Aktif Değişiklikler
 ### NavBar.tsx
 - Nav linkleri: Anasayfa, Hakkımızda, İletişim

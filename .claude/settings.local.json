@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm uninstall *)",
+      "Bash(npm install *)",
+      "Bash(npm ls *)",
+      "Bash(npx tsc *)",
+      "Bash(xargs ls)",
+      "Bash(python -m pip install --user pip-audit --quiet)",
+      "Bash(python -m pip_audit -r requirements.txt)",
+      "Bash(python3 -m pip install pip-audit)",
+      "Bash(~/.local/bin/pip-audit -r requirements.txt)",
+      "Bash(~/.local/bin/pip-audit -r /home/ydogan/Masaüstü/HandPocket/backend/requirements.txt)",
+      "Bash(npm audit *)",
+      "Bash(python -c \"from src.main import app; print\\('OK'\\)\")",
+      "Bash(python -c \"from src.routers.tasks import router; print\\([r.path for r in router.routes]\\)\")",
+      "Bash(python -c \"from src.main import app; print\\('routes:', [r.path for r in app.routes if '/notifications' in getattr\\(r, 'path', ''\\)]\\)\")",
+      "Bash(python -c ' *)",
+      "Bash(python -c \"from src.main import app; print\\('routes loaded:', len\\(app.routes\\)\\)\")",
+      "Bash(python -m py_compile src/routers/tasks.py src/routers/disputes.py src/services/notify.py src/models/notification.py)",
+      "Bash(python -m py_compile src/routers/notifications.py src/routers/disputes.py src/routers/tasks.py src/services/notify.py src/models/notification.py)",
+      "Bash(python -m py_compile src/routers/tasks.py src/routers/disputes.py src/routers/notifications.py src/services/notify.py)",
+      "Bash(python -c \"from src.main import app; print\\('routes:', len\\(app.routes\\)\\)\")"
+    ]
+  }
+}

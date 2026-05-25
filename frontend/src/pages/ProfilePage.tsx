@@ -404,7 +404,7 @@ export default function ProfilePage() {
                     <DeliveryTable title="BEKLEYEN TALEPLER" rows={rows.filter(r => ['pending', 'accepted', 'picked_up'].includes(r.rawStatus))} animClass="delivery-table-2" />
                   </>
                 )}
-                <DeliveryTable title="BAŞARILI TESLİMATLAR" rows={rows.filter(r => r.rawStatus === 'completed')}                          animClass="delivery-table-2" />
+                <DeliveryTable title="BAŞARILI TALEPLER" rows={rows.filter(r => r.rawStatus === 'completed')}                          animClass="delivery-table-2" />
                 <DeliveryTable title="BAŞARISIZ TALEPLER"   rows={rows.filter(r => ['disputed', 'cancelled'].includes(r.rawStatus))} animClass="delivery-table-3" />
 
                 {/* Geçmiş Teslimatlar — lazy loaded */}
@@ -418,7 +418,7 @@ export default function ProfilePage() {
                   </button>
                   {historyOpen && (
                     <div className="px-4 pt-4">
-                      <DeliveryTable title="BAŞARILI"          rows={historyRows.filter(r => r.rawStatus === 'completed')} />
+                      <DeliveryTable title="BAŞARILI TALEPLER"  rows={historyRows.filter(r => r.rawStatus === 'completed')} />
                       <DeliveryTable title="BAŞARISIZ TALEPLER" rows={historyRows.filter(r => ['disputed', 'cancelled'].includes(r.rawStatus))} />
                     </div>
                   )}
