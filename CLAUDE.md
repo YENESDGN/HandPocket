@@ -12,6 +12,12 @@
 - **Sıradaki odak: Mobil uygulama** (bkz. [Plan.md](Plan.md) Part B). Framework kararı + kurulum sonraki oturumda başlayacak — bu oturumda mobil kod yazılmaz.
 - Backend mobil için hazır (auth, tasks, locations, notifications, wallet, reviews, disputes — hepsi REST + JWT). Mobil istemci yeni codebase olacak.
 
+### Branch & dizin yapısı (git worktree)
+- **`main` branch → `HandPocket/` dizini** (bu dizin): web v0.1, dondurulmuş. Burada mobil kod yazılmaz.
+- **`mobile` branch → `HP-Mobile/` dizini** (sibling: `../HP-Mobile`): mobil uygulama (Expo) buraya kurulacak. Aynı repo + aynı backend, ayrı git worktree.
+- İki dizin aynı `.git`'i paylaşır; `mobile`'daki commit'ler buradan görünür, `main` hiç değişmez.
+- Mobil iş için `../HP-Mobile` dizininde çalış; web (`main`) checkout'u bozulmaz.
+
 ## Aktif Değişiklikler
 ### NavBar.tsx
 - Nav linkleri: Anasayfa, Hakkımızda, İletişim

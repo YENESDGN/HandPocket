@@ -20,7 +20,11 @@
       "Bash(python -m py_compile src/routers/tasks.py src/routers/disputes.py src/services/notify.py src/models/notification.py)",
       "Bash(python -m py_compile src/routers/notifications.py src/routers/disputes.py src/routers/tasks.py src/services/notify.py src/models/notification.py)",
       "Bash(python -m py_compile src/routers/tasks.py src/routers/disputes.py src/routers/notifications.py src/services/notify.py)",
-      "Bash(python -c \"from src.main import app; print\\('routes:', len\\(app.routes\\)\\)\")"
+      "Bash(python -c \"from src.main import app; print\\('routes:', len\\(app.routes\\)\\)\")",
+      "Bash(awk 'NR>=89 && NR<=220' /home/ydogan/Masaüstü/HandPocket/Plan.md)",
+      "Bash(awk 'NR>=131 && NR<=210' /home/ydogan/Masaüstü/HandPocket/Plan.md)",
+      "Bash(git branch *)",
+      "Bash(git worktree *)"
     ]
   }
 }

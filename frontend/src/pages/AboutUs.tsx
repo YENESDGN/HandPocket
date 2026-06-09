@@ -2,13 +2,6 @@ import { Link } from 'react-router-dom';
 import Footer from '../components/Footer';
 import SecondNavBar from '../components/SecondNavBar';
 
-const stats = [
-    { value: '50K+', label: 'Tamamlanan Teslimat' },
-    { value: '81',   label: 'Hizmet Verilen Şehir' },
-    { value: '4.9',  label: 'Ortalama Puan' },
-    { value: '2K+',  label: 'Aktif Kurye' },
-];
-
 const values = ['Hız', 'Güvenlik', 'Güvenilirlik', 'Şeffaflık'];
 
 export default function AboutUs() {

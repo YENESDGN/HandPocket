@@ -38,9 +38,9 @@ export default function SecondNavBar() {
                     </Link>
                 </div>
             ) : (
-                <div className='flex items-center gap-5 bg-secondary-blue rounded-full px-3 py-1'>
-                    <Link to="/giris" className='text-white text-sm btn-hover-blue-secondary'>Giriş Yap</Link>
-                    <Link to="/kayit" className='text-white text-sm btn-hover-blue-secondary'>Kayıt Ol</Link>
+                <div className='flex items-center gap-5 bg-primary-blue rounded-full px-3 py-1'>
+                    <Link to="/giris" className='text-white text-sm btn-hover-blue'>Giriş Yap</Link>
+                    <Link to="/kayit" className='text-white text-sm btn-hover-blue'>Kayıt Ol</Link>
                 </div>
             )}
         </nav>
