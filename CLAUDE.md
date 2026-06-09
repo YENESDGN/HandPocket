@@ -9,8 +9,18 @@
 
 ## Yön (2026-05-25 itibariyle) — ÖNEMLİ
 - **Web geliştirme durduruldu.** v0.1 (Faz 1-8.1) demo edilebilir durumda. Kullanıcı açıkça istemedikçe `frontend/`, `backend/` veya web ile ilgili hiçbir dosyada değişiklik / yeni feature / refactor yapma.
-- **Sıradaki odak: Mobil uygulama** (bkz. [Plan.md](Plan.md) Part B). Framework kararı + kurulum sonraki oturumda başlayacak — bu oturumda mobil kod yazılmaz.
+- **Sıradaki odak: Mobil uygulama** (bkz. [Plan.md](Plan.md) Part B + ayrıntılı fazlı plan: [Mobile_Plan.md](Mobile_Plan.md)).
 - Backend mobil için hazır (auth, tasks, locations, notifications, wallet, reviews, disputes — hepsi REST + JWT). Mobil istemci yeni codebase olacak.
+
+### Mobil kararlar (2026-06-09 — KİLİTLENDİ)
+- **Framework: React Native + Expo.** Hedef "web'i mobile port etmek" — sadece UI/frontend; backend + DB dokunulmaz, tek ve paylaşımlı kalır. RN bunu bir *port* yapar (Flutter rewrite olurdu).
+- **Entegrasyon = veri seviyesinde:** mobil ve web *aynı* backend + aynı DB'yi kullanır; mobilde yapılan işlem web'de otomatik görünür. Ortak UI kodu YOK.
+- **İstemci katmanı KOPYALANIR (paylaşılmaz):** `services/`, `store/auth.ts`, `lib/api.ts`, `types/index.ts` mobile'a kopyalanır. Web dondurulduğu için monorepo shared package'a geçilmez (o, web'i değiştirmek demek). Hem backend hem web dondurulduğundan divergence riski şu an ~sıfır.
+- **Konum:** mobil uygulama `HP-Mobile/mobile/` (yeni dizin, `mobile` branch). `frontend/` ve `backend/` dokunulmaz.
+- **Uyarlama:** `import.meta.env` → `process.env.EXPO_PUBLIC_*`; supabase'e SecureStore adapter + `detectSessionInUrl:false`; `mapbox-gl` → `@rnmapbox/maps`; Tailwind → NativeWind; `react-router-dom` → `expo-router`; `lucide-react` → `lucide-react-native`.
+- **Push (FCM):** backend'e dokunan TEK faz (`users.fcm_token` kolonu + endpoint). Ertelendi (Faz F); ayrı onay gerekir. O zamana kadar in-app polling değişmeden çalışır.
+- **Yayın (App Store / Play Store) kapsam DIŞI** — proje yayınlanmayacak.
+- **Sıralama:** Faz A (kurulum + ortak katman) → B (auth + navigasyon) → C (sender ekranları) → D (courier ekranları) → E (profil + bildirim) → F (push, ertelendi) → G (native cilası). Detay: [Mobile_Plan.md](Mobile_Plan.md).
 
 ### Branch & dizin yapısı (git worktree)
 - **`main` branch → `HandPocket/` dizini** (bu dizin): web v0.1, dondurulmuş. Burada mobil kod yazılmaz.

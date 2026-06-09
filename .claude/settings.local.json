@@ -24,7 +24,38 @@
       "Bash(awk 'NR>=89 && NR<=220' /home/ydogan/Masaüstü/HandPocket/Plan.md)",
       "Bash(awk 'NR>=131 && NR<=210' /home/ydogan/Masaüstü/HandPocket/Plan.md)",
       "Bash(git branch *)",
-      "Bash(git worktree *)"
+      "Bash(git worktree *)",
+      "Bash(sed -n '1,30p' lib/api.ts)",
+      "Bash(sed -n '1,60p' /home/ydogan/Masaüstü/HP-Mobile/frontend/package.json)",
+      "Read(//usr/lib/**)",
+      "Bash(flatpak remotes *)",
+      "Bash(java -version)",
+      "Read(//home/ydogan/**)",
+      "Bash(flatpak list *)",
+      "Read(//home/ydogan/Android/**)",
+      "Read(//dev/**)",
+      "Bash(xdg-user-dir DOWNLOAD)",
+      "Bash(tar -xzf ~/İndirilenler/android-studio-quail1-linux.tar.gz -C ~/)",
+      "Bash(if grep *)",
+      "Bash(nohup ~/android-studio/bin/studio.sh)",
+      "Bash(echo \"Launched studio.sh \\(PID $!\\). Early log:\")",
+      "Read(//tmp/**)",
+      "Bash(~/android-studio/bin/studio.sh)",
+      "Bash(nohup env LIBGL_ALWAYS_SOFTWARE=1 ~/android-studio/bin/studio.sh)",
+      "Bash(echo \"Launched PID $!\")",
+      "Bash(chmod +x ~/.local/share/applications/android-studio.desktop)",
+      "Bash(update-desktop-database ~/.local/share/applications/)",
+      "Bash(npx create-expo-app@latest mobile --template default)",
+      "Bash(python3 -c \"import json,sys; p=json.load\\(sys.stdin\\); print\\('Expo:', p.get\\('dependencies',{}\\).get\\('expo','?'\\)\\); print\\('Router:', p.get\\('dependencies',{}\\).get\\('expo-router','?'\\)\\)\")",
+      "Bash(npx expo *)",
+      "Bash(python3 -c \"import json,sys; p=json.load\\(sys.stdin\\); print\\(json.dumps\\({k:p[k] for k in ['main','scripts'] if k in p}, indent=2\\)\\)\")",
+      "Bash(python3 -c \"import json,sys; p=json.load\\(sys.stdin\\); print\\(json.dumps\\(p.get\\('expo',{}\\).get\\('plugins',[]\\), indent=2\\)\\)\")",
+      "Bash(python3 -c \"import json,sys; p=json.load\\(sys.stdin\\); deps={**p.get\\('dependencies',{}\\),**p.get\\('devDependencies',{}\\)}; print\\('\\\\n'.join\\([f'{k}: {v}' for k,v in deps.items\\(\\) if any\\(x in k for x in ['nativewind','tailwind','metro','babel']\\)]\\)\\)\")",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d.get\\('dependencies',{}\\), indent=2\\)\\)\")",
+      "Bash(python3 -c \"import json,sys; print\\(json.dumps\\(json.load\\(sys.stdin\\), indent=2\\)\\)\")"
+    ],
+    "additionalDirectories": [
+      "/home/ydogan"
     ]
   }
 }
