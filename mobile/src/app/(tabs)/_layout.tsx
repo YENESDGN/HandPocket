@@ -1,11 +1,15 @@
 import { useEffect } from 'react';
+import { View } from 'react-native';
 import { Tabs, useRouter } from 'expo-router';
 import { Home, Package, Truck, User } from 'lucide-react-native';
 import { useAuthStore } from '@/shared/store/auth';
+import { useThemeColors } from '@/shared/store/theme';
+import NotificationBell from '@/shared/ui/NotificationBell';
 
 export default function TabsLayout() {
   const { isLoggedIn, role } = useAuthStore();
   const router = useRouter();
+  const C = useThemeColors();
 
   useEffect(() => {
     if (!isLoggedIn) router.replace('/(auth)/login');
@@ -16,18 +20,23 @@ export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerShown: false,
+        headerStyle: { backgroundColor: C.tabBar },
+        headerTitleStyle: { color: C.text, fontWeight: '600' },
+        headerRight: () => (
+          <View style={{ marginRight: 8 }}>
+            <NotificationBell />
+          </View>
+        ),
         tabBarStyle: {
-          backgroundColor: '#004561',
-          borderTopColor: '#1ea4dc',
+          backgroundColor: C.tabBar,
+          borderTopColor: C.border,
           borderTopWidth: 1,
         },
-        tabBarActiveTintColor: '#08b4fb',
-        tabBarInactiveTintColor: '#6b7280',
+        tabBarActiveTintColor: C.primary,
+        tabBarInactiveTintColor: C.textDim,
         tabBarLabelStyle: { fontSize: 12, fontWeight: '500' },
       }}
     >
-      {/* Home (sender) / Jobs (courier) */}
       <Tabs.Screen
         name="index"
         options={{
@@ -36,22 +45,18 @@ export default function TabsLayout() {
             isSender ? <Home size={size} color={color} /> : <Truck size={size} color={color} />,
         }}
       />
-
-      {/* Deliveries — sender only */}
       <Tabs.Screen
         name="deliveries"
         options={{
           title: 'Teslimatlar',
-          href: isSender ? undefined : null,
           tabBarIcon: ({ color, size }) => <Package size={size} color={color} />,
         }}
       />
-
-      {/* Profile — both roles */}
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Profil',
+          headerShown: false,
           tabBarIcon: ({ color, size }) => <User size={size} color={color} />,
         }}
       />

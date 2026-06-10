@@ -1,8 +1,30 @@
 import { create } from 'zustand';
 import * as SecureStore from 'expo-secure-store';
+import * as Notifications from 'expo-notifications';
+import Constants from 'expo-constants';
 import { supabase } from '../api/supabase';
-import { createUser, getMe, updateMe, deleteMe } from '../api/services/userService';
+import { createUser, getMe, updateMe, deleteMe, uploadPushToken } from '../api/services/userService';
 import type { User } from '../types';
+
+async function registerPushToken(): Promise<void> {
+  try {
+    const { status } = await Notifications.getPermissionsAsync();
+    const granted =
+      status === 'granted' ||
+      (await Notifications.requestPermissionsAsync()).status === 'granted';
+    if (!granted) return;
+    // projectId is required in Expo SDK 53+ for standalone builds; falls back fine in Expo Go
+    const projectId =
+      Constants.expoConfig?.extra?.eas?.projectId ??
+      (Constants as unknown as { easConfig?: { projectId?: string } }).easConfig?.projectId;
+    const { data: token } = await Notifications.getExpoPushTokenAsync(
+      projectId ? { projectId } : undefined,
+    );
+    await uploadPushToken(token);
+  } catch {
+    // Silently skip — push is best-effort; app works without it
+  }
+}
 
 type UserRole = 'sender' | 'courier';
 
@@ -64,11 +86,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
 
-      const profile = await getMe();
-      const savedAvatar = await SecureStore.getItemAsync(AVATAR_KEY(profile.id));
-      if (savedAvatar && !profile.avatar_url) profile.avatar_url = savedAvatar;
+      // Unblock the UI immediately after Supabase responds
+      set({ isLoggedIn: true, loading: false });
 
-      set({ isLoggedIn: true, role: profile.role as UserRole, user: profile, loading: false });
+      // Fetch profile + register push token in the background
+      try {
+        const profile = await getMe();
+        const savedAvatar = await SecureStore.getItemAsync(AVATAR_KEY(profile.id));
+        if (savedAvatar && !profile.avatar_url) profile.avatar_url = savedAvatar;
+        set({ role: profile.role as UserRole, user: profile });
+        registerPushToken();
+      } catch {
+        // Profile fetch failed (backend down / slow) — user is still logged in via Supabase
+      }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Giriş başarısız';
       set({ loading: false, error: message });
@@ -90,6 +120,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (savedAvatar && !profile.avatar_url) profile.avatar_url = savedAvatar;
 
       set({ isLoggedIn: true, role: profile.role as UserRole, user: profile });
+      registerPushToken();
     } catch {
       await supabase.auth.signOut();
     }

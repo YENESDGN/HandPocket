@@ -1,14 +1,21 @@
 {
   "expo": {
-    "name": "mobile",
+    "name": "HandPocket",
     "slug": "mobile",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "mobile",
+    "icon": "./assets/images/hp-logo.png",
+    "scheme": "handpocket",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "infoPlist": {
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Kurye olarak çalışırken konumunuz arka planda takip edilir.",
+        "NSLocationAlwaysUsageDescription": "Kurye olarak çalışırken konumunuz arka planda takip edilir.",
+        "NSLocationWhenInUseUsageDescription": "Teslimat için konumunuza ihtiyaç duyulmaktadır.",
+        "NSFaceIDUsageDescription": "Hızlı giriş için Face ID kullanın.",
+        "UIBackgroundModes": ["location", "fetch"]
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -17,11 +24,20 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.ACCESS_BACKGROUND_LOCATION",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.VIBRATE",
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT"
+      ]
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/favicon.png",
+      "bundler": "metro"
     },
     "plugins": [
       "expo-router",
@@ -35,7 +51,26 @@
           }
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/hp-logo.png",
+          "color": "#08b4fb",
+          "defaultChannel": "default",
+          "sounds": []
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Kurye olarak çalışırken konumunuz arka planda takip edilir.",
+          "locationAlwaysPermission": "Kurye olarak çalışırken konumunuz arka planda takip edilir.",
+          "locationWhenInUsePermission": "Teslimat için konumunuza ihtiyaç duyulmaktadır.",
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

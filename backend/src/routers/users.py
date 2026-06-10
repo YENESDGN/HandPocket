@@ -3,7 +3,7 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException, Request
 from slowapi import Limiter
 from slowapi.util import get_remote_address
-from sqlmodel import Session, select
+from sqlmodel import Session, SQLModel, select
 
 from ..database import get_session
 from ..models.user import User, UserCreate, UserPublic, UserPublicLimited, UserUpdate, UserRole
@@ -75,6 +75,24 @@ def delete_me(
 ):
     session.delete(current_user)
     session.commit()
+
+
+class PushTokenPayload(SQLModel):
+    token: str
+
+
+@router.post("/me/fcm-token", status_code=204)
+@limiter.limit("20/minute")
+def upsert_push_token(
+    request: Request,
+    payload: PushTokenPayload,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    current_user.push_token = payload.token.strip() or None
+    session.add(current_user)
+    session.commit()
+    logger.info("push_token_updated user_id=%s", current_user.id)
 
 
 @router.patch("/{user_id}/ban", response_model=UserPublic)

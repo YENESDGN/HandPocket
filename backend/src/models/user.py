@@ -21,6 +21,7 @@ class User(SQLModel, table=True):
     average_rating: Optional[float] = None
     is_banned: bool = Field(default=False)
     created_at: datetime = Field(default_factory=datetime.utcnow)
+    push_token: Optional[str] = Field(default=None)  # Expo push token for FCM/APNs
 
 
 class UserCreate(SQLModel):

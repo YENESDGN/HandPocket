@@ -18,3 +18,6 @@ export const getUserById = (id: string) =>
   api.get<User>(`/users/${id}`).then((r) => r.data);
 
 export const deleteMe = () => api.delete('/users/me');
+
+export const uploadPushToken = (token: string) =>
+  api.post('/users/me/fcm-token', { token });
