@@ -99,7 +99,7 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
         content={"detail": "Internal server error"},
     )
 
-_ALLOWED_ORIGINS = os.getenv("FRONTEND_URL", "http://localhost:5173").split(",")
+_ALLOWED_ORIGINS = os.getenv("FRONTEND_URL", "http://localhost:5173,http://localhost:8081,http://localhost:19006").split(",")
 
 app.add_middleware(GZipMiddleware, minimum_size=500)
 app.add_middleware(HSTSMiddleware)

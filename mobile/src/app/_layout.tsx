@@ -2,29 +2,43 @@ import '@/global.css';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Platform, View } from 'react-native';
 import { Stack, useRouter, useSegments } from 'expo-router';
-import * as Notifications from 'expo-notifications';
+import Constants from 'expo-constants';
 import { useAuthStore } from '@/shared/store/auth';
 import { useThemeStore } from '@/shared/store/theme';
 
-// Show notification banner while app is in foreground
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-  }),
-});
+// expo-notifications throws at require() in Expo Go since SDK 53 — skip entirely.
+const IS_EXPO_GO = Constants.executionEnvironment === 'storeClient';
 
-async function setupNotificationChannel() {
+type Unsub = { remove: () => void } | null;
+
+async function setupNotifications(onTap: (id: string) => void): Promise<() => void> {
+  if (IS_EXPO_GO) return () => {};
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const N = require('expo-notifications');
+  N.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+    }),
+  });
   if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync('default', {
+    await N.setNotificationChannelAsync('default', {
       name: 'Genel Bildirimler',
-      importance: Notifications.AndroidImportance.HIGH,
+      importance: N.AndroidImportance.HIGH,
       vibrationPattern: [0, 250, 250, 250],
       lightColor: '#08b4fb',
     });
   }
+  const s1: Unsub = N.addNotificationReceivedListener(() => {});
+  const s2: Unsub = N.addNotificationResponseReceivedListener(
+    (response: { notification: { request: { content: { data: Record<string, unknown> } } } }) => {
+      const id = response.notification.request.content.data?.request_id as string | undefined;
+      if (id) onTap(id);
+    },
+  );
+  return () => { s1?.remove(); s2?.remove(); };
 }
 
 export default function RootLayout() {
@@ -32,35 +46,26 @@ export default function RootLayout() {
   const { isLoggedIn, initialize } = useAuthStore();
   const router = useRouter();
   const segments = useSegments();
-  const notificationListener = useRef<Notifications.EventSubscription | null>(null);
-  const responseListener = useRef<Notifications.EventSubscription | null>(null);
+  const cleanup = useRef<() => void>(() => {});
+
+  console.log('[HP] RootLayout render, ready=', ready);
 
   useEffect(() => {
-    setupNotificationChannel();
-
+    console.log('[HP] RootLayout mount effect START');
     const { loadSaved } = useThemeStore.getState();
-    const timeout = new Promise<void>((resolve) => setTimeout(resolve, 6000));
-    Promise.all([loadSaved(), Promise.race([initialize(), timeout])]).finally(() => setReady(true));
 
-    // Foreground notification received — banner is shown by the handler above
-    notificationListener.current = Notifications.addNotificationReceivedListener(() => {});
+    // Hard safety: never let the splash hang — show the app within 6s no matter what.
+    const safety = setTimeout(() => { console.log('[HP] safety fired'); setReady(true); }, 6000);
 
-    // Notification tap → navigate to the relevant delivery
-    responseListener.current = Notifications.addNotificationResponseReceivedListener((response) => {
-      const data = response.notification.request.content.data as Record<string, unknown>;
-      const requestId = data?.request_id as string | undefined;
-      if (requestId) {
-        router.push(`/delivery/${requestId}` as never);
-      }
-    });
+    setupNotifications((id) => router.push(`/delivery/${id}` as never))
+      .then((fn) => { cleanup.current = fn; })
+      .catch(() => {});
 
-    // expo-router already handles handpocket:// scheme deep links automatically
-    // via the scheme configured in app.json — no manual Linking handler needed
+    Promise.all([loadSaved(), initialize()])
+      .catch(() => {})
+      .finally(() => { clearTimeout(safety); setReady(true); });
 
-    return () => {
-      notificationListener.current?.remove();
-      responseListener.current?.remove();
-    };
+    return () => { clearTimeout(safety); cleanup.current(); };
   }, []);
 
   useEffect(() => {

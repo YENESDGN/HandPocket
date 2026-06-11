@@ -1,28 +1,31 @@
 import { create } from 'zustand';
 import * as SecureStore from 'expo-secure-store';
-import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 import { supabase } from '../api/supabase';
 import { createUser, getMe, updateMe, deleteMe, uploadPushToken } from '../api/services/userService';
 import type { User } from '../types';
 
+const IS_EXPO_GO = Constants.executionEnvironment === 'storeClient';
+
 async function registerPushToken(): Promise<void> {
+  if (IS_EXPO_GO) return;
   try {
-    const { status } = await Notifications.getPermissionsAsync();
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const N = require('expo-notifications');
+    const { status } = await N.getPermissionsAsync();
     const granted =
       status === 'granted' ||
-      (await Notifications.requestPermissionsAsync()).status === 'granted';
+      (await N.requestPermissionsAsync()).status === 'granted';
     if (!granted) return;
-    // projectId is required in Expo SDK 53+ for standalone builds; falls back fine in Expo Go
     const projectId =
       Constants.expoConfig?.extra?.eas?.projectId ??
       (Constants as unknown as { easConfig?: { projectId?: string } }).easConfig?.projectId;
-    const { data: token } = await Notifications.getExpoPushTokenAsync(
+    const { data: token } = await N.getExpoPushTokenAsync(
       projectId ? { projectId } : undefined,
     );
     await uploadPushToken(token);
   } catch {
-    // Silently skip — push is best-effort; app works without it
+    // Silently skip — push is best-effort; Expo Go does not support remote push since SDK 53
   }
 }
 
